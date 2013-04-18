@@ -17,3 +17,21 @@ tracks:
     vcs_type: hg
     vcs_uri: https://bitbucket.org/ompl/ompl
     version: 0.12.1002173
+  hydro:
+    actions:
+    - bloom-export-upstream :{vcs_local_uri} :{vcs_type} --tag :{release_tag} --display-uri
+      :{vcs_uri} --name :{name} --output-dir :{archive_dir_path}
+    - git-bloom-import-upstream :{archive_path} :{patches} --release-version :{version}
+      --replace
+    - git-bloom-generate -y rosrelease :{ros_distro} --source upstream -i :{release_inc}
+    - git-bloom-generate -y rosdebian --prefix release/:{ros_distro} :{ros_distro}
+      -i :{release_inc}
+    devel_branch: null
+    name: upstream_hydro
+    patches: hydro
+    release_inc: -1
+    release_tag: :{ask}
+    ros_distro: hydro
+    vcs_type: hg
+    vcs_uri: https://bitbucket.org/ompl/ompl
+    version: :{ask}
