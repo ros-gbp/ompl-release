@@ -142,3 +142,5 @@ if (OMPL_REGISTRATION)
         endif()
     endif()
 endif()
+
+install(FILES package.xml DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
