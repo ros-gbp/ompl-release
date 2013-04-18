@@ -45,10 +45,9 @@ endif(IS_ICPC)
 find_package(Boost COMPONENTS date_time thread serialization filesystem system program_options unit_test_framework REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
-find_package(Boost COMPONENTS odeint QUIET)
 if (NOT ${Boost_VERSION} LESS 104400)
   option(OMPL_ODESOLVER "Enable OMPL ODE solver classes" ON)
-  if(NOT Boost_ODEINT_FOUND)
+  if(${Boost_VERSION} LESS 105300)
     # Include bundled version of boost::odeint if it isn't installed natively
     set(ODEINT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external")
     include_directories("${ODEINT_INCLUDE_DIR}")
@@ -68,6 +67,13 @@ set(OMPL_EXTENSION_OPENDE ${OPENDE_FOUND})
 if (OPENDE_FOUND)
   add_definitions(${OPENDE_DEFINITIONS})
   include_directories(${OPENDE_INCLUDE_DIR})
+endif()
+
+# If FLANN is installed, a wrapper for its nearest neighbor data structures can be used
+find_package(flann 1.8.3 QUIET)
+if (FLANN_FOUND)
+    set(OMPL_HAVE_FLANN 1)
+    include_directories("${FLANN_INCLUDE_DIRS}")
 endif()
 
 add_subdirectory(py-bindings)
