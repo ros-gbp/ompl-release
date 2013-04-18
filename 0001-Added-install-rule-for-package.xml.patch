@@ -1,0 +1,22 @@
+From a15c4d12d733997b3c2230b89db46a9baeb2fd7c Mon Sep 17 00:00:00 2001
+From: Ioan Sucan <isucan@willowgarage.com>
+Date: Thu, 18 Apr 2013 11:56:46 +0300
+Subject: [PATCH] Added install rule for package.xml
+
+---
+ CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5aeaced..8075365 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -136,3 +136,5 @@ if (OMPL_REGISTRATION)
+         endif()
+     endif()
+ endif()
++
++install(FILES package.xml DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
+-- 
+1.8.1.2
+
