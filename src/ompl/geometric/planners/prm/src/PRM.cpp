@@ -37,8 +37,8 @@
 #include "ompl/geometric/planners/prm/PRM.h"
 #include "ompl/geometric/planners/prm/ConnectionStrategy.h"
 #include "ompl/base/goals/GoalSampleableRegion.h"
-#include "ompl/datastructures/NearestNeighborsGNAT.h"
 #include "ompl/datastructures/PDF.h"
+#include "ompl/tools/config/SelfConfig.h"
 #include <boost/lambda/bind.hpp>
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/incremental_components.hpp>
@@ -102,7 +102,7 @@ void ompl::geometric::PRM::setup(void)
 {
     Planner::setup();
     if (!nn_)
-        nn_.reset(new NearestNeighborsGNAT<Vertex>());
+        nn_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Vertex>(si_->getStateSpace()));
     nn_->setDistanceFunction(boost::bind(&PRM::distanceFunction, this, _1, _2));
     if (!connectionStrategy_)
     {
@@ -519,10 +519,10 @@ void ompl::geometric::PRM::getPlannerData(base::PlannerData &data) const
 
     // Explicitly add start and goal states:
     for (size_t i = 0; i < startM_.size(); ++i)
-        data.addStartVertex(base::PlannerDataVertex(stateProperty_[startM_[i]]));
+        data.addStartVertex(base::PlannerDataVertex(stateProperty_[startM_[i]], const_cast<PRM*>(this)->disjointSets_.find_set(startM_[i])));
 
     for (size_t i = 0; i < goalM_.size(); ++i)
-        data.addGoalVertex(base::PlannerDataVertex(stateProperty_[goalM_[i]]));
+        data.addGoalVertex(base::PlannerDataVertex(stateProperty_[goalM_[i]], const_cast<PRM*>(this)->disjointSets_.find_set(goalM_[i])));
 
     // Adding edges and all other vertices simultaneously
     foreach(const Edge e, boost::edges(g_))
@@ -535,5 +535,9 @@ void ompl::geometric::PRM::getPlannerData(base::PlannerData &data) const
         // Add the reverse edge, since we're constructing an undirected roadmap
         data.addEdge(base::PlannerDataVertex(stateProperty_[v2]),
                      base::PlannerDataVertex(stateProperty_[v1]));
+
+	// Add tags for the newly added vertices
+	data.tagState(stateProperty_[v1], const_cast<PRM*>(this)->disjointSets_.find_set(v1));
+	data.tagState(stateProperty_[v2], const_cast<PRM*>(this)->disjointSets_.find_set(v2));
     }
 }
