@@ -17,8 +17,8 @@ include(CompilerSettings)
 include(OMPLVersion)
 include(OMPLUtils)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin")
+set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib")
 
 set(OMPL_CMAKE_UTIL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules"
     CACHE FILEPATH "Path to directory with auxiliary CMake scripts for OMPL")
@@ -45,10 +45,9 @@ endif(IS_ICPC)
 find_package(Boost COMPONENTS date_time thread serialization filesystem system program_options unit_test_framework REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
-find_package(Boost COMPONENTS odeint QUIET)
 if (NOT ${Boost_VERSION} LESS 104400)
   option(OMPL_ODESOLVER "Enable OMPL ODE solver classes" ON)
-  if(NOT Boost_ODEINT_FOUND)
+  if(${Boost_VERSION} LESS 105300)
     # Include bundled version of boost::odeint if it isn't installed natively
     set(ODEINT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/external")
     include_directories("${ODEINT_INCLUDE_DIR}")
@@ -70,6 +69,13 @@ if (OPENDE_FOUND)
   include_directories(${OPENDE_INCLUDE_DIR})
 endif()
 
+# If FLANN is installed, a wrapper for its nearest neighbor data structures can be used
+find_package(flann 1.8.3 QUIET)
+if (FLANN_FOUND)
+    set(OMPL_HAVE_FLANN 1)
+    include_directories("${FLANN_INCLUDE_DIRS}")
+endif()
+
 add_subdirectory(py-bindings)
 add_subdirectory(src)
 add_subdirectory(tests)
@@ -83,7 +89,7 @@ if (NOT MSVC)
   set(PKG_OMPL_LIBS "-lompl")
   set(pkg_conf_file "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/ompl.pc")
   configure_file("${pkg_conf_file}.in" "${pkg_conf_file}" @ONLY)
-  install(FILES ${pkg_conf_file} DESTINATION lib/pkgconfig/
+  install(FILES "${pkg_conf_file}" DESTINATION lib/pkgconfig/
     COMPONENT pkgconfig RENAME "ompl${OMPL_INSTALL_SUFFIX}.pc")
 
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/doc/dox/FindOMPL.cmake"
@@ -92,9 +98,9 @@ if (NOT MSVC)
   if (NOT ${CMAKE_VERSION} VERSION_LESS 2.8.6)
     include(WriteBasicConfigVersionFile)
     write_basic_config_version_file(
-      ${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake
+      "${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake"
       VERSION ${OMPL_VERSION} COMPATIBILITY SameMajorVersion)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake"
       DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
   endif()
 endif()
@@ -105,7 +111,7 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
 add_custom_target(uninstall
-  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+  COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
 if (OMPL_VERSIONED_INSTALL)
   # script to create sym links
@@ -113,8 +119,8 @@ if (OMPL_VERSIONED_INSTALL)
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/create_symlinks.sh" @ONLY)
   execute_process(COMMAND
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/create_symlinks.sh"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.symlinks/ DESTINATION .)
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+  install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.symlinks/" DESTINATION .)
   # script to uninstall sym links
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/uninstall_symlinks.sh.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/uninstall_symlinks.sh" @ONLY)
@@ -136,5 +142,3 @@ if (OMPL_REGISTRATION)
         endif()
     endif()
 endif()
-
-install(FILES package.xml DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
