@@ -13,11 +13,11 @@ tracks:
     name: upstream_groovy
     patches: groovy
     release_inc: '1'
-    release_tag: '2173'
+    release_tag: :{ask}
     ros_distro: groovy
     vcs_type: hg
     vcs_uri: https://bitbucket.org/ompl/ompl
-    version: 0.12.1002173
+    version: :{ask}
   hydro:
     actions:
     - bloom-export-upstream :{vcs_local_uri} :{vcs_type} --tag :{release_tag} --display-uri
