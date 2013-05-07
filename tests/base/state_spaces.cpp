@@ -67,7 +67,7 @@ bool isValid(const base::State *)
 {
     return true;
 }
-
+/*
 BOOST_AUTO_TEST_CASE(Dubins_Simple)
 {
     base::StateSpacePtr d(new base::DubinsStateSpace()), dsym(new base::DubinsStateSpace(1., true));
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(Discrete_Simple)
     d->interpolate(s1.get(), s2.get(), 0.2, s3.get());
     BOOST_CHECK_EQUAL(s3->value, 0);
 }
-
+*/
 BOOST_AUTO_TEST_CASE(SO2_Simple)
 {
     base::StateSpacePtr m(new base::SO2StateSpace());
@@ -311,6 +311,7 @@ BOOST_AUTO_TEST_CASE(RealVector_Simple)
     BOOST_CHECK_EQUAL(m2->getDimension(), 1u);
 }
 
+/*
 BOOST_AUTO_TEST_CASE(Time_Bounds)
 {
     base::TimeStateSpace t;
@@ -365,6 +366,7 @@ BOOST_AUTO_TEST_CASE(Time_Simple)
     ss = s0;
     BOOST_CHECK(s0 == ss);
 }
+*/
 
 BOOST_AUTO_TEST_CASE(Compound_Simple)
 {
