@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, Rice University
+*  Copyright (c) 2013, Rice University
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,31 +32,47 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Author: Ioan Sucan */
+/* Author: Ioan Sucan, James D. Marble */
 
-#define BOOST_TEST_MODULE "rrt_star"
-#include <boost/test/unit_test.hpp>
-#include "../../../../../tests/BoostTestTeamCityReporter.h"
+#ifndef OMPL_GEOMETRIC_PLANNERS_PRM_PRM_STAR_
+#define OMPL_GEOMETRIC_PLANNERS_PRM_PRM_STAR_
 
-// The following header file is useful for testing planners.
-// See ../../../../../tests/geometric/2dmap.cpp for example usage.
-// You could copy that file and modify it for your planner.
-#include "../../../../../tests/base/PlannerTest.h"
-#include "../../../../../tests/geometric/2dmap/2DmapSetup.h"
+#include "ompl/geometric/planners/prm/PRM.h"
 
-#include "../RRTstar.h"
-
-using namespace ompl;
-
-
-BOOST_AUTO_TEST_CASE(Basic)
+namespace ompl
 {
-    geometric::SimpleSetup2DMap s("env1.txt");
-    s.setPlanner(base::PlannerPtr(new geometric::RRTstar(s.getSpaceInformation())));
-    s.setup();
+
+    namespace geometric
+    {
+
+        /**
+           @anchor gPRMstar
+           Run PRM with the "star strategy". Instead of setting the
+           value "k" for how many neighbors to connect, automatically
+           compute it based on the coverage of the space, guaranteeing
+           optimality of solutions.
+           @par Short description
+           @par External documentation
+           L.E. Kavraki, P.Švestka, J.-C. Latombe, and M.H. Overmars,
+           Probabilistic roadmaps for path planning in high-dimensional configuration spaces,
+           <em>IEEE Trans. on Robotics and Automation</em>, vol. 12, pp. 566–580, Aug. 1996.
+           DOI: <a href="http://dx.doi.org/10.1109/70.508439">10.1109/70.508439</a><br>
+           S. Karaman and E. Frazzoli, Sampling-based
+           Algorithms for Optimal Motion Planning, International Journal of Robotics
+           Research, vol. 30, no.7, pp. 846-894, 2011.
+           <a href="http://dx.doi.org/10.1177/0278364911406761</a><br>
+           <a href="http://www.kavrakilab.org/robotics/lazyprm.html">[more]</a>
+        */
+
+        /** \brief PRM* planner */
+        class PRMstar : public PRM
+        {
+        public:
+
+            /** \brief Constructor */
+            PRMstar(const base::SpaceInformationPtr &si);
+        };
+    }
 }
 
-BOOST_AUTO_TEST_CASE(More)
-{
-    // other tests, if you want
-}
+#endif
