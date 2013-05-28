@@ -44,6 +44,7 @@
 #include <ompl/control/planners/syclop/SyclopRRT.h>
 #include <ompl/control/planners/syclop/SyclopEST.h>
 #include <ompl/control/planners/pdst/PDST.h>
+#include <ompl/control/planners/syclop/GridDecomposition.h>
 #include <ompl/control/SimpleSetup.h>
 #include <ompl/config.h>
 #include <iostream>
@@ -65,20 +66,13 @@ public:
         coord[0] = s->as<ob::SE2StateSpace::StateType>()->getX();
         coord[1] = s->as<ob::SE2StateSpace::StateType>()->getY();
     }
-    virtual void sampleFromRegion(const int rid, const ob::StateSamplerPtr& sampler, ob::State* s)
+
+    virtual void sampleFullState(const ob::StateSamplerPtr& sampler, const std::vector<double>& coord, ob::State* s) const
     {
-        const ob::RealVectorBounds& regionBounds(getRegionBounds(rid));
         sampler->sampleUniform(s);
-        s->as<ob::SE2StateSpace::StateType>()->setX(
-            rng_.uniformReal(regionBounds.low[0], regionBounds.high[0]));
-        s->as<ob::SE2StateSpace::StateType>()->setY(
-            rng_.uniformReal(regionBounds.low[1], regionBounds.high[1]));
+        s->as<ob::SE2StateSpace::StateType>()->setXY(coord[0], coord[1]);
     }
-
-private:
-    ompl::RNG rng_;
 };
-
 
 bool isStateValid(const oc::SpaceInformation *si, const ob::State *state)
 {
