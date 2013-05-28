@@ -16,7 +16,7 @@ tracks:
     release_tag: :{ask}
     ros_distro: groovy
     vcs_type: hg
-    vcs_uri: https://bitbucket.org/isucan/ompl
+    vcs_uri: https://bitbucket.org/ompl/ompl
     version: :{ask}
   hydro:
     actions:
