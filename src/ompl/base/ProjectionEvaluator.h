@@ -82,7 +82,8 @@ namespace ompl
                 argument: all elements (rows) in column[i] are divided
                 by scale[i]. This is useful to specify if scaling of
                 the elements of the state is to be applied before
-                projection.
+                projection. If the scale for a column is 0, the column
+                itself is set to 0.
 
                 Each element is sampled with a Gaussian distribution
                 with mean 0 and variance 1 and the matrix rows are
@@ -92,7 +93,8 @@ namespace ompl
             /** \brief Compute a random projection matrix with \e from
                 columns and \e to rows. A vector with \e from elements
                 can be multiplied by this matrix in order to produce a
-                vector with \e to elements.
+                vector with \e to elements. This uses the function above
+                called with an empty \e scale vector.
 
                 Each element is sampled with a Gaussian distribution
                 with mean 0 and variance 1 and the matrix rows are
@@ -191,24 +193,34 @@ namespace ompl
                 sizes either. */
             void inferCellSizes(void);
 
+            /** \brief Set the default cell dimensions for this
+                projection. The default implementation of this
+                function is empty. setup() calls this function if no
+                cell dimensions have been previously set. */
+            virtual void defaultCellSizes(void);
+
+            /** \brief Check if the projection dimension matched the dimension of the bounds */
+            void checkBounds(void) const;
+
+            /** \brief Check if bounds were specified for this projection */
+            bool hasBounds(void) const
+            {
+                return !bounds_.low.empty();
+            }
+
             /** \brief Set bounds on the projection. The PDST planner
                  needs to known the bounds on the projection. Default bounds
                  are automatically computed by inferCellSizes(). */
-            void setBounds(const RealVectorBounds &bounds)
-            {
-                bounds_ = bounds;
-            }
+            void setBounds(const RealVectorBounds &bounds);
+
             /** \brief Get the bounds computed/set for this projection */
             const RealVectorBounds& getBounds(void)
             {
                 return bounds_;
             }
 
-            /** \brief Set the default cell dimensions for this
-                projection. The default implementation of this
-                function is empty. setup() calls this function if no
-                cell dimensions have been previously set. */
-            virtual void defaultCellSizes(void);
+            /** \brief Compute an approximation of the bounds for this projection space. getBounds() will then report the computed bounds. */
+            void inferBounds(void);
 
             /** \brief Perform configuration steps, if needed */
             virtual void setup(void);
@@ -244,6 +256,9 @@ namespace ompl
 
         protected:
 
+            /** \brief Fill estimatedBounds_ with an approximate bounding box for the projection space (via sampling) */
+            void estimateBounds(void);
+
             /** \brief The state space this projection operates on */
             const StateSpace    *space_;
 
@@ -254,6 +269,11 @@ namespace ompl
 
             /** \brief A bounding box for projected state values */
             RealVectorBounds     bounds_;
+
+            /** \brief An approximate bounding box for projected state values;
+                This is the cached result of estimateBounds() which may later be copied
+                to bounds_ if bounds are needed but were not specified. */
+            RealVectorBounds     estimatedBounds_;
 
             /** \brief Flag indicating whether cell sizes have
                 been set by the user, or whether they were inferred
