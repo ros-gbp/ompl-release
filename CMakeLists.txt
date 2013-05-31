@@ -3,8 +3,19 @@ project(ompl CXX C)
 
 # set the default build type
 if (NOT CMAKE_BUILD_TYPE)
+    # By default, use Release mode
     set(CMAKE_BUILD_TYPE Release)
+
+    # On 32bit architectures with gcc < 4.7, use RelWithDebInfo
+    if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+        execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+	if (GCC_VERSION VERSION_LESS 4.7)
+	    set(CMAKE_BUILD_TYPE RelWithDebInfo)
+	endif()
+    endif()
 endif()
+
+message(STATUS "Building ${CMAKE_BUILD_TYPE}")
 
 # This shouldn't be necessary, but there has been trouble
 # with MSVC being set off, but MSVCXX ON.
@@ -17,8 +28,8 @@ include(CompilerSettings)
 include(OMPLVersion)
 include(OMPLUtils)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+set(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}/bin")
+set(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}/lib")
 
 set(OMPL_CMAKE_UTIL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules"
     CACHE FILEPATH "Path to directory with auxiliary CMake scripts for OMPL")
@@ -69,6 +80,12 @@ if (OPENDE_FOUND)
   include_directories(${OPENDE_INCLUDE_DIR})
 endif()
 
+find_package(Triangle QUIET)
+set(OMPL_EXTENSION_TRIANGLE ${TRIANGLE_FOUND})
+if (TRIANGLE_FOUND)
+  include_directories(${TRIANGLE_INCLUDE_DIR})
+endif()
+
 # If FLANN is installed, a wrapper for its nearest neighbor data structures can be used
 find_package(flann 1.8.3 QUIET)
 if (FLANN_FOUND)
@@ -89,7 +106,7 @@ if (NOT MSVC)
   set(PKG_OMPL_LIBS "-lompl")
   set(pkg_conf_file "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/ompl.pc")
   configure_file("${pkg_conf_file}.in" "${pkg_conf_file}" @ONLY)
-  install(FILES ${pkg_conf_file} DESTINATION lib/pkgconfig/
+  install(FILES "${pkg_conf_file}" DESTINATION lib/pkgconfig/
     COMPONENT pkgconfig RENAME "ompl${OMPL_INSTALL_SUFFIX}.pc")
 
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/doc/dox/FindOMPL.cmake"
@@ -98,9 +115,9 @@ if (NOT MSVC)
   if (NOT ${CMAKE_VERSION} VERSION_LESS 2.8.6)
     include(WriteBasicConfigVersionFile)
     write_basic_config_version_file(
-      ${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake
+      "${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake"
       VERSION ${OMPL_VERSION} COMPATIBILITY SameMajorVersion)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ompl-config-version.cmake"
       DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
   endif()
 endif()
@@ -111,7 +128,7 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
   IMMEDIATE @ONLY)
 add_custom_target(uninstall
-  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+  COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
 if (OMPL_VERSIONED_INSTALL)
   # script to create sym links
@@ -119,8 +136,8 @@ if (OMPL_VERSIONED_INSTALL)
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/create_symlinks.sh" @ONLY)
   execute_process(COMMAND
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/create_symlinks.sh"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.symlinks/ DESTINATION .)
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+  install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.symlinks/" DESTINATION .)
   # script to uninstall sym links
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/uninstall_symlinks.sh.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/uninstall_symlinks.sh" @ONLY)
