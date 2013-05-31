@@ -1,4 +1,4 @@
-From c8093329ba9ce0f1aa9a415f6446a31f84374be9 Mon Sep 17 00:00:00 2001
+From 6a226c326d3ba4d4503654fa2c6cfa1779a0c58b Mon Sep 17 00:00:00 2001
 From: Ioan Sucan <isucan@willowgarage.com>
 Date: Thu, 18 Apr 2013 11:56:46 +0300
 Subject: [PATCH] Added install rule for package.xml
@@ -8,10 +8,10 @@ Subject: [PATCH] Added install rule for package.xml
  1 file changed, 2 insertions(+)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index f6bcb00..7e67786 100644
+index b6279df..f0ebeb2 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -142,3 +142,5 @@ if (OMPL_REGISTRATION)
+@@ -148,3 +148,5 @@ if (OMPL_REGISTRATION)
          endif()
      endif()
  endif()
