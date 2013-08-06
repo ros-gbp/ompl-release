@@ -28,7 +28,7 @@ tracks:
     - git-bloom-generate -y rosdebian --prefix release/:{ros_distro} :{ros_distro}
       -i :{release_inc}
     devel_branch: null
-    last_version: 0.13.0002515
+    last_version: 0.13.0002516
     name: upstream_hydro
     patches: hydro
     release_inc: '0'
