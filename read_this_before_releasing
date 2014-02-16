@@ -1,0 +1,4 @@
+OMPL is released from its home mercurial repo using the following conventions:
+- leave version & tag to :{ask} for all tracks.
+- when asked about a tag, use the mercurial revision number (e.g., 2830)
+- when asked about a version, use the latest released version for OMPL (e.g. 0.14.1), add two 0 values and then the revision number used (the tag). So for 0.14.1 (official release), the deb version will be 0.14.1002830
