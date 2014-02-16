@@ -1,3 +1,22 @@
+## ompl - 0.14.1002830-1
+
+User `isucan@isucan-glaptop0` released the packages in the `ompl` repository by running `/usr/bin/bloom-release -t indigo -r indigo ompl` on `Sun, 16 Feb 2014 04:13:11 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+- rosdistro version: `null`
+- old version: `0.14.1002830-0`
+- new version: `0.14.1002830-1`
+
+Versions of tools used:
+- bloom version: `0.4.9`
+- catkin_pkg version: `0.1.26`
+- rosdep version: `0.10.25`
+- rosdistro version: `0.3.4`
+- vcstools version: `0.1.33`
+
+
 ## ompl - 0.14.1002830-0
 
 User `isucan@isucan-glaptop0` released the packages in the `ompl` repository by running `/usr/bin/bloom-release -t indigo -r indigo --new-track ompl` on `Sun, 16 Feb 2014 04:09:06 -0000`
