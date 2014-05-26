@@ -8,7 +8,6 @@ if (NOT CMAKE_BUILD_TYPE)
 
     # On 32bit architectures, use RelWithDebInfo
     if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-        execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
         set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Type of build" FORCE)
     endif()
 endif()
@@ -54,6 +53,13 @@ endif(IS_ICPC)
 # Do one quiet find_package on Boost to see if it is recent enough to
 # have the try_join_for call
 find_package(Boost QUIET 1.50)
+
+# If Boost is not found at all, the check for version 1.50 below will die in
+# the most ungraceful manner because Boost_VERSION is not defined.  Define the
+# variable here for a more useful error.
+if (NOT ${Boost_FOUND})
+    set(Boost_VERSION 0)
+endif()
 
 # try_join_for requires the chrono library, so if we will use
 # try_join_for, we need to include the chrono component
