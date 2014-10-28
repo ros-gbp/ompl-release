@@ -1,3 +1,24 @@
+## ompl (indigo) - 1.0.0003094-0
+
+The packages in the `ompl` repository were released into the `indigo` distro by running `/usr/bin/bloom-release ompl -t indigo -r indigo` on `Tue, 28 Oct 2014 05:17:10 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `0.14.2002850-0`
+- old version: `0.14.2002850-0`
+- new version: `1.0.0003094-0`
+
+Versions of tools used:
+- bloom version: `0.5.12`
+- catkin_pkg version: `0.2.6`
+- rosdep version: `0.10.32`
+- rosdistro version: `0.3.6`
+- vcstools version: `0.1.35`
+
+
 ## ompl (indigo) - 0.14.2002850-0
 
 The packages in the `ompl` repository were released into the `indigo` distro by running `/usr/bin/bloom-release -t indigo -r indigo ompl` on `Mon, 26 May 2014 17:22:22 -0000`
