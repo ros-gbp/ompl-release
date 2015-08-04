@@ -73,12 +73,12 @@ tracks:
       :{release_inc}
     devel_branch: null
     last_version: 1.0.0003094
-    name: upstream_indigo
-    patches: indigo
+    name: upstream
+    patches: jade
     release_inc: '0'
     release_repo_url: null
     release_tag: :{ask}
-    ros_distro: indigo
+    ros_distro: jade
     vcs_type: hg
     vcs_uri: https://bitbucket.org/ompl/ompl
     version: :{ask}
