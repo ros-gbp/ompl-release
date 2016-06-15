@@ -1,3 +1,26 @@
+## ompl (kinetic) - 1.1.3535-0
+
+The packages in the `ompl` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release --track kinetic --rosdistro kinetic ompl` on `Wed, 15 Jun 2016 21:36:39 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `1.1.3535-0`
+
+Versions of tools used:
+
+- bloom version: `0.5.21`
+- catkin_pkg version: `0.2.10`
+- rosdep version: `0.11.5`
+- rosdistro version: `0.4.7`
+- vcstools version: `0.1.38`
+
+
 ## ompl (jade) - 1.0.3094-0
 
 The packages in the `ompl` repository were released into the `jade` distro by running `/usr/bin/bloom-release --track jade --rosdistro jade ompl` on `Wed, 15 Jun 2016 21:22:29 -0000`
