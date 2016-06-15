@@ -76,10 +76,10 @@ tracks:
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc}
     devel_branch: null
-    last_version: 1.0.0003094
+    last_version: 1.0.3094
     name: upstream
     patches: jade
-    release_inc: '2'
+    release_inc: '0'
     release_repo_url: null
     release_tag: :{ask}
     ros_distro: jade
