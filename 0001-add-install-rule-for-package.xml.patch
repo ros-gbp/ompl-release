@@ -1,4 +1,4 @@
-From b9d72239219911b227d54b448f0dacdc795dfc8f Mon Sep 17 00:00:00 2001
+From 9e3895a912aab3f4895d03a057255e410c6d9c21 Mon Sep 17 00:00:00 2001
 From: Ioan Sucan <isucan@gmail.com>
 Date: Sat, 15 Feb 2014 20:10:56 -0800
 Subject: [PATCH] add install rule for package.xml
@@ -18,5 +18,5 @@ index b4c17a9..5312fcb 100644
 +
 +install(FILES package.xml DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
 -- 
-2.1.4
+2.7.4
 
