@@ -154,6 +154,10 @@ double ompl::geometric::PathGeometric::smoothness() const
 
 bool ompl::geometric::PathGeometric::check() const
 {
+    // make sure state validity checker is set
+    if (!si_->isSetup())
+        si_->setup();
+
     bool result = true;
     if (states_.size() > 0)
     {
@@ -202,12 +206,12 @@ std::pair<bool, bool> ompl::geometric::PathGeometric::checkAndRepair(unsigned in
     }
 
     // a path with invalid endpoints cannot be fixed; planners should not return such paths anyway
-    const int n1 = states_.size() - 1;
-    if (!si_->isValid(states_[0]) || !si_->isValid(states_[n1]))
+    const int n1 = states_.size();
+    if (!si_->isValid(states_[0]) || !si_->isValid(states_[n1 - 1]))
         return std::make_pair(false, false);
 
-    base::State *temp = NULL;
-    base::UniformValidStateSampler *uvss = NULL;
+    base::State *temp = nullptr;
+    base::UniformValidStateSampler *uvss = nullptr;
     bool result = true;
 
     for (int i = 1 ; i < n1 ; ++i)
@@ -267,7 +271,7 @@ std::pair<bool, bool> ompl::geometric::PathGeometric::checkAndRepair(unsigned in
     // free potentially allocated memory
     if (temp)
         si_->freeState(temp);
-    bool originalValid = uvss == NULL;
+    bool originalValid = uvss == nullptr;
     if (uvss)
         delete uvss;
 

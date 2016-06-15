@@ -8,8 +8,6 @@ if (OMPL_BUILD_DEMOS)
       ompl
       ${Boost_FILESYSTEM_LIBRARY}
       ${Boost_SYSTEM_LIBRARY}
-      ${Boost_THREAD_LIBRARY}
-      ${Boost_DATE_TIME_LIBRARY}
       ${Boost_PROGRAM_OPTIONS_LIBRARY})
   endmacro(add_ompl_demo)
 
@@ -27,10 +25,16 @@ if (OMPL_BUILD_DEMOS)
   aux_source_directory(Koules Koules_SRC)
   add_ompl_demo(demo_Koules ${Koules_SRC})
   add_ompl_demo(demo_PlannerData PlannerData.cpp)
+  add_ompl_demo(demo_ThunderLightning ThunderLightning.cpp)
 
   add_ompl_demo(demo_OptimalPlanning OptimalPlanning.cpp)
   add_ompl_demo(demo_PlannerProgressProperties PlannerProgressProperties.cpp)
   add_ompl_demo(demo_CForestCircleGridBenchmark CForestCircleGridBenchmark.cpp)
+
+  if(OMPL_HAVE_EIGEN3)
+    add_ompl_demo(demo_VectorFieldConservative VFRRT/VectorFieldConservative.cpp)
+    add_ompl_demo(demo_VectorFieldNonconservative VFRRT/VectorFieldNonconservative.cpp)
+  endif()
 
   if (OMPL_EXTENSION_OPENDE)
     add_ompl_demo(demo_OpenDERigidBodyPlanning OpenDERigidBodyPlanning.cpp)
@@ -50,5 +54,8 @@ install(FILES ${OMPL_DEMO_CXX_FILES} ${OMPL_DEMO_PY_FILES}
     DESTINATION "${OMPL_DEMO_INSTALL_DIR}"
     COMPONENT ompl)
 install(DIRECTORY Koules
+    DESTINATION "${OMPL_DEMO_INSTALL_DIR}"
+    COMPONENT ompl)
+install(DIRECTORY VFRRT
     DESTINATION "${OMPL_DEMO_INSTALL_DIR}"
     COMPONENT ompl)

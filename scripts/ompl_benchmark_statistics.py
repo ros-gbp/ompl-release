@@ -37,16 +37,22 @@
 # Author: Mark Moll, Ioan Sucan, Luis G. Torres
 
 from sys import argv, exit
-from os.path import basename, splitext
+from os.path import basename, splitext, exists
+import os
 import sqlite3
 import datetime
-import matplotlib
-matplotlib.use('pdf')
-from matplotlib import __version__ as matplotlibversion
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-import numpy as np
-from math import floor
+plottingEnabled=True
+try:
+    import matplotlib
+    matplotlib.use('pdf')
+    from matplotlib import __version__ as matplotlibversion
+    from matplotlib.backends.backend_pdf import PdfPages
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from math import floor
+except:
+    print('Matplotlib or Numpy was not found; disabling plotting capabilities...')
+    plottingEnabled=False
 from optparse import OptionParser, OptionGroup
 
 # Given a text line, split it into tokens (by space) and return the token
@@ -133,11 +139,34 @@ def readBenchmarkLog(dbname, filenames, moveitformat):
     for filename in filenames:
         print('Processing ' + filename)
         logfile = open(filename,'r')
-        version = readOptionalLogValue(logfile, -1, {0 : "OMPL", 1 : "version"})
+        start_pos = logfile.tell()
+        libname = readOptionalLogValue(logfile, 0, {1 : "version"})
+        if libname == None:
+            libname = "OMPL"
+        logfile.seek(start_pos)
+        version = readOptionalLogValue(logfile, -1, {1 : "version"})
         if version == None:
             # set the version number to make Planner Arena happy
             version = "0.0.0"
+        version = ' '.join([libname, version])
         expname = readRequiredLogValue("experiment name", logfile, -1, {0 : "Experiment"})
+
+        # optional experiment properties
+        nrexpprops = int(readOptionalLogValue(logfile, 0, {-2: "experiment", -1: "properties"}) or 0)
+        expprops = {}
+        for i in range(nrexpprops):
+            entry = logfile.readline().strip().split('=')
+            nameAndType = entry[0].split(' ')
+            expprops[nameAndType[0]] = (entry[1], nameAndType[1])
+
+        # adding columns to experiments table
+        c.execute('PRAGMA table_info(experiments)')
+        columnNames = [col[1] for col in c.fetchall()]
+        for name in sorted(expprops.keys()):
+            # only add column if it doesn't exist
+            if name not in columnNames:
+                c.execute('ALTER TABLE experiments ADD %s %s' % (name, expprops[name][1]))
+
         hostname = readRequiredLogValue("hostname", logfile, -1, {0 : "Running"})
         date = ' '.join(ensurePrefix(logfile.readline(), "Starting").split()[2:])
         if moveitformat:
@@ -168,10 +197,15 @@ def readBenchmarkLog(dbname, filenames, moveitformat):
                 for j in range(len(enum)-1):
                     c.execute('INSERT INTO enums VALUES (?,?,?)',
                         (enum[0],j,enum[j+1]))
-        c.execute('INSERT INTO experiments VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-              (None, expname, totaltime, timelimit, memorylimit, nrruns,
-              version, hostname, cpuinfo, date, rseed, expsetup) )
+
+        # Creating entry in experiments table
+        experimentEntries = [None, expname, totaltime, timelimit, memorylimit, nrruns, version,
+                             hostname, cpuinfo, date, rseed, expsetup]
+        for name in sorted(expprops.keys()): # sort to ensure correct order
+            experimentEntries.append(expprops[name][0])
+        c.execute('INSERT INTO experiments VALUES (' + ','.join('?' for i in experimentEntries) + ')', experimentEntries)
         experimentId = c.lastrowid
+
         numPlanners = int(readRequiredLogValue("planner count", logfile, 0, {-1 : "planners"}))
         for i in range(numPlanners):
             plannerName = logfile.readline()[:-1]
@@ -217,6 +251,7 @@ def readBenchmarkLog(dbname, filenames, moveitformat):
                 values = tuple([experimentId, plannerId] + \
                     [None if len(x) == 0 or x == 'nan' or x == 'inf' else x
                     for x in logfile.readline().split('; ')[:-1]])
+
                 c.execute(insertFmtStr, values)
                 # extract primary key of each run row so we can reference them
                 # in the planner progress data table if needed
@@ -266,8 +301,6 @@ def readBenchmarkLog(dbname, filenames, moveitformat):
 def plotAttribute(cur, planners, attribute, typename):
     """Create a plot for a particular attribute. It will include data for
     all planners that have data for this attribute."""
-    plt.clf()
-    ax = plt.gca()
     labels = []
     measurements = []
     nanCounts = []
@@ -290,6 +323,12 @@ def plotAttribute(cur, planners, attribute, typename):
             else:
                 measurements.append(measurement)
 
+    if len(measurements)==0:
+        print('Skipping "%s": no available measurements' % attribute)
+        return
+
+    plt.clf()
+    ax = plt.gca()
     if typename == 'ENUM':
         width = .5
         measurements = np.transpose(np.vstack(measurements))
@@ -379,7 +418,10 @@ each planner."""
             # plot average with error bars
             plt.errorbar(times, means, yerr=2*stddevs, errorevery=max(1, len(times) // 20))
             ax.legend(plannerNames)
-    plt.show()
+    if len(plannerNames)>0:
+        plt.show()
+    else:
+        plt.clf()
 
 def plotStatistics(dbname, fname):
     """Create a PDF file with box plots for all attributes."""
@@ -397,9 +439,8 @@ def plotStatistics(dbname, fname):
     for col in colInfo:
         if col[2] == 'BOOLEAN' or col[2] == 'ENUM' or \
            col[2] == 'INTEGER' or col[2] == 'REAL':
-            plotAttribute(c, planners, col[1], col[2])
-            pp.savefig(plt.gcf())
-    plt.clf()
+           plotAttribute(c, planners, col[1], col[2])
+           pp.savefig(plt.gcf())
 
     c.execute('PRAGMA table_info(progress)')
     colInfo = c.fetchall()[2:]
@@ -422,7 +463,7 @@ def plotStatistics(dbname, fname):
         plt.figtext(pagex, pagey-0.05, 'Number of averaged runs: %d' % numRuns)
         plt.figtext(pagex, pagey-0.10, "Time limit per run: %g seconds" % experiment[2])
         plt.figtext(pagex, pagey-0.15, "Memory limit per run: %g MB" % experiment[3])
-        pagey -= 0.22
+
     plt.show()
     pp.savefig(plt.gcf())
     pp.close()
@@ -523,15 +564,21 @@ if __name__ == "__main__":
     parser = OptionParser(usage)
     parser.add_option("-d", "--database", dest="dbname", default="benchmark.db",
         help="Filename of benchmark database [default: %default]")
+    parser.add_option("-a", "--append", action="store_true", dest="append", default=False,
+        help="Append data to database (as opposed to overwriting an existing database)")
     parser.add_option("-v", "--view", action="store_true", dest="view", default=False,
         help="Compute the views for best planner configurations")
-    parser.add_option("-p", "--plot", dest="plot", default=None,
-        help="Create a PDF of plots")
+    if plottingEnabled:
+        parser.add_option("-p", "--plot", dest="plot", default=None,
+            help="Create a PDF of plots")
     parser.add_option("-m", "--mysql", dest="mysqldb", default=None,
         help="Save SQLite3 database as a MySQL dump file")
     parser.add_option("--moveit", action="store_true", dest="moveit", default=False,
         help="Log files are produced by MoveIt!")
     (options, args) = parser.parse_args()
+
+    if not options.append and exists(options.dbname) and len(args>0):
+        os.remove(options.dbname)
 
     if len(args)>0:
         readBenchmarkLog(options.dbname, args, options.moveit)

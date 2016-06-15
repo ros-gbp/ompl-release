@@ -61,16 +61,20 @@ Planners in this category only accounts for the geometric and kinematic constrai
     PDST is a planner that has entirely removed the dependency on a distance measure, which is useful in cases where a good distance metric is hard to define. PDST maintains a binary space partitioning such that motions are completely contained within one cell of the partition. The density of motions per cell is used to guide expansion of the tree.
   - [Fast Marching Tree algorithm (FMT∗)](\ref gFMT) \[__experimental__\]<br>
     The FMT∗ algorithm performs a “lazy” dynamic programming recursion on a set of probabilistically-drawn samples to grow a tree of paths, which moves outward in cost-to-come space. Unlike all other planners, the numbers of valid samples needs to be chosen beforehand.
+  - [Bidirectional Fast Marching Tree algorithm (BFMT∗)](\ref gBFMT) \[__experimental__\]<br>
+    Executes two FMT* trees, one from the start and another one from the goal resulting in a faster planner as it explores less space.
 - **Optimizing planners**<br>
   In recent years several sampling-based planning algorithms have been proposed that still provide some optimality guarantees. Typically, an optimal solution is assumed to be shortest path. In OMPL we have a more general framework for expressing the cost of states and paths that allows you to, e.g., maximize the minimum clearance along a path, minimize the mechanical work, or some arbitrary user-defined optimization criterion. See \ref optimalPlanning for more information. Some of the planners below use this general cost framework, but keep in mind that convergence to optimality is **not guaranteed** when optimizing over something other than path length.
   - [PRM*](\ref gPRMstar)<br> An asymptotically optimal version of PRM; _uses the general cost framework._
   - [LazyPRM*](\ref gLazyPRMstar)<br> Lazy version of PRM*; _uses the general cost framework._
   - [RRT*](\ref gRRTstar)<br> An asymptotically optimal version of RRT; _uses the general cost framework._
+  - [Informed RRT*](\ref gInformedRRTstar)<br> A variant of RRT* that uses heuristics to bound the search for optimal solutions. _It uses the general cost framework._
+  - [Batch Informed Trees (BIT*)](\ref gBITstar)<br> An anytime asymptotically optimal algorithm that uses heuristics to order and bound the search for optimal solutions. _It uses the general cost framework._
   - [Lower Bound Tree RRT (LBTRRT)](\ref gLBTRRT) \[__experimental__\]<br> An asymptotically near-optimal version of RRT.
   - [Transition-based RRT (T-RRT)](\ref gTRRT)<br> T-RRT does not give any hard optimality guarantees, but tries to find short, low-cost paths. _It uses the general cost framework._
   - [SPARS](\ref gSPARS)<br> An asymptotically near-optimal roadmap-based planner.
   - [SPARS2](\ref gSPARStwo)<br> An asymptotically near-optimal roadmap-based planner.
-  - [FMT*](\ref gFMT)<br> An asymptotically near-optimal tree-based planner.
+  - [FMT*](\ref gFMT)<br> An asymptotically optimal tree-based planner.
   - [CForest](\ref gCForest)<br> A meta-planner that runs several instances of asymptotically optimal planners in different threads. When one thread finds a better solution path, the states along the path are passed on to the other threads.
   - [AnytimePathShortening (APS)](\ref gAPS)<br> APS is a generic wrapper around one or more geometric motion planners that repeatedly applies [shortcutting](\ref ompl::geometric::PathSimplifier) and [hybridization](\ref ompl::geometric::PathHybridization) to a set of solution paths. Any number and combination of planners can be specified, each is run in a separate thread.
 .

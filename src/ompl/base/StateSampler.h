@@ -42,8 +42,7 @@
 #include "ompl/util/ClassForward.h"
 #include <vector>
 #include <string>
-#include <boost/function.hpp>
-#include <boost/noncopyable.hpp>
+#include <functional>
 
 namespace ompl
 {
@@ -60,12 +59,15 @@ namespace ompl
         /// @endcond
 
         /** \class ompl::base::StateSamplerPtr
-            \brief A boost shared pointer wrapper for ompl::base::StateSampler */
+            \brief A shared pointer wrapper for ompl::base::StateSampler */
 
         /** \brief Abstract definition of a state space sampler. */
-        class StateSampler : private boost::noncopyable
+        class StateSampler
         {
         public:
+            // non-copyable
+            StateSampler(const StateSampler&) = delete;
+            StateSampler& operator=(const StateSampler&) = delete;
 
             /** \brief Constructor */
             StateSampler(const StateSpace *space) : space_(space)
@@ -79,10 +81,24 @@ namespace ompl
             /** \brief Sample a state */
             virtual void sampleUniform(State *state) = 0;
 
-            /** \brief Sample a state near another, within specified distance */
+            /** \brief Sample a state near another, within a neighborhood controlled by a distance parameter.
+
+            Typically, StateSampler-derived classes will return in `state` a
+            state that is uniformly distributed within a ball with radius
+            `distance` defined by the distance function from the corresponding
+            state space. However, this is not guaranteed. For example, the
+            default state sampler for the RealVectorStateSpace returns samples
+            uniformly distributed using L_inf distance, while the default
+            distance function is L_2 distance.
+            */
             virtual void sampleUniformNear(State *state, const State *near, const double distance) = 0;
 
-            /** \brief Sample a state using a Gaussian distribution with given \e mean and standard deviation (\e stdDev) */
+            /** \brief Sample a state using a Gaussian distribution with given \e mean and standard deviation (\e stdDev).
+
+            As with sampleUniform, the implementation of sampleGaussian is
+            specific to the derived class and few assumptions can be made
+            about the distance between `state` and `mean`.
+            */
             virtual void sampleGaussian(State *state, const State *mean, const double stdDev) = 0;
 
         protected:
@@ -181,7 +197,7 @@ namespace ompl
         };
 
         /** \brief Definition of a function that can allocate a state sampler */
-        typedef boost::function<StateSamplerPtr(const StateSpace*)> StateSamplerAllocator;
+        typedef std::function<StateSamplerPtr(const StateSpace*)> StateSamplerAllocator;
     }
 }
 

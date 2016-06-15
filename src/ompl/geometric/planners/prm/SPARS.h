@@ -43,12 +43,12 @@
 #include "ompl/util/Time.h"
 
 #include <boost/range/adaptor/map.hpp>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/pending/disjoint_sets.hpp>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
+#include <functional>
+#include <mutex>
 #include <iostream>
 #include <fstream>
 #include <utility>
@@ -115,20 +115,10 @@ namespace ompl
             typedef unsigned long int VertexIndexType;
 
             /** \brief Hash for storing interface information. */
-            typedef boost::unordered_map<VertexIndexType, std::set<VertexIndexType>, boost::hash<VertexIndexType> > InterfaceHash;
+            typedef std::unordered_map<VertexIndexType, std::set<VertexIndexType> > InterfaceHash;
 
             /** \brief Internal representation of a dense path */
             typedef std::deque<base::State*> DensePath;
-
-            // The InterfaceHash structure is wrapped inside of this struct due to a compilation error on
-            // GCC 4.6 with Boost 1.48.  An implicit assignment operator overload does not compile with these
-            // components, so an explicit overload is given here.
-            // Remove this struct when the minimum Boost requirement is > v1.48.
-            struct InterfaceHashStruct
-            {
-                InterfaceHashStruct& operator=(const InterfaceHashStruct &rhs) { interfaceHash = rhs.interfaceHash; return *this; }
-                InterfaceHash interfaceHash;
-            };
 
             /**
              @brief The constructed roadmap spanner.
@@ -149,7 +139,7 @@ namespace ompl
                 boost::property < boost::vertex_rank_t, VertexIndexType,
                 boost::property < vertex_color_t, GuardType,
                 boost::property < vertex_list_t, std::set<VertexIndexType>,
-                boost::property < vertex_interface_list_t, InterfaceHashStruct > > > > > >,
+                boost::property < vertex_interface_list_t, InterfaceHash > > > > > >,
                 boost::property < boost::edge_weight_t, base::Cost >
             > SpannerGraph;
 
@@ -160,7 +150,7 @@ namespace ompl
             typedef boost::graph_traits<SpannerGraph>::edge_descriptor   SparseEdge;
 
             /** \brief Nearest neighbor structure which works over the SpannerGraph */
-            typedef boost::shared_ptr< NearestNeighbors<SparseVertex> > SparseNeighbors;
+            typedef std::shared_ptr< NearestNeighbors<SparseVertex> > SparseNeighbors;
 
             /**
              @brief The underlying roadmap graph.
@@ -193,7 +183,7 @@ namespace ompl
             typedef boost::graph_traits<DenseGraph>::edge_descriptor   DenseEdge;
 
             /** \brief Nearest neighbor structure which works over the DenseGraph */
-            typedef boost::shared_ptr< NearestNeighbors<DenseVertex> > DenseNeighbors;
+            typedef std::shared_ptr< NearestNeighbors<DenseVertex> > DenseNeighbors;
 
             /** \brief Constructor. */
             SPARS(const base::SpaceInformationPtr &si);
@@ -242,7 +232,7 @@ namespace ompl
             void setDenseNeighbors()
             {
                 nn_.reset(new NN<DenseVertex>());
-                connectionStrategy_.clear();
+                connectionStrategy_ = std::function<const std::vector<DenseVertex>&(const DenseVertex)>();
                 if (isSetup())
                     setup();
             }
@@ -536,7 +526,7 @@ namespace ompl
                                                                                 sparseDJSets_;
 
             /** \brief Function that returns the milestones to attempt connections with */
-            boost::function<const std::vector<DenseVertex>&(const DenseVertex)> connectionStrategy_;
+            std::function<const std::vector<DenseVertex>&(const DenseVertex)> connectionStrategy_;
 
             /** \brief A counter for the number of consecutive failed iterations of the algorithm */
             unsigned int                                                        consecutiveFailures_;
@@ -566,7 +556,7 @@ namespace ompl
             RNG                                                                 rng_;
 
             /** \brief Mutex to guard access to the graphs */
-            mutable boost::mutex                                                graphMutex_;
+            mutable std::mutex                                                  graphMutex_;
 
             /** \brief Objective cost function for PRM graph edges */
             base::OptimizationObjectivePtr                                      opt_;
