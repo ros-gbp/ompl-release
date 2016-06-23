@@ -34,8 +34,8 @@
 
 /* Author: Ryan Luna */
 
-#ifndef OMPL_GEOMETRIC_PLANNERS_EST_EST_
-#define OMPL_GEOMETRIC_PLANNERS_EST_EST_
+#ifndef OMPL_GEOMETRIC_PLANNERS_EST_BIEST_
+#define OMPL_GEOMETRIC_PLANNERS_EST_BIEST_
 
 #include "ompl/geometric/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighbors.h"
@@ -49,7 +49,7 @@ namespace ompl
     {
 
         /**
-           @anchor gEST
+           @anchor gBiEST
            @par Short description
            EST is a tree-based motion planner that attempts to detect
            the less explored area of the space by measuring the density
@@ -62,37 +62,19 @@ namespace ompl
            [[PDF]](http://bigbird.comp.nus.edu.sg/pmwiki/farm/motion/uploads/Site/ijcga96.pdf)
         */
 
-        /** \brief Expansive Space Trees */
-        class EST : public base::Planner
+        /** \brief Bi-directional Expansive Space Trees */
+        class BiEST : public base::Planner
         {
         public:
 
             /** \brief Constructor */
-            EST(const base::SpaceInformationPtr &si);
+            BiEST(const base::SpaceInformationPtr &si);
 
-            virtual ~EST();
+            virtual ~BiEST();
 
             virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
             virtual void clear();
-
-            /** \brief In the process of randomly selecting states in
-                the state space to attempt to go towards, the
-                algorithm may in fact choose the actual goal state, if
-                it knows it, with some probability. This probability
-                is a real number between 0.0 and 1.0; its value should
-                usually be around 0.05 and should not be too large. It
-                is probably a good idea to use the default value. */
-            void setGoalBias(double goalBias)
-            {
-                goalBias_ = goalBias;
-            }
-
-            /** \brief Get the goal bias the planner is using */
-            double getGoalBias() const
-            {
-                return goalBias_;
-            }
 
             /** \brief Set the range the planner is supposed to use.
 
@@ -102,6 +84,10 @@ namespace ompl
             void setRange(double distance)
             {
                 maxDistance_ = distance;
+
+                // Make the neighborhood radius smaller than sampling range to
+                // keep probabilities relatively high for rejection sampling
+                nbrhoodRadius_ = maxDistance_ / 3.0;
             }
 
             /** \brief Get the range the planner is using */
@@ -121,12 +107,12 @@ namespace ompl
             {
             public:
 
-                Motion() : state(NULL), parent(NULL), element(NULL)
+                Motion() : state(NULL), parent(NULL), element(NULL), root(NULL)
                 {
                 }
 
                 /// \brief Constructor that allocates memory for the state
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(NULL), element(NULL)
+                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(NULL), element(NULL), root(NULL)
                 {
                 }
 
@@ -142,6 +128,9 @@ namespace ompl
 
                 /// \brief A pointer to the corresponding element in the probability distribution function
                 PDF<Motion*>::Element *element;
+
+                /// \brief The root node of the tree this motion is in
+                const base::State     *root;
             };
 
             /// \brief Compute distance between motions (actually distance between contained states)
@@ -151,25 +140,27 @@ namespace ompl
             }
 
             /// \brief A nearest-neighbors datastructure containing the tree of motions
-            std::shared_ptr< NearestNeighbors<Motion*> > nn_;
+            std::shared_ptr< NearestNeighbors<Motion*> > nnStart_;
+            std::shared_ptr< NearestNeighbors<Motion*> > nnGoal_;
 
-            /// \brief The set of all states in the tree
-            std::vector<Motion*> motions_;
+            /// \brief The set of all states in the start tree
+            std::vector<Motion*> startMotions_;
+            std::vector<Motion*> goalMotions_;
 
-            /// \brief The probability distribution function over states in the tree
-            PDF<Motion*> pdf_;
+            /// \brief The probability distribution function over states in each tree
+            PDF<Motion*> startPdf_;
+            PDF<Motion*> goalPdf_;
 
             ///\brief Free the memory allocated by this planner
             void freeMemory();
 
             /// \brief Add a motion to the exploration tree
-            void addMotion(Motion *motion, const std::vector<Motion*>& neighbors);
+            void addMotion(Motion* motion, std::vector<Motion*>& motions,
+                           PDF<Motion*>& pdf, std::shared_ptr< NearestNeighbors<Motion*> > nn,
+                           const std::vector<Motion*>& neighbors);
 
             /// \brief Valid state sampler
             base::ValidStateSamplerPtr   sampler_;
-
-            /// \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available)
-            double                       goalBias_;
 
             /// \brief The maximum length of a motion to be added to a tree
             double                       maxDistance_;
@@ -177,11 +168,11 @@ namespace ompl
             /// \brief The radius considered for neighborhood
             double                       nbrhoodRadius_;
 
-            /** \brief The random number generator */
+            /// \brief The random number generator
             RNG                          rng_;
 
-            /// \brief The most recent goal motion.  Used for PlannerData computation
-            Motion                       *lastGoalMotion_;
+            /// \brief The pair of states in each tree connected during planning.  Used for PlannerData computation
+            std::pair<base::State*, base::State*>      connectionPoint_;
         };
 
     }
