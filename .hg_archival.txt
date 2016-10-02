@@ -1,4 +1,4 @@
 repo: acc0a7de5b906703869dd1e58b000b426d18be78
-node: 3f893f5be92ff33b0d9a0133501fefca7a6d0373
+node: a717190965a7a1e29ae9f0599ceef6801f86a0b5
 branch: default
-tag: 1.2.0
+tag: 1.2.1
