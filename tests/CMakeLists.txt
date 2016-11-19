@@ -22,7 +22,7 @@ if (OMPL_BUILD_TESTS)
     add_ompl_test(test_pdf datastructures/pdf.cpp)
 
     # Test utilities
-#    add_ompl_test(test_random util/random/random.cpp)
+    add_ompl_test(test_random util/random/random.cpp)
     add_ompl_test(test_machine_specs benchmark/machine_specs.cpp)
 
     # Test base code
