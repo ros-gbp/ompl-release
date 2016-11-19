@@ -1,0 +1,12 @@
+Source: ros-kinetic-ompl
+Section: misc
+Priority: extra
+Maintainer: Ioan Sucan <isucan@google.com>
+Build-Depends: debhelper (>= 9.0.0), cmake, libboost-all-dev, libeigen3-dev
+Homepage: http://ompl.kavrakilab.org
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-ompl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libboost-all-dev, libeigen3-dev
+Description: OMPL is a free sampling-based motion planning library.
