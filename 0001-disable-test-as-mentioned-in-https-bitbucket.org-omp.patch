@@ -1,0 +1,26 @@
+From 037dea57af080262f447da59a1312a3c3c5b7334 Mon Sep 17 00:00:00 2001
+From: Vincent Rabaud <vincent.rabaud@gmail.com>
+Date: Sat, 19 Nov 2016 19:02:09 +0100
+Subject: [PATCH] disable test as mentioned in
+ https://bitbucket.org/ompl/ompl/issues/293/ompl-build-timeout-on-ros-buildfarm
+
+---
+ tests/CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
+index f18a96a..73a5852 100644
+--- a/tests/CMakeLists.txt
++++ b/tests/CMakeLists.txt
+@@ -22,7 +22,7 @@ if (OMPL_BUILD_TESTS)
+     add_ompl_test(test_pdf datastructures/pdf.cpp)
+ 
+     # Test utilities
+-    add_ompl_test(test_random util/random/random.cpp)
++#    add_ompl_test(test_random util/random/random.cpp)
+     add_ompl_test(test_machine_specs benchmark/machine_specs.cpp)
+ 
+     # Test base code
+-- 
+2.7.4
+
