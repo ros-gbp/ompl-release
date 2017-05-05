@@ -3,7 +3,7 @@
   <name>ompl</name>
   <version>:{version}</version>
   <description>OMPL is a free sampling-based motion planning library.</description>
-  <maintainer email="isucan@google.com">Ioan Sucan</maintainer>
+  <maintainer email="moll@rice.edu">Mark Moll</maintainer>
   <license>BSD</license>
 
   <url type="website">http://ompl.kavrakilab.org</url>
