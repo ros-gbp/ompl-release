@@ -39,12 +39,10 @@
 # coding: utf-8
 
 import logging
-from os.path import exists, join, isdir
-from os import getenv
-import subprocess
-from sys import platform
+import time
+import threading
+import sys
 from pygccxml import declarations, parser
-from pygccxml.utils import xml_generator
 from pyplusplus import module_builder, messages
 from pyplusplus.module_builder import call_policies
 from pyplusplus.decl_wrappers import print_declarations
@@ -108,6 +106,17 @@ def returns_reference(decl):
     c = decl.return_type.decl_string[-1]
     return c=='&' or c=='*'
 
+class Heartbeat(object):
+    def __init__(self, delay):
+        self.start = time.time()
+        self.delay = delay
+    def __call__(self):
+        while True:
+            time.sleep(self.delay)
+            t = time.time()
+            print('still alive after %g seconds!' % (t - self.start))
+            sys.stdout.flush()
+
 class code_generator_t(object):
     """The base class code generator."""
 
@@ -115,7 +124,11 @@ class code_generator_t(object):
         """Constructor.
         @name name of the python module
         @dep name of another module this module depends on"""
-        module_builder.set_logger_level( logging.INFO )
+        # create a separate thread that prints out a message every 60 seconds
+        # to let build bots know the build is not stuck.
+        self.heartbeat = threading.Thread(target = Heartbeat(60))
+        self.heartbeat.daemon = True
+        self.heartbeat.start()
         xml_generator_config = parser.load_xml_generator_configuration("@CASTXMLCONFIGPATH@")
         self.mb = module_builder.module_builder_t(
             files = [ 'bindings/' + name + '.h' ],
