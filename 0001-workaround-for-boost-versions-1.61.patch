@@ -1,0 +1,81 @@
+From dd20dc6d6031ec23c91dc3079a5c75e9d15196f6 Mon Sep 17 00:00:00 2001
+From: Mark Moll <mmoll@rice.edu>
+Date: Thu, 25 May 2017 17:55:07 -0500
+Subject: [PATCH] workaround for boost versions < 1.61
+
+---
+ tests/util/random/random.cpp | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/tests/util/random/random.cpp b/tests/util/random/random.cpp
+index b3a9134..69e19a7 100644
+--- a/tests/util/random/random.cpp
++++ b/tests/util/random/random.cpp
+@@ -36,6 +36,7 @@
+ 
+ #define BOOST_TEST_MODULE "Random"
+ #include <boost/test/unit_test.hpp>
++#include <boost/version.hpp>
+ 
+ #include "ompl/config.h"
+ #include "ompl/util/RandomNumbers.h"
+@@ -44,6 +45,14 @@
+ #include <vector>
+ #include <cstdio>
+ 
++// workaround for bug in boost versions < 1.61
++// see fix at https://github.com/boostorg/random/commit/29e8bd59a24ac2f6023c3706916f829b0d416297
++#if BOOST_VERSION >= 106100
++#define DIMSTART 1u
++#else
++#define DIMSTART 2u
++#endif
++
+ using namespace ompl;
+ 
+ struct SetSeedTo1
+@@ -206,7 +215,6 @@ BOOST_AUTO_TEST_CASE(NormalReals)
+     BOOST_OMPL_EXPECT_NEAR(avgNormalReals(10.0, 1.0), 10.0, errNormal(1.0));
+ }
+ 
+-
+ BOOST_AUTO_TEST_CASE(SampleUnitSphere)
+ {
+     // Variables
+@@ -220,7 +228,7 @@ BOOST_AUTO_TEST_CASE(SampleUnitSphere)
+     double testTol = 10.0*std::numeric_limits<double>::epsilon();
+ 
+     // Iterate over a sequence of dimensions
+-    for (unsigned int dim = 1u; dim <= numDims; ++dim)
++    for (unsigned int dim = DIMSTART; dim <= numDims; ++dim)
+     {
+         // Iterate over a sequence of random samples
+         for (unsigned int j = 0u; j < numSamples; ++j)
+@@ -295,7 +303,6 @@ BOOST_AUTO_TEST_CASE(SampleBall)
+ }
+ 
+ #if OMPL_HAVE_EIGEN3
+-
+ BOOST_AUTO_TEST_CASE(SamplePhsSurface)
+ {
+     // Variables
+@@ -309,7 +316,7 @@ BOOST_AUTO_TEST_CASE(SamplePhsSurface)
+     double testTol = 1E5*std::numeric_limits<double>::epsilon();
+ 
+     // Iterate over a sequence of dimensions
+-    for (unsigned int dim = 1u; dim <= numDims; ++dim)
++    for (unsigned int dim = DIMSTART; dim <= numDims; ++dim)
+     {
+         // Variables
+         // The foci
+@@ -352,7 +359,6 @@ BOOST_AUTO_TEST_CASE(SamplePhsSurface)
+     }
+ }
+ 
+-
+ BOOST_AUTO_TEST_CASE(SampleInPhs)
+ {
+     // Variables
+-- 
+2.7.4
+
