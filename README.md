@@ -1,3 +1,26 @@
+## ompl (lunar) - 1.3.1-3
+
+The packages in the `ompl` repository were released into the `lunar` distro by running `/usr/bin/bloom-release ompl -r lunar -t lunar` on `Thu, 25 May 2017 22:58:57 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.3.1-2`
+- old version: `1.3.1-2`
+- new version: `1.3.1-3`
+
+Versions of tools used:
+
+- bloom version: `0.5.26`
+- catkin_pkg version: `0.3.1`
+- rosdep version: `0.11.5`
+- rosdistro version: `0.6.2`
+- vcstools version: `0.1.39`
+
+
 ## ompl (lunar) - 1.3.1-2
 
 The packages in the `ompl` repository were released into the `lunar` distro by running `/usr/bin/bloom-release ompl -r lunar -t lunar` on `Wed, 24 May 2017 00:38:05 -0000`
