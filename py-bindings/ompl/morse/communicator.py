@@ -200,7 +200,7 @@ def goalRegionSatisfied():
 #    Returns [sum_of_Nargs, [cbm0, cbM0, ...], (component_name,service_name,Nargs), ...]
 def getControlDescription():
 
-    settings = bpy.context.scene.objects['__settings']
+    settings = bpy.context.scene.objects['ompl_settings']
     desc = [0, []]
     # Query the request_manager for a list of services
     for name, inst in bge.logic.morsedata.morse_services.request_managers().items():
@@ -208,12 +208,15 @@ def getControlDescription():
             for cname, services in inst.services().items():
                 if cname.endswith('Motion'):
                     for svc in services:
+                        if svc == 'set_property':
+                            continue
                         # Add info to the description
                         n = len(inspect.getargspec(inst._services[cname,svc][0])[0]) - 1
-                        if n > 0: # Services like stop() aren't really helpful to OMPL
-                            # Fill it in backwards
-                            desc = desc[:2] + [(cname, svc, n)] + desc[2:]
-                            desc[0] += n
+                        if n == 0: # Services like stop() aren't really helpful to OMPL
+                            continue
+                        # Fill it in backwards
+                        desc = desc[:2] + [(cname, svc, n)] + desc[2:]
+                        desc[0] += n
 
     # Fill in the control bounds at the beginning
     for i in range(min(16,desc[0])):
@@ -229,7 +232,7 @@ def getControlDescription():
 def getRigidBodiesBounds():
 
     # Check whether user set the autopb flag
-    settings = bpy.context.scene.objects['__settings']
+    settings = bpy.context.scene.objects['ompl_settings']
     if settings['autopb']:
 
         # Find min and max values for all objects' bounding box vertices
@@ -264,6 +267,9 @@ def getRigidBodiesBounds():
         mZ -= dz
         MZ += dz
 
+        print("OMPL: Inferred position bounds [[%f,%f],[%f,%f],[%f,%f]]"
+              % (mX,MX,mY,MY,mZ,MZ))
+        
     else:
 
         # Use user-specified positional bounds
@@ -315,11 +321,12 @@ def endSimulation():
     # Stop the game engine loop
     bge.logic.endGame()
 
-    mode = bpy.data.objects['__settings']['Mode']
+    mode = bpy.data.objects['ompl_settings']['Mode']
     if mode == 'PLAY':
 
         # We need to clean up the created animation file
-        animpath = bpy.data.objects['__settings']['Animpath']
+        animpath = bpy.data.objects['ompl_settings']['Animpath']
+        animtmppath = animpath + ".tmp"
 
         # Prevent autostart
         bpy.context.scene.game_settings.use_auto_start = False
@@ -327,11 +334,11 @@ def endSimulation():
         # Mark unwanted objects for deletion; set the active camera
         toDelete = []
         for obj in bpy.context.scene.objects:
-            if obj.name in ['Scene_Script_Holder','CameraFP','__settings'] or \
-              obj.name.endswith('.goalPose') or obj.name.endswith('.goalRegion') or \
-              obj.name.endswith('.goalRot'):
+            if obj.name in ['Scene_Script_Holder','CameraFP',
+                            'ompl_settings','MORSE.Properties',
+                            '__morse_dt_analyser']:
                 toDelete.append(obj)
-            elif obj.name == "Camera":
+            elif obj.name == 'Camera':
                 bpy.context.scene.camera = obj
             for child in obj.children:
                 if child.name.endswith('Motion'):
@@ -340,8 +347,16 @@ def endSimulation():
         for obj in toDelete:
             _recurseDelete(obj)
 
-        # Save animation curves to specified file
-        bpy.ops.wm.save_mainfile(filepath=animpath, check_existing=False)
+        # Delete text files in the blend file.
+        for txt in ['communicator.py', 'component_config.py',
+                    'setup_path.py', 'Info.txt']:
+            txt = bpy.data.texts.get(txt)
+            if txt:
+                bpy.data.texts.remove(txt)
+            
+        # Save animation curves to tmp file
+        print("OMPL: Writing to tmp file '" + animtmppath + "'")
+        bpy.ops.wm.save_mainfile(filepath=animtmppath, check_existing=False)
 
     # Signal to exit loop
     return False
@@ -400,7 +415,7 @@ def spawn_planner():
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('localhost', 50007))
 
-    mode = bpy.data.objects['__settings']['Mode']
+    mode = bpy.data.objects['ompl_settings']['Mode']
     if mode == 'PLAN':
         # Spawn planner.py
         f = '/planner.py'
@@ -410,7 +425,7 @@ def spawn_planner():
 
     if mode != 'QUERY':
         # Pass the name of the output (or input) file
-        subprocess.Popen(['env', sys.executable, '-P', OMPL_DIR + f, '--', bpy.data.objects['__settings']['Outpath']])
+        subprocess.Popen(['env', sys.executable, '-P', OMPL_DIR + f, '--', bpy.data.objects['ompl_settings']['Outpath']])
 
     # Make a connection
     s.listen(0)
