@@ -48,6 +48,8 @@ import morse.blender
 
 OMPL_DIR=os.path.dirname(__file__)
 
+print("OMPL builder script invocation: " + str(sys.argv))
+
 # Determine the mode to use (third argument)
 mode = sys.argv[sys.argv.index('--') + 3]
 
@@ -147,11 +149,7 @@ for obj in bpy.context.scene.objects:
         # True means "no sleeping"
         obj.game.use_sleep = True
 
-# Get '__settings' object so we can set up some properties
-settings = bpy.data.objects['__settings']
-settings.hide = False
-settings.hide_render = False
-settings.hide_select = False
+settings = bpy.data.objects['ompl_settings']
 
 # Determine the solution path file to use (second argument)
 outpath = sys.argv[sys.argv.index('--') + 2]
@@ -165,11 +163,9 @@ if mode == 'PLAY':
     bpy.context.scene.game_settings.use_animation_record = True
 
 bpy.ops.object.select_all(action='DESELECT')
-context_override = {"active_object":settings,"object":settings,"blend_data":bpy.data,
-                    "scene":bpy.context.scene,"edit_object":settings}
 
 # Add 'Tick' sensor
-bpy.ops.logic.sensor_add(context_override, type='DELAY', name='Tick')
+bpy.ops.logic.sensor_add(type='DELAY', name='Tick', object='ompl_settings')
 tick = settings.game.sensors['Tick']
 tick.use_repeat = True
 
@@ -177,7 +173,7 @@ tick.use_repeat = True
 bpy.ops.text.open(filepath=OMPL_DIR + "/communicator.py")
 
 # Add 'Comm' controller for the script
-bpy.ops.logic.controller_add(context_override, type='PYTHON', name='Comm')
+bpy.ops.logic.controller_add(type='PYTHON', name='Comm', object='ompl_settings')
 comm = settings.game.controllers['Comm']
 comm.mode = 'MODULE'
 comm.module = 'communicator.main'
