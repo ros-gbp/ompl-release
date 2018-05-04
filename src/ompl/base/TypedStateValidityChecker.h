@@ -45,12 +45,14 @@ namespace ompl
 {
     namespace base
     {
+
         template <typename SpaceType_>
         class TypedStateValidityChecker : public StateValidityChecker
         {
         public:
-            using SpaceType = SpaceType_;
-            using SpaceInformationType = TypedSpaceInformation<SpaceType>;
+
+            typedef SpaceType_ SpaceType;
+            typedef TypedSpaceInformation<SpaceType> SpaceInformationType;
 
             TypedStateValidityChecker(SpaceInformationType *si) : StateValidityChecker(si)
             {
@@ -60,26 +62,28 @@ namespace ompl
             {
             }
 
-            SpaceInformationType *getTypedSpaceInformation() const
+            SpaceInformationType* getTypedSpaceInformation() const
             {
-                return static_cast<SpaceInformationType *>(si_);
+                return static_cast<SpaceInformationType*>(si_);
             }
 
-            SpaceType *getTypedStateSpace() const
+            SpaceType* getTypedStateSpace() const
             {
                 return getTypedSpaceInformation()->getTypedStateSpace();
             }
 
-            static typename SpaceType::StateType *state_as(State *s)
+            static typename SpaceType::StateType* state_as(State *s)
             {
                 return SpaceInformationType::state_as(s);
             }
 
-            static const typename SpaceType::StateType *state_as(const State *s)
+            static const typename SpaceType::StateType* state_as(const State *s)
             {
                 return SpaceInformationType::state_as(s);
             }
         };
+
     }
+
 }
 #endif

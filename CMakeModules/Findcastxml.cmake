@@ -19,12 +19,7 @@ if (CASTXML)
         endif()
     endif()
 
-    set(CASTXMLCONFIG "[xml_generator]
-xml_generator=castxml
-xml_generator_path=${CASTXML}
-compiler=${CASTXMLCOMPILER}
-compiler_path=${CMAKE_CXX_COMPILER}
-")
+    set(CASTXMLCONFIG "[gccxml]\nxml_generator=castxml\nxml_generator_path=${CASTXML}\ncompiler=${CASTXMLCOMPILER}\ncompiler_path=${CMAKE_CXX_COMPILER}\n")
 
     set(_candidate_include_path
         "${OMPL_INCLUDE_DIR}"

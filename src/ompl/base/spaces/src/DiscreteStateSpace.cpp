@@ -41,15 +41,17 @@
 
 void ompl::base::DiscreteStateSampler::sampleUniform(State *state)
 {
-    state->as<DiscreteStateSpace::StateType>()->value = rng_.uniformInt(
-        space_->as<DiscreteStateSpace>()->getLowerBound(), space_->as<DiscreteStateSpace>()->getUpperBound());
+    state->as<DiscreteStateSpace::StateType>()->value =
+        rng_.uniformInt(space_->as<DiscreteStateSpace>()->getLowerBound(),
+                        space_->as<DiscreteStateSpace>()->getUpperBound());
 }
 
 void ompl::base::DiscreteStateSampler::sampleUniformNear(State *state, const State *near, const double distance)
 {
-    const auto d = (int)floor(distance + 0.5);
-    state->as<DiscreteStateSpace::StateType>()->value = rng_.uniformInt(
-        near->as<DiscreteStateSpace::StateType>()->value - d, near->as<DiscreteStateSpace::StateType>()->value + d);
+    const int d = (int)floor(distance + 0.5);
+    state->as<DiscreteStateSpace::StateType>()->value =
+        rng_.uniformInt(near->as<DiscreteStateSpace::StateType>()->value - d,
+                        near->as<DiscreteStateSpace::StateType>()->value + d);
     space_->enforceBounds(state);
 }
 
@@ -84,8 +86,9 @@ void ompl::base::DiscreteStateSpace::enforceBounds(State *state) const
 {
     if (state->as<StateType>()->value < lowerBound_)
         state->as<StateType>()->value = lowerBound_;
-    else if (state->as<StateType>()->value > upperBound_)
-        state->as<StateType>()->value = upperBound_;
+    else
+        if (state->as<StateType>()->value > upperBound_)
+            state->as<StateType>()->value = upperBound_;
 }
 
 bool ompl::base::DiscreteStateSpace::satisfiesBounds(const State *state) const
@@ -131,17 +134,17 @@ void ompl::base::DiscreteStateSpace::interpolate(const State *from, const State 
 
 ompl::base::StateSamplerPtr ompl::base::DiscreteStateSpace::allocDefaultStateSampler() const
 {
-    return std::make_shared<DiscreteStateSampler>(this);
+    return StateSamplerPtr(new DiscreteStateSampler(this));
 }
 
-ompl::base::State *ompl::base::DiscreteStateSpace::allocState() const
+ompl::base::State* ompl::base::DiscreteStateSpace::allocState() const
 {
     return new StateType();
 }
 
 void ompl::base::DiscreteStateSpace::freeState(State *state) const
 {
-    delete static_cast<StateType *>(state);
+    delete static_cast<StateType*>(state);
 }
 
 void ompl::base::DiscreteStateSpace::registerProjections()
@@ -149,16 +152,17 @@ void ompl::base::DiscreteStateSpace::registerProjections()
     class DiscreteDefaultProjection : public ProjectionEvaluator
     {
     public:
+
         DiscreteDefaultProjection(const StateSpace *space) : ProjectionEvaluator(space)
         {
         }
 
-        unsigned int getDimension() const override
+        virtual unsigned int getDimension() const
         {
             return 1;
         }
 
-        void defaultCellSizes() override
+        virtual void defaultCellSizes()
         {
             bounds_.resize(1);
             bounds_.low[0] = space_->as<DiscreteStateSpace>()->lowerBound_;
@@ -167,13 +171,13 @@ void ompl::base::DiscreteStateSpace::registerProjections()
             cellSizes_[0] = 1.0;
         }
 
-        void project(const State *state, EuclideanProjection &projection) const override
+        virtual void project(const State *state, EuclideanProjection &projection) const
         {
             projection(0) = state->as<DiscreteStateSpace::StateType>()->value;
         }
     };
 
-    registerDefaultProjection(std::make_shared<DiscreteDefaultProjection>(this));
+    registerDefaultProjection(ProjectionEvaluatorPtr(dynamic_cast<ProjectionEvaluator*>(new DiscreteDefaultProjection(this))));
 }
 
 void ompl::base::DiscreteStateSpace::setup()
@@ -186,7 +190,7 @@ void ompl::base::DiscreteStateSpace::setup()
 void ompl::base::DiscreteStateSpace::printState(const State *state, std::ostream &out) const
 {
     out << "DiscreteState [";
-    if (state != nullptr)
+    if (state)
         out << state->as<StateType>()->value;
     else
         out << "nullptr";
@@ -195,6 +199,5 @@ void ompl::base::DiscreteStateSpace::printState(const State *state, std::ostream
 
 void ompl::base::DiscreteStateSpace::printSettings(std::ostream &out) const
 {
-    out << "Discrete state space '" << getName() << "' with bounds [" << lowerBound_ << ", " << upperBound_ << "]"
-        << std::endl;
+    out << "Discrete state space '" << getName() << "' with bounds [" << lowerBound_ << ", " << upperBound_ << "]" << std::endl;
 }

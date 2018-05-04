@@ -60,14 +60,14 @@ public:
         : GridDecomposition(length, 2, bounds)
     {
     }
-    void project(const ob::State* s, std::vector<double>& coord) const override
+    virtual void project(const ob::State* s, std::vector<double>& coord) const
     {
         coord.resize(2);
         coord[0] = s->as<ob::SE2StateSpace::StateType>()->getX();
         coord[1] = s->as<ob::SE2StateSpace::StateType>()->getY();
     }
 
-    void sampleFullState(const ob::StateSamplerPtr& sampler, const std::vector<double>& coord, ob::State* s) const override
+    virtual void sampleFullState(const ob::StateSamplerPtr& sampler, const std::vector<double>& coord, ob::State* s) const
     {
         sampler->sampleUniform(s);
         s->as<ob::SE2StateSpace::StateType>()->setXY(coord[0], coord[1]);
@@ -78,13 +78,13 @@ bool isStateValid(const oc::SpaceInformation *si, const ob::State *state)
 {
     //    ob::ScopedState<ob::SE2StateSpace>
     // cast the abstract state type to the type we expect
-    const auto *se2state = state->as<ob::SE2StateSpace::StateType>();
+    const ob::SE2StateSpace::StateType *se2state = state->as<ob::SE2StateSpace::StateType>();
 
     // extract the first component of the state and cast it to what we expect
-    const auto *pos = se2state->as<ob::RealVectorStateSpace::StateType>(0);
+    const ob::RealVectorStateSpace::StateType *pos = se2state->as<ob::RealVectorStateSpace::StateType>(0);
 
     // extract the second component of the state and cast it to what we expect
-    const auto *rot = se2state->as<ob::SO2StateSpace::StateType>(1);
+    const ob::SO2StateSpace::StateType *rot = se2state->as<ob::SO2StateSpace::StateType>(1);
 
     // check validity of state defined by pos & rot
 
@@ -95,7 +95,7 @@ bool isStateValid(const oc::SpaceInformation *si, const ob::State *state)
 
 void propagate(const ob::State *start, const oc::Control *control, const double duration, ob::State *result)
 {
-    const auto *se2state = start->as<ob::SE2StateSpace::StateType>();
+    const ob::SE2StateSpace::StateType *se2state = start->as<ob::SE2StateSpace::StateType>();
     const double* pos = se2state->as<ob::RealVectorStateSpace::StateType>(0)->values;
     const double rot = se2state->as<ob::SO2StateSpace::StateType>(1)->value;
     const double* ctrl = control->as<oc::RealVectorControlSpace::ControlType>()->values;
@@ -107,38 +107,38 @@ void propagate(const ob::State *start, const oc::Control *control, const double 
         rot    + ctrl[1] * duration);
 }
 
-void plan()
+void plan(void)
 {
 
     // construct the state space we are planning in
-    auto space(std::make_shared<ob::SE2StateSpace>());
+    ob::StateSpacePtr space(new ob::SE2StateSpace());
 
     // set the bounds for the R^2 part of SE(2)
     ob::RealVectorBounds bounds(2);
     bounds.setLow(-1);
     bounds.setHigh(1);
 
-    space->setBounds(bounds);
+    space->as<ob::SE2StateSpace>()->setBounds(bounds);
 
     // create a control space
-    auto cspace(std::make_shared<oc::RealVectorControlSpace>(space, 2));
+    oc::ControlSpacePtr cspace(new oc::RealVectorControlSpace(space, 2));
 
     // set the bounds for the control space
     ob::RealVectorBounds cbounds(2);
     cbounds.setLow(-0.3);
     cbounds.setHigh(0.3);
 
-    cspace->setBounds(cbounds);
+    cspace->as<oc::RealVectorControlSpace>()->setBounds(cbounds);
 
     // construct an instance of  space information from this control space
-    auto si(std::make_shared<oc::SpaceInformation>(space, cspace));
+    oc::SpaceInformationPtr si(new oc::SpaceInformation(space, cspace));
 
     // set state validity checking for this space
-    si->setStateValidityChecker(
-        [&si](const ob::State *state) { return isStateValid(si.get(), state); });
+    si->setStateValidityChecker(std::bind(&isStateValid, si.get(),  std::placeholders::_1));
 
     // set the state propagation routine
-    si->setStatePropagator(propagate);
+    si->setStatePropagator(std::bind(&propagate, std::placeholders::_1,
+        std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
     // create a start state
     ob::ScopedState<ob::SE2StateSpace> start(space);
@@ -151,18 +151,18 @@ void plan()
     goal->setX(0.5);
 
     // create a problem instance
-    auto pdef(std::make_shared<ob::ProblemDefinition>(si));
+    ob::ProblemDefinitionPtr pdef(new ob::ProblemDefinition(si));
 
     // set the start and goal states
     pdef->setStartAndGoalStates(start, goal, 0.1);
 
     // create a planner for the defined space
-    //auto planner(std::make_shared<oc::RRT>(si));
-    //auto planner(std::make_shared<oc::EST>(si));
-    //auto planner(std::make_shared<oc::KPIECE1>(si));
-    auto decomp(std::make_shared<MyDecomposition>(32, bounds));
-    auto planner(std::make_shared<oc::SyclopEST>(si, decomp));
-    //auto planner(std::make_shared<oc::SyclopRRT>(si, decomp));
+    //ob::PlannerPtr planner(new oc::RRT(si));
+    //ob::PlannerPtr planner(new oc::EST(si));
+    //ob::PlannerPtr planner(new oc::KPIECE1(si));
+    oc::DecompositionPtr decomp(new MyDecomposition(32, bounds));
+    ob::PlannerPtr planner(new oc::SyclopEST(si, decomp));
+    //ob::PlannerPtr planner(new oc::SyclopRRT(si, decomp));
 
     // set the problem we are trying to solve for the planner
     planner->setProblemDefinition(pdef);
@@ -177,8 +177,8 @@ void plan()
     // print the problem settings
     pdef->print(std::cout);
 
-    // attempt to solve the problem within ten seconds of planning time
-    ob::PlannerStatus solved = planner->ob::Planner::solve(10.0);
+    // attempt to solve the problem within one second of planning time
+    ob::PlannerStatus solved = planner->solve(10.0);
 
     if (solved)
     {
@@ -195,37 +195,38 @@ void plan()
 }
 
 
-void planWithSimpleSetup()
+void planWithSimpleSetup(void)
 {
     // construct the state space we are planning in
-    auto space(std::make_shared<ob::SE2StateSpace>());
+    ob::StateSpacePtr space(new ob::SE2StateSpace());
 
     // set the bounds for the R^2 part of SE(2)
     ob::RealVectorBounds bounds(2);
     bounds.setLow(-1);
     bounds.setHigh(1);
 
-    space->setBounds(bounds);
+    space->as<ob::SE2StateSpace>()->setBounds(bounds);
 
     // create a control space
-    auto cspace(std::make_shared<oc::RealVectorControlSpace>(space, 2));
+    oc::ControlSpacePtr cspace(new oc::RealVectorControlSpace(space, 2));
 
     // set the bounds for the control space
     ob::RealVectorBounds cbounds(2);
     cbounds.setLow(-0.3);
     cbounds.setHigh(0.3);
 
-    cspace->setBounds(cbounds);
+    cspace->as<oc::RealVectorControlSpace>()->setBounds(cbounds);
 
     // define a simple setup class
     oc::SimpleSetup ss(cspace);
 
     // set the state propagation routine
-    ss.setStatePropagator(propagate);
+    ss.setStatePropagator(std::bind(&propagate, std::placeholders::_1,
+        std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
 
     // set state validity checking for this space
-    ss.setStateValidityChecker(
-        [&ss](const ob::State *state) { return isStateValid(ss.getSpaceInformation().get(), state); });
+    ss.setStateValidityChecker(std::bind(&isStateValid,
+        ss.getSpaceInformation().get(), std::placeholders::_1));
 
     // create a start state
     ob::ScopedState<ob::SE2StateSpace> start(space);
@@ -243,7 +244,7 @@ void planWithSimpleSetup()
     // set the start and goal states
     ss.setStartAndGoalStates(start, goal, 0.05);
 
-    // ss.setPlanner(std::make_shared<oc::PDST>(ss.getSpaceInformation()));
+    // ss.setPlanner(ob::PlannerPtr(new oc::PDST(ss.getSpaceInformation())));
     // ss.getSpaceInformation()->setMinMaxControlDuration(1,100);
     // attempt to solve the problem within one second of planning time
     ob::PlannerStatus solved = ss.solve(10.0);
@@ -259,7 +260,7 @@ void planWithSimpleSetup()
         std::cout << "No solution found" << std::endl;
 }
 
-int main(int /*argc*/, char ** /*argv*/)
+int main(int, char **)
 {
     std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 

@@ -82,14 +82,15 @@ KoulesStateSpace::KoulesStateSpace(unsigned int numKoules)
     }
 }
 
-void KoulesStateSpace::registerProjections()
+void KoulesStateSpace::registerProjections(void)
 {
-    registerDefaultProjection(std::make_shared<KoulesProjection>(this, 3));
-    registerProjection("PDSTProjection", std::make_shared<KoulesProjection>(this, (getDimension() - 1) / 2 + 1));
+    registerDefaultProjection(ob::ProjectionEvaluatorPtr(new KoulesProjection(this, (getDimension() - 1) / 4 + 1)));
+    registerProjection("PDSTProjection", ob::ProjectionEvaluatorPtr(
+        new KoulesProjection(this, (getDimension() - 1) / 2 + 1)));
 }
 
 bool KoulesStateSpace::isDead(const ompl::base::State* state, unsigned int i) const
 {
-    const auto* s = static_cast<const StateType*>(state);
-    return s->values[i != 0u ? 4 * i + 1 : 0] == -2. * kouleRadius;
+    const StateType* s = static_cast<const StateType*>(state);
+    return s->values[i ? 4 * i + 1 : 0] == -2. * kouleRadius;
 }

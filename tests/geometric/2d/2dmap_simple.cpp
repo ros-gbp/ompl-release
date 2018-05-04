@@ -49,14 +49,16 @@ static const double SOLUTION_TIME = 2.0;
 class TestPlanner
 {
 public:
-    TestPlanner()
+    TestPlanner(void)
     {
         msg::setLogLevel(msg::LOG_ERROR);
     }
 
-    virtual ~TestPlanner() = default;
+    virtual ~TestPlanner(void)
+    {
+    }
 
-    virtual bool execute(Environment2D &env, bool show = false, double *time = nullptr, double *pathLength = nullptr)
+    virtual bool execute(Environment2D &env, bool show = false, double *time = NULL, double *pathLength = NULL)
     {
         bool result = true;
 
@@ -69,7 +71,7 @@ public:
         if (setup.solve(SOLUTION_TIME))
         {
             ompl::time::duration elapsed = ompl::time::now() - startTime;
-            if (time != nullptr)
+            if (time)
                 *time += ompl::time::seconds(elapsed);
             if (show)
                 printf("Found solution in %f seconds!\n", ompl::time::seconds(elapsed));
@@ -82,7 +84,7 @@ public:
             setup.getPathSimplifier()->reduceVertices(path);
             elapsed = ompl::time::now() - startTime;
 
-            if (time != nullptr)
+            if (time)
                 *time += ompl::time::seconds(elapsed);
 
             if (show)
@@ -91,7 +93,7 @@ public:
             /* fill in values that were linearly interpolated */
             path.interpolate(path.getStateCount() * 2);
 
-            if (pathLength != nullptr)
+            if (pathLength)
                 *pathLength += path.length();
 
             if (show)
@@ -104,8 +106,8 @@ public:
             /* display the solution */
             for (unsigned int i = 0 ; i < path.getStateCount() ; ++i)
             {
-                auto x = (int)path.getState(i)->as<base::CompoundState>()->as<base::RealVectorStateSpace::StateType>(0)->values[0];
-                auto y = (int)path.getState(i)->as<base::CompoundState>()->as<base::RealVectorStateSpace::StateType>(1)->values[0];
+                int x = (int)path.getState(i)->as<base::CompoundState>()->as<base::RealVectorStateSpace::StateType>(0)->values[0];
+                int y = (int)path.getState(i)->as<base::CompoundState>()->as<base::RealVectorStateSpace::StateType>(1)->values[0];
                 if (temp.grid[x][y] == T_FREE || temp.grid[x][y] == T_PATH)
                     temp.grid[x][y] = T_PATH;
                 else
@@ -129,7 +131,7 @@ class PlanTest
 {
 public:
 
-    PlanTest()
+    PlanTest(void)
     {
         verbose = true;
         boost::filesystem::path path(TEST_RESOURCES_DIR);
@@ -142,7 +144,9 @@ public:
         }
     }
 
-    ~PlanTest() = default;
+    ~PlanTest(void)
+    {
+    }
 
     void runPlanTest(TestPlanner *p, double *success, double *avgruntime, double *avglength)
     {

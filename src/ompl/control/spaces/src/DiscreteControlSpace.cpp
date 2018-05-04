@@ -39,8 +39,9 @@
 
 void ompl::control::DiscreteControlSampler::sample(Control *control)
 {
-    control->as<DiscreteControlSpace::ControlType>()->value = rng_.uniformInt(
-        space_->as<DiscreteControlSpace>()->getLowerBound(), space_->as<DiscreteControlSpace>()->getUpperBound());
+    control->as<DiscreteControlSpace::ControlType>()->value =
+        rng_.uniformInt(space_->as<DiscreteControlSpace>()->getLowerBound(),
+                        space_->as<DiscreteControlSpace>()->getUpperBound());
 }
 
 unsigned int ompl::control::DiscreteControlSpace::getDimension() const
@@ -60,17 +61,17 @@ bool ompl::control::DiscreteControlSpace::equalControls(const Control *control1,
 
 ompl::control::ControlSamplerPtr ompl::control::DiscreteControlSpace::allocDefaultControlSampler() const
 {
-    return std::make_shared<DiscreteControlSampler>(this);
+    return ControlSamplerPtr(new DiscreteControlSampler(this));
 }
 
-ompl::control::Control *ompl::control::DiscreteControlSpace::allocControl() const
+ompl::control::Control* ompl::control::DiscreteControlSpace::allocControl() const
 {
     return new ControlType();
 }
 
 void ompl::control::DiscreteControlSpace::freeControl(Control *control) const
 {
-    delete static_cast<ControlType *>(control);
+    delete static_cast<ControlType*>(control);
 }
 
 void ompl::control::DiscreteControlSpace::nullControl(Control *control) const
@@ -81,7 +82,7 @@ void ompl::control::DiscreteControlSpace::nullControl(Control *control) const
 void ompl::control::DiscreteControlSpace::printControl(const Control *control, std::ostream &out) const
 {
     out << "DiscreteControl [";
-    if (control != nullptr)
+    if (control)
         out << control->as<ControlType>()->value;
     else
         out << "nullptr";
@@ -90,8 +91,7 @@ void ompl::control::DiscreteControlSpace::printControl(const Control *control, s
 
 void ompl::control::DiscreteControlSpace::printSettings(std::ostream &out) const
 {
-    out << "Discrete control space '" << getName() << "' with bounds [" << lowerBound_ << ", " << upperBound_ << "]"
-        << std::endl;
+    out << "Discrete control space '" << getName() << "' with bounds [" << lowerBound_ << ", " << upperBound_ << "]" << std::endl;
 }
 
 void ompl::control::DiscreteControlSpace::setup()

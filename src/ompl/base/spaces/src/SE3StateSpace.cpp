@@ -38,9 +38,9 @@
 #include "ompl/tools/config/MagicConstants.h"
 #include <cstring>
 
-ompl::base::State *ompl::base::SE3StateSpace::allocState() const
+ompl::base::State* ompl::base::SE3StateSpace::allocState() const
 {
-    auto *state = new StateType();
+    StateType *state = new StateType();
     allocStateComponents(state);
     return state;
 }
@@ -55,16 +55,17 @@ void ompl::base::SE3StateSpace::registerProjections()
     class SE3DefaultProjection : public ProjectionEvaluator
     {
     public:
+
         SE3DefaultProjection(const StateSpace *space) : ProjectionEvaluator(space)
         {
         }
 
-        unsigned int getDimension() const override
+        virtual unsigned int getDimension() const
         {
             return 3;
         }
 
-        void defaultCellSizes() override
+        virtual void defaultCellSizes()
         {
             cellSizes_.resize(3);
             bounds_ = space_->as<SE3StateSpace>()->getBounds();
@@ -73,13 +74,11 @@ void ompl::base::SE3StateSpace::registerProjections()
             cellSizes_[2] = (bounds_.high[2] - bounds_.low[2]) / magic::PROJECTION_DIMENSION_SPLITS;
         }
 
-        void project(const State *state, EuclideanProjection &projection) const override
+        virtual void project(const State *state, EuclideanProjection &projection) const
         {
-            memcpy(&projection(0),
-                   state->as<SE3StateSpace::StateType>()->as<RealVectorStateSpace::StateType>(0)->values,
-                   3 * sizeof(double));
+            memcpy(&projection(0), state->as<SE3StateSpace::StateType>()->as<RealVectorStateSpace::StateType>(0)->values, 3 * sizeof(double));
         }
     };
 
-    registerDefaultProjection(std::make_shared<SE3DefaultProjection>(this));
+    registerDefaultProjection(ProjectionEvaluatorPtr(dynamic_cast<ProjectionEvaluator*>(new SE3DefaultProjection(this))));
 }

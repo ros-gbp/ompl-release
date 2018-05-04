@@ -40,12 +40,14 @@
 #include "ompl/base/State.h"
 #include "ompl/util/ClassForward.h"
 #include "ompl/base/GenericParam.h"
+#include <functional>
 #include <string>
 
 namespace ompl
 {
     namespace base
     {
+
         /// @cond IGNORE
         OMPL_CLASS_FORWARD(SpaceInformation);
         /// @endcond
@@ -63,8 +65,8 @@ namespace ompl
         {
         public:
             // non-copyable
-            ValidStateSampler(const ValidStateSampler &) = delete;
-            ValidStateSampler &operator=(const ValidStateSampler &) = delete;
+            ValidStateSampler(const ValidStateSampler&) = delete;
+            ValidStateSampler& operator=(const ValidStateSampler&) = delete;
 
             /** \brief Constructor */
             ValidStateSampler(const SpaceInformation *si);
@@ -72,7 +74,7 @@ namespace ompl
             virtual ~ValidStateSampler();
 
             /** \brief Get the name of the sampler */
-            const std::string &getName() const
+            const std::string& getName() const
             {
                 return name_;
             }
@@ -88,7 +90,7 @@ namespace ompl
 
             /** \brief Sample a state near another, within specified distance. Return false, in case of failure.
                 \note The memory for \e near must be disjoint from the memory for \e state */
-            virtual bool sampleNear(State *state, const State *near, double distance) = 0;
+            virtual bool sampleNear(State *state, const State *near, const double distance) = 0;
 
             /** \brief Finding a valid sample usually requires
                 performing multiple attempts. This call allows setting
@@ -105,34 +107,36 @@ namespace ompl
             }
 
             /** \brief Get the parameters for the valid state sampler */
-            ParamSet &params()
+            ParamSet& params()
             {
                 return params_;
             }
 
             /** \brief Get the parameters for the valid state sampler */
-            const ParamSet &params() const
+            const ParamSet& params() const
             {
                 return params_;
             }
 
         protected:
+
             /** \brief The state space this sampler samples */
             const SpaceInformation *si_;
 
             /** \brief Number of attempts to find a valid sample */
-            unsigned int attempts_;
+            unsigned int            attempts_;
 
             /** \brief The name of the sampler */
-            std::string name_;
+            std::string             name_;
 
             /** \brief The parameters for this instance of the valid state sampler */
-            ParamSet params_;
+            ParamSet                params_;
         };
 
         /** \brief Definition of a function that can allocate a valid state sampler */
-        typedef std::function<ValidStateSamplerPtr(const SpaceInformation *)> ValidStateSamplerAllocator;
+        typedef std::function<ValidStateSamplerPtr(const SpaceInformation*)> ValidStateSamplerAllocator;
     }
 }
+
 
 #endif

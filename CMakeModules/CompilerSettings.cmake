@@ -1,23 +1,13 @@
-if (CMAKE_VERSION VERSION_LESS "3.1")
-    # force C++11 mode (MS Visual Studio doesn't know about this flag)
-    if(NOT MSVC)
-        add_definitions(-std=c++11)
-    endif()
-else()
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_CXX_EXTENSIONS OFF)
-    # this next line shouldn't be necessary, but doesn't always get added by cmake (e.g., for clang++-5)
+# force C++11 mode (MS Visual Studio doesn't know about this flag)
+if(NOT MSVC)
     add_definitions(-std=c++11)
 endif()
-
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-W -Wall -Wextra #-Wconversion
                     -Wcast-qual -Wwrite-strings -Wunreachable-code -Wpointer-arith
                     -Winit-self -Wredundant-decls
-                    -Wno-unused-parameter -Wno-unused-function
-                    -fext-numeric-literals)
+                    -Wno-unused-parameter -Wno-unused-function)
     # prepend optimizion flag (in case the default setting doesn't include one)
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 ${CMAKE_CXX_FLAGS_RELEASE}")
 endif(CMAKE_COMPILER_IS_GNUCXX)
@@ -62,14 +52,11 @@ if((CMAKE_COMPILER_IS_GNUCXX OR IS_ICPC) AND NOT MINGW)
     add_definitions(-fPIC)
 endif((CMAKE_COMPILER_IS_GNUCXX OR IS_ICPC) AND NOT MINGW)
 
-option(OMPL_SKIP_RPATH "Don't set RPATH to the OMPL library" OFF)
-if(NOT OMPL_SKIP_RPATH)
-    # Set rpath http://www.paraview.org/Wiki/CMake_RPATH_handling
-    set(CMAKE_SKIP_BUILD_RPATH FALSE)
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-endif()
+# Set rpath http://www.paraview.org/Wiki/CMake_RPATH_handling
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # no prefix needed for python modules
 set(CMAKE_SHARED_MODULE_PREFIX "")

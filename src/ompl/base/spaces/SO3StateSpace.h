@@ -43,16 +43,18 @@ namespace ompl
 {
     namespace base
     {
+
         /** \brief State space sampler for SO(3), using quaternion representation  */
         class SO3StateSampler : public StateSampler
         {
         public:
+
             /** \brief Constructor */
             SO3StateSampler(const StateSpace *space) : StateSampler(space)
             {
             }
 
-            void sampleUniform(State *state) override;
+            virtual void sampleUniform(State *state);
             /** \brief To sample unit quaternions uniformly within some given
                 distance, we sample a 3-vector from the R^3 tangent space.
                 This vector is drawn uniformly random from a 3D ball centered at
@@ -61,7 +63,7 @@ namespace ompl
                 around the identity quaternion within given distance. We
                 pre-multiply this quaternion with the quaternion near
                 to center the distribution around near. */
-            void sampleUniformNear(State *state, const State *near, double distance) override;
+            virtual void sampleUniformNear(State *state, const State *near, const double distance);
             /** \brief Sample a state such that the expected distance between
                 mean and state is stdDev.
 
@@ -72,7 +74,7 @@ namespace ompl
                 around S^3 to obtain a Gaussian quaternion with zero mean.
                 We pre-multiply this quaternion with the quaternion mean
                 to get the desired mean. */
-            void sampleGaussian(State *state, const State *mean, double stdDev) override;
+            virtual void sampleGaussian(State *state, const State *mean, const double stdDev);
         };
 
         /** \brief A state space representing SO(3). The internal
@@ -82,6 +84,8 @@ namespace ompl
         class SO3StateSpace : public StateSpace
         {
         public:
+
+
             /** \brief The definition of a state in SO(3) represented as a unit quaternion
 
                 \note The order of the elements matters in this
@@ -90,6 +94,7 @@ namespace ompl
             class StateType : public State
             {
             public:
+
                 /** \brief Set the quaternion from axis-angle representation.  The angle is given in radians. */
                 void setAxisAngle(double ax, double ay, double az, double angle);
 
@@ -109,54 +114,56 @@ namespace ompl
                 double w;
             };
 
-            SO3StateSpace()
+            SO3StateSpace() : StateSpace()
             {
                 setName("SO3" + getName());
                 type_ = STATE_SPACE_SO3;
             }
 
-            ~SO3StateSpace() override = default;
+            virtual ~SO3StateSpace()
+            {
+            }
 
             /** \brief Compute the norm of a state */
             double norm(const StateType *state) const;
 
-            unsigned int getDimension() const override;
+            virtual unsigned int getDimension() const;
 
-            double getMaximumExtent() const override;
+            virtual double getMaximumExtent() const;
 
-            double getMeasure() const override;
+            virtual double getMeasure() const;
 
-            void enforceBounds(State *state) const override;
+            virtual void enforceBounds(State *state) const;
 
-            bool satisfiesBounds(const State *state) const override;
+            virtual bool satisfiesBounds(const State *state) const;
 
-            void copyState(State *destination, const State *source) const override;
+            virtual void copyState(State *destination, const State *source) const;
 
-            unsigned int getSerializationLength() const override;
+            virtual unsigned int getSerializationLength() const;
 
-            void serialize(void *serialization, const State *state) const override;
+            virtual void serialize(void *serialization, const State *state) const;
 
-            void deserialize(State *state, const void *serialization) const override;
+            virtual void deserialize(State *state, const void *serialization) const;
 
-            double distance(const State *state1, const State *state2) const override;
+            virtual double distance(const State *state1, const State *state2) const;
 
-            bool equalStates(const State *state1, const State *state2) const override;
+            virtual bool equalStates(const State *state1, const State *state2) const;
 
-            void interpolate(const State *from, const State *to, double t, State *state) const override;
+            virtual void interpolate(const State *from, const State *to, const double t, State *state) const;
 
-            StateSamplerPtr allocDefaultStateSampler() const override;
+            virtual StateSamplerPtr allocDefaultStateSampler() const;
 
-            State *allocState() const override;
+            virtual State* allocState() const;
 
-            void freeState(State *state) const override;
+            virtual void freeState(State *state) const;
 
-            double *getValueAddressAtIndex(State *state, unsigned int index) const override;
+            virtual double* getValueAddressAtIndex(State *state, const unsigned int index) const;
 
-            void printState(const State *state, std::ostream &out) const override;
+            virtual void printState(const State *state, std::ostream &out) const;
 
-            void printSettings(std::ostream &out) const override;
+            virtual void printSettings(std::ostream &out) const;
 
-            void registerProjections() override;
+            virtual void registerProjections();
         };
     }
 }

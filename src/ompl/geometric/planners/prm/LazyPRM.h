@@ -41,6 +41,7 @@
 #include "ompl/datastructures/NearestNeighbors.h"
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <functional>
 #include <utility>
 #include <vector>
 #include <map>
@@ -55,6 +56,7 @@ namespace ompl
 
     namespace geometric
     {
+
         /**
            @anchor gLazyPRM
            @par Short description
@@ -73,29 +75,25 @@ namespace ompl
         class LazyPRM : public base::Planner
         {
         public:
-            struct vertex_state_t
-            {
+            struct vertex_state_t {
                 typedef boost::vertex_property_tag kind;
             };
 
-            struct vertex_flags_t
-            {
+            struct vertex_flags_t {
                 typedef boost::vertex_property_tag kind;
             };
 
-            struct vertex_component_t
-            {
+            struct vertex_component_t {
                 typedef boost::vertex_property_tag kind;
             };
 
-            struct edge_flags_t
-            {
+            struct edge_flags_t {
                 typedef boost::edge_property_tag kind;
             };
 
             /** @brief The type for a vertex in the roadmap. */
-            typedef boost::adjacency_list_traits<boost::vecS, boost::listS, boost::undirectedS>::vertex_descriptor
-                Vertex;
+            typedef boost::adjacency_list_traits<boost::vecS, boost::listS,
+                                                 boost::undirectedS>::vertex_descriptor Vertex;
 
             /**
              @brief The underlying roadmap graph.
@@ -113,41 +111,39 @@ namespace ompl
 
              @par Edges should be undirected and have a weight property.
              */
-            typedef boost::adjacency_list<
+            typedef boost::adjacency_list <
                 boost::vecS, boost::listS, boost::undirectedS,
-                boost::property<
-                    vertex_state_t, base::State *,
-                    boost::property<
-                        boost::vertex_index_t, unsigned long int,
-                        boost::property<vertex_flags_t, unsigned int,
-                                        boost::property<vertex_component_t, unsigned long int,
-                                                        boost::property<boost::vertex_predecessor_t, Vertex,
-                                                                        boost::property<boost::vertex_rank_t,
-                                                                                        unsigned long int>>>>>>,
-                boost::property<boost::edge_weight_t, base::Cost, boost::property<edge_flags_t, unsigned int>>>
-                Graph;
+                boost::property < vertex_state_t, base::State*,
+                boost::property < boost::vertex_index_t, unsigned long int,
+                boost::property < vertex_flags_t, unsigned int,
+                boost::property < vertex_component_t, unsigned long int,
+                boost::property < boost::vertex_predecessor_t, Vertex,
+                boost::property < boost::vertex_rank_t, unsigned long int > > > > > >,
+                boost::property < boost::edge_weight_t, base::Cost,
+                boost::property < edge_flags_t, unsigned int > >
+            > Graph;
 
             /** @brief The type for an edge in the roadmap. */
-            typedef boost::graph_traits<Graph>::edge_descriptor Edge;
+            typedef boost::graph_traits<Graph>::edge_descriptor   Edge;
 
             /** @brief A nearest neighbors data structure for roadmap vertices. */
-            typedef std::shared_ptr<NearestNeighbors<Vertex>> RoadmapNeighbors;
+            typedef std::shared_ptr< NearestNeighbors<Vertex> > RoadmapNeighbors;
 
             /** @brief A function returning the milestones that should be
              * attempted to connect to. */
-            typedef std::function<const std::vector<Vertex> &(const Vertex)> ConnectionStrategy;
+            typedef std::function<const std::vector<Vertex>&(const Vertex)> ConnectionStrategy;
 
             /** @brief A function that can reject connections.
 
              This is called after previous connections from the neighbor list
              have been added to the roadmap.
              */
-            typedef std::function<bool(const Vertex &, const Vertex &)> ConnectionFilter;
+            typedef std::function<bool(const Vertex&, const Vertex&)> ConnectionFilter;
 
             /** \brief Constructor */
             LazyPRM(const base::SpaceInformationPtr &si, bool starStrategy = false);
 
-            ~LazyPRM() override;
+            virtual ~LazyPRM();
 
             /** \brief Set the maximum length of a motion to be added to the roadmap. */
             void setRange(double distance);
@@ -159,20 +155,17 @@ namespace ompl
             }
 
             /** \brief Set a different nearest neighbors datastructure */
-            template <template <typename T> class NN>
+            template<template<typename T> class NN>
             void setNearestNeighbors()
             {
-                if (nn_ && nn_->size() == 0)
-                    OMPL_WARN("Calling setNearestNeighbors will clear all states.");
-                clear();
-                nn_ = std::make_shared<NN<Vertex>>();
+                nn_.reset(new NN<Vertex>());
                 if (!userSetConnectionStrategy_)
                     connectionStrategy_ = ConnectionStrategy();
                 if (isSetup())
                     setup();
             }
 
-            void setProblemDefinition(const base::ProblemDefinitionPtr &pdef) override;
+            virtual void setProblemDefinition(const base::ProblemDefinitionPtr &pdef);
 
             /** \brief Set the connection strategy function that specifies the
              milestones that connection attempts will be make to for a
@@ -228,11 +221,11 @@ namespace ompl
                 return boost::num_edges(g_);
             }
 
-            void getPlannerData(base::PlannerData &data) const override;
+            virtual void getPlannerData(base::PlannerData &data) const;
 
-            void setup() override;
+            virtual void setup();
 
-            void clear() override;
+            virtual void clear();
 
             /** \brief Clear the query previously loaded from the ProblemDefinition.
                 Subsequent calls to solve() will reuse the previously computed roadmap,
@@ -240,20 +233,21 @@ namespace ompl
                 This enables multi-query functionality for LazyPRM. */
             void clearQuery();
 
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
         protected:
+
             /** \brief Flag indicating validity of an edge of a vertex */
             static const unsigned int VALIDITY_UNKNOWN = 0;
 
             /** \brief Flag indicating validity of an edge of a vertex */
-            static const unsigned int VALIDITY_TRUE = 1;
+            static const unsigned int VALIDITY_TRUE    = 1;
 
             ///////////////////////////////////////
             // Planner progress property functions
             std::string getIterationCount() const
             {
-                return std::to_string(iterations_);
+                return boost::lexical_cast<std::string>(iterations_);
             }
             std::string getBestCost() const
             {
@@ -261,18 +255,17 @@ namespace ompl
             }
             std::string getMilestoneCountString() const
             {
-                return std::to_string(milestoneCount());
+                return boost::lexical_cast<std::string>(milestoneCount());
             }
             std::string getEdgeCountString() const
             {
-                return std::to_string(edgeCount());
+                return boost::lexical_cast<std::string>(edgeCount());
             }
 
             /** \brief Free all the memory allocated by the planner */
             void freeMemory();
 
-            /** \brief Construct a milestone for a given state (\e state), store it in the nearest neighbors data
-               structure
+            /** \brief Construct a milestone for a given state (\e state), store it in the nearest neighbors data structure
                 and then connect it to the roadmap in accordance to the connection strategy. */
             Vertex addMilestone(base::State *state);
 
@@ -284,12 +277,10 @@ namespace ompl
                 If so, return the id of that component. Otherwise, return -1. */
             long int solutionComponent(std::pair<std::size_t, std::size_t> *startGoalPair) const;
 
-            /** \brief Given two milestones from the same connected component, construct a path connecting them and set
-             * it as the solution */
+            /** \brief Given two milestones from the same connected component, construct a path connecting them and set it as the solution */
             ompl::base::PathPtr constructSolution(const Vertex &start, const Vertex &goal);
 
-            /** \brief Compute distance between two milestones (this is simply distance between the states of the
-             * milestones) */
+            /** \brief Compute distance between two milestones (this is simply distance between the states of the milestones) */
             double distanceFunction(const Vertex a, const Vertex b) const
             {
                 return si_->distance(stateProperty_[a], stateProperty_[b]);
@@ -300,68 +291,68 @@ namespace ompl
             base::Cost costHeuristic(Vertex u, Vertex v) const;
 
             /** \brief Flag indicating whether the default connection strategy is the Star strategy */
-            bool starStrategy_;
+            bool                                                   starStrategy_;
 
             /** \brief Function that returns the milestones to attempt connections with */
-            ConnectionStrategy connectionStrategy_;
+            ConnectionStrategy                                     connectionStrategy_;
 
             /** \brief Function that can reject a milestone connection */
-            ConnectionFilter connectionFilter_;
+            ConnectionFilter                                       connectionFilter_;
 
-            /** \brief Flag indicating whether the employed connection strategy was set by the user (or defaults are
-             * assumed) */
-            bool userSetConnectionStrategy_{false};
+            /** \brief Flag indicating whether the employed connection strategy was set by the user (or defaults are assumed) */
+            bool                                                   userSetConnectionStrategy_;
 
             /** \brief The maximum length of a motion to be added to a tree */
-            double maxDistance_{0.};
+            double                                                 maxDistance_;
 
             /** \brief Sampler user for generating random in the state space */
-            base::StateSamplerPtr sampler_;
+            base::StateSamplerPtr                                  sampler_;
 
             /** \brief Nearest neighbors data structure */
-            RoadmapNeighbors nn_;
+            RoadmapNeighbors                                       nn_;
 
             /** \brief Connectivity graph */
-            Graph g_;
+            Graph                                                  g_;
 
             /** \brief Array of start milestones */
-            std::vector<Vertex> startM_;
+            std::vector<Vertex>                                    startM_;
 
             /** \brief Array of goal milestones */
-            std::vector<Vertex> goalM_;
+            std::vector<Vertex>                                    goalM_;
 
             /** \brief Access to the internal base::state at each Vertex */
             boost::property_map<Graph, boost::vertex_index_t>::type indexProperty_;
 
             /** \brief Access to the internal base::state at each Vertex */
-            boost::property_map<Graph, vertex_state_t>::type stateProperty_;
+            boost::property_map<Graph, vertex_state_t>::type       stateProperty_;
 
             /** \brief Access to the weights of each Edge */
             boost::property_map<Graph, boost::edge_weight_t>::type weightProperty_;
 
             /** \brief Access the connected component of a vertex */
-            boost::property_map<Graph, vertex_component_t>::type vertexComponentProperty_;
+            boost::property_map<Graph, vertex_component_t>::type   vertexComponentProperty_;
 
             /** \brief Access the validity state of a vertex */
-            boost::property_map<Graph, vertex_flags_t>::type vertexValidityProperty_;
+            boost::property_map<Graph, vertex_flags_t>::type       vertexValidityProperty_;
 
             /** \brief Access the validity state of an edge */
-            boost::property_map<Graph, edge_flags_t>::type edgeValidityProperty_;
+            boost::property_map<Graph, edge_flags_t>::type         edgeValidityProperty_;
 
             /** \brief Number of connected components created so far. This is used as an ID only,
                 does not represent the actual number of components currently in the graph. */
-            unsigned long int componentCount_{0};
+            unsigned long int                                      componentCount_;
 
             /** \brief The number of elements in each component in the LazyPRM roadmap. */
-            std::map<unsigned long int, unsigned long int> componentSize_;
+            std::map<unsigned long int, unsigned long int>         componentSize_;
 
             /** \brief Objective cost function for PRM graph edges */
-            base::OptimizationObjectivePtr opt_;
+            base::OptimizationObjectivePtr                         opt_;
 
-            base::Cost bestCost_{std::numeric_limits<double>::quiet_NaN()};
+            base::Cost                                             bestCost_;
 
-            unsigned long int iterations_{0};
+            unsigned long int                                      iterations_;
         };
+
     }
 }
 

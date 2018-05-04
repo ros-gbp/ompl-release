@@ -49,10 +49,12 @@ using namespace ompl;
 
 struct Metadata
 {
-    Metadata() = default;
+    Metadata(void) : tag1(0), tag2(0.5f)
+    {
+    }
 
-    int   tag1{0};
-    float tag2{0.5f};
+    int   tag1;
+    float tag2;
 
     template<typename Archive>
     void serialize(Archive & ar, const unsigned int /*version*/)
@@ -65,11 +67,11 @@ struct Metadata
 
 BOOST_AUTO_TEST_CASE(Store)
 {
-    auto space(std::make_shared<base::SE3StateSpace>());
+    base::StateSpacePtr space(new base::SE3StateSpace());
     base::RealVectorBounds bounds(3);
     bounds.setLow(-1);
     bounds.setHigh(1);
-    space->setBounds(bounds);
+    space->as<base::SE3StateSpace>()->setBounds(bounds);
     space->setup();
 
     base::StateStorage ss(space);
@@ -93,11 +95,11 @@ BOOST_AUTO_TEST_CASE(Store)
 
 BOOST_AUTO_TEST_CASE(Load)
 {
-    auto space(std::make_shared<base::SE3StateSpace>());
+    base::StateSpacePtr space(new base::SE3StateSpace());
     base::RealVectorBounds bounds(3);
     bounds.setLow(-1);
     bounds.setHigh(1);
-    space->setBounds(bounds);
+    space->as<base::SE3StateSpace>()->setBounds(bounds);
     space->setup();
 
     base::StateStorage ss(space);

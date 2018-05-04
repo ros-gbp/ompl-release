@@ -41,7 +41,6 @@
 #include "ompl/datastructures/GridB.h"
 #include "ompl/util/Exception.h"
 #include <functional>
-#include <utility>
 #include <vector>
 #include <limits>
 #include <cassert>
@@ -51,69 +50,77 @@
 
 namespace ompl
 {
+
     namespace geometric
     {
+
         /** \brief One-level discretization used for KPIECE */
-        template <typename Motion>
+        template<typename Motion>
         class Discretization
         {
         public:
+
             /** \brief The data held by a cell in the grid of motions */
             struct CellData
             {
-                CellData() = default;
+                CellData() : coverage(0.0), selections(1), score(1.0), iteration(0), importance(0.0)
+                {
+                }
 
-                ~CellData() = default;
+                ~CellData()
+                {
+                }
 
                 /** \brief The set of motions contained in this grid cell */
-                std::vector<Motion *> motions;
+                std::vector<Motion*> motions;
 
                 /** \brief A measure of coverage for this cell. For
                     this implementation, this is the sum of motion
                     lengths */
-                double coverage{0.0};
+                double               coverage;
 
                 /** \brief The number of times this cell has been
                     selected for expansion */
-                unsigned int selections{1};
+                unsigned int         selections;
 
                 /** \brief A heuristic score computed based on
                     distance to goal (if available), successes and
                     failures at expanding from this cell. */
-                double score{1.0};
+                double               score;
 
                 /** \brief The iteration at which this cell was created */
-                unsigned int iteration{0};
+                unsigned int         iteration;
 
                 /** \brief The computed importance (based on other class members) */
-                double importance{0.0};
+                double               importance;
             };
 
             /** \brief Definintion of an operator passed to the Grid
                 structure, to order cells by importance */
             struct OrderCellsByImportance
             {
+
                 /** \brief Order function */
-                bool operator()(const CellData *const a, const CellData *const b) const
+                bool operator()(const CellData * const a, const CellData * const b) const
                 {
                     return a->importance > b->importance;
                 }
             };
 
             /** \brief The datatype for the maintained grid datastructure */
-            typedef GridB<CellData *, OrderCellsByImportance> Grid;
+            typedef GridB<CellData*, OrderCellsByImportance> Grid;
 
             /** \brief The datatype for the maintained grid cells */
-            typedef typename Grid::Cell Cell;
+            typedef typename Grid::Cell  Cell;
 
             /** \brief The datatype for the maintained grid coordinates */
             typedef typename Grid::Coord Coord;
 
             /** \brief The signature of a function that frees the memory for a motion */
-            typedef typename std::function<void(Motion *)> FreeMotionFn;
+            typedef typename std::function<void(Motion*)> FreeMotionFn;
 
-            Discretization(FreeMotionFn freeMotion)
-              : grid_(0), size_(0), iteration_(1), recentCell_(nullptr), freeMotion_(std::move(freeMotion))
+            Discretization(const FreeMotionFn &freeMotion) : grid_(0), size_(0), iteration_(1), recentCell_(nullptr),
+                                                             freeMotion_(freeMotion)
             {
                 grid_.onCellUpdate(computeImportance, nullptr);
                 selectBorderFraction_ = 0.9;
@@ -177,7 +184,7 @@ namespace ompl
             /** \brief Free the memory for the motions contained in a grid */
             void freeMemory()
             {
-                for (auto it = grid_.begin(); it != grid_.end(); ++it)
+                for (typename Grid::iterator it = grid_.begin(); it != grid_.end() ; ++it)
                     freeCellData(it->second->data);
                 grid_.clear();
             }
@@ -221,19 +228,19 @@ namespace ompl
             /** \brief Select a motion and the cell it is part of from
                 the grid of motions. This is where preference is given
                 to cells on the boundary of the grid.*/
-            void selectMotion(Motion *&smotion, Cell *&scell)
+            void selectMotion(Motion* &smotion, Cell* &scell)
             {
-                scell = rng_.uniform01() < std::max(selectBorderFraction_, grid_.fracExternal()) ? grid_.topExternal() :
-                                                                                                   grid_.topInternal();
+                scell = rng_.uniform01() < std::max(selectBorderFraction_, grid_.fracExternal()) ?
+                    grid_.topExternal() : grid_.topInternal();
 
                 // We are running on finite precision, so our update scheme will end up
                 // with 0 values for the score. This is where we fix the problem
                 if (scell->data->score < std::numeric_limits<double>::epsilon())
                 {
-                    std::vector<CellData *> content;
+                    std::vector<CellData*> content;
                     content.reserve(grid_.size());
                     grid_.getContent(content);
-                    for (auto it = content.begin(); it != content.end(); ++it)
+                    for (typename std::vector<CellData*>::iterator it = content.begin() ; it != content.end() ; ++it)
                         (*it)->score += 1.0 + log((double)((*it)->iteration));
                     grid_.updateAll();
                 }
@@ -246,11 +253,11 @@ namespace ompl
 
             bool removeMotion(Motion *motion, const Coord &coord)
             {
-                Cell *cell = grid_.getCell(coord);
+                Cell* cell = grid_.getCell(coord);
                 if (cell)
                 {
                     bool found = false;
-                    for (unsigned int i = 0; i < cell->data->motions.size(); ++i)
+                    for (unsigned int i = 0 ; i < cell->data->motions.size(); ++i)
                         if (cell->data->motions[i] == motion)
                         {
                             cell->data->motions.erase(cell->data->motions.begin() + i);
@@ -274,21 +281,21 @@ namespace ompl
                 grid_.update(cell);
             }
 
-            const Grid &getGrid() const
+            const Grid& getGrid() const
             {
                 return grid_;
             }
 
             void getPlannerData(base::PlannerData &data, int tag, bool start, const Motion *lastGoalMotion) const
             {
-                std::vector<CellData *> cdata;
+                std::vector<CellData*> cdata;
                 grid_.getContent(cdata);
 
                 if (lastGoalMotion)
-                    data.addGoalVertex(base::PlannerDataVertex(lastGoalMotion->state, tag));
+                    data.addGoalVertex (base::PlannerDataVertex(lastGoalMotion->state, tag));
 
-                for (unsigned int i = 0; i < cdata.size(); ++i)
-                    for (unsigned int j = 0; j < cdata[i]->motions.size(); ++j)
+                for (unsigned int i = 0 ; i < cdata.size() ; ++i)
+                    for (unsigned int j = 0 ; j < cdata[i]->motions.size() ; ++j)
                     {
                         if (cdata[i]->motions[j]->parent == nullptr)
                         {
@@ -310,10 +317,11 @@ namespace ompl
             }
 
         private:
+
             /** \brief Free the memory for the data contained in a grid cell */
             void freeCellData(CellData *cdata)
             {
-                for (unsigned int i = 0; i < cdata->motions.size(); ++i)
+                for (unsigned int i = 0 ; i < cdata->motions.size() ; ++i)
                     freeMotion_(cdata->motions[i]);
                 delete cdata;
             }
@@ -321,35 +329,36 @@ namespace ompl
             /** \brief This function is provided as a callback to the
                 grid datastructure to update the importance of a
                 cell */
-            static void computeImportance(Cell *cell, void * /*unused*/)
+            static void computeImportance(Cell *cell, void*)
             {
                 CellData &cd = *(cell->data);
-                cd.importance = cd.score / ((cell->neighbors + 1) * cd.coverage * cd.selections);
+                cd.importance =  cd.score / ((cell->neighbors + 1) * cd.coverage * cd.selections);
             }
 
             /** \brief A grid containing motions, imposed on a
                 projection of the state space */
-            Grid grid_;
+            Grid         grid_;
 
             /** \brief The total number of motions (there can be
                 multiple per cell) in the grid */
-            std::size_t size_;
+            std::size_t  size_;
 
             /** \brief The number of iterations performed on this tree */
             unsigned int iteration_;
 
             /** \brief The most recently created cell */
-            Cell *recentCell_;
+            Cell        *recentCell_;
 
             /** \brief Method that can free the memory for a stored motion */
             FreeMotionFn freeMotion_;
 
             /** \brief The fraction of time to focus exploration on
                 the border of the grid. */
-            double selectBorderFraction_;
+            double       selectBorderFraction_;
 
             /** \brief The random number generator */
-            RNG rng_;
+            RNG          rng_;
+
         };
     }
 }

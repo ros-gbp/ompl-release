@@ -143,15 +143,15 @@ int main()
     abounds[3] = 6;
     abounds[4] = -6;
     abounds[5] = 6;
-    auto env(std::make_shared<MyEnvironment>(2, 2, cbounds, pbounds, lbounds, abounds));
+    base::MorseEnvironmentPtr env(new MyEnvironment(2, 2, cbounds, pbounds, lbounds, abounds));
 
-    auto ss(std::make_shared<control::MorseSimpleSetup>(env));
+    control::SimpleSetupPtr ss(new control::MorseSimpleSetup(env));
 
-    auto g(std::make_shared<MyGoal>(ss->getSpaceInformation()));
+    base::GoalPtr g(new MyGoal(ss->getSpaceInformation()));
 
     ss->setGoal(g);
 
-    ss->control::SimpleSetup::solve(1.0);
+    ss->solve(1.0);
 
     return 0;
 }

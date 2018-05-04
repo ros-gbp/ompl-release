@@ -71,11 +71,11 @@ public:
         setGrid(grid);
     }
 
-    bool isValid(const base::State *state) const override
+    virtual bool isValid(const base::State *state) const
     {
         /* planning is done in a continuous space, but our collision space representation is discrete */
-        auto x = (int)(state->as<base::RealVectorStateSpace::StateType>()->values[0]);
-        auto y = (int)(state->as<base::RealVectorStateSpace::StateType>()->values[1]);
+        int x = (int)(state->as<base::RealVectorStateSpace::StateType>()->values[0]);
+        int y = (int)(state->as<base::RealVectorStateSpace::StateType>()->values[1]);
 
         if (x < 0 || y < 0 || x >= w_ || y >= h_)
             return false;
@@ -105,14 +105,14 @@ public:
     {
     }
 
-    double distance(const base::State *state1, const base::State *state2) const override
+    virtual double distance(const base::State *state1, const base::State *state2) const
     {
         /* planning is done in a continuous space, but our collision space representation is discrete */
-        auto x1 = (int)(state1->as<base::RealVectorStateSpace::StateType>()->values[0]);
-        auto y1 = (int)(state1->as<base::RealVectorStateSpace::StateType>()->values[1]);
+        int x1 = (int)(state1->as<base::RealVectorStateSpace::StateType>()->values[0]);
+        int y1 = (int)(state1->as<base::RealVectorStateSpace::StateType>()->values[1]);
 
-        auto x2 = (int)(state2->as<base::RealVectorStateSpace::StateType>()->values[0]);
-        auto y2 = (int)(state2->as<base::RealVectorStateSpace::StateType>()->values[1]);
+        int x2 = (int)(state2->as<base::RealVectorStateSpace::StateType>()->values[0]);
+        int y2 = (int)(state2->as<base::RealVectorStateSpace::StateType>()->values[1]);
 
         return abs(x1 - x2) + abs(y1 - y2);
     }
@@ -126,7 +126,7 @@ public:
     {
     }
 
-    void propagate(const base::State *state, const control::Control* control, const double duration, base::State *result) const override
+    virtual void propagate(const base::State *state, const control::Control* control, const double duration, base::State *result) const
     {
         result->as<base::RealVectorStateSpace::StateType>()->values[0] =
             state->as<base::RealVectorStateSpace::StateType>()->values[0] + duration * control->as<control::RealVectorControlSpace::ControlType>()->values[0];
@@ -153,12 +153,12 @@ public:
         bounds_.setHigh(1, spacebounds.high[1]);
     }
 
-    unsigned int getDimension() const override
+    virtual unsigned int getDimension(void) const
     {
         return 2;
     }
 
-    void project(const base::State *state, base::EuclideanProjection &projection) const override
+    virtual void project(const base::State *state, base::EuclideanProjection &projection) const
     {
         projection(0) = state->as<base::RealVectorStateSpace::StateType>()->values[0];
         projection(1) = state->as<base::RealVectorStateSpace::StateType>()->values[1];
@@ -168,7 +168,7 @@ public:
 /** Space information */
 control::SpaceInformationPtr mySpaceInformation(Environment2D &env)
 {
-    auto sMan(std::make_shared<myStateSpace>());
+    base::RealVectorStateSpace *sMan = new myStateSpace();
 
     base::RealVectorBounds sbounds(4);
 
@@ -190,7 +190,9 @@ control::SpaceInformationPtr mySpaceInformation(Environment2D &env)
     sbounds.high[3] = MAX_VELOCITY;
     sMan->setBounds(sbounds);
 
-    auto cMan(std::make_shared<control::RealVectorControlSpace>(sMan, 2));
+    base::StateSpacePtr sManPtr(sMan);
+
+    control::RealVectorControlSpace *cMan = new control::RealVectorControlSpace(sManPtr, 2);
     base::RealVectorBounds cbounds(2);
 
     cbounds.low[0] = -MAX_VELOCITY;
@@ -199,12 +201,12 @@ control::SpaceInformationPtr mySpaceInformation(Environment2D &env)
     cbounds.high[1] = MAX_VELOCITY;
     cMan->setBounds(cbounds);
 
-    auto si(std::make_shared<control::SpaceInformation>(sMan, cMan));
+    control::SpaceInformationPtr si(new control::SpaceInformation(sManPtr, control::ControlSpacePtr(cMan)));
     si->setMinMaxControlDuration(2, 25);
     si->setPropagationStepSize(0.25);
 
-    si->setStateValidityChecker(std::make_shared<myStateValidityChecker>(si.get(), env.grid));
-    si->setStatePropagator(std::make_shared<myStatePropagator>(si));
+    si->setStateValidityChecker(base::StateValidityCheckerPtr(new myStateValidityChecker(si.get(), env.grid)));
+    si->setStatePropagator(control::StatePropagatorPtr(new myStatePropagator(si)));
 
     si->setup();
 
@@ -216,20 +218,22 @@ control::SpaceInformationPtr mySpaceInformation(Environment2D &env)
 class TestPlanner
 {
 public:
-    TestPlanner()
+    TestPlanner(void)
     {
         msg::setLogLevel(msg::LOG_ERROR);
     }
 
-    virtual ~TestPlanner() = default;
+    virtual ~TestPlanner(void)
+    {
+    }
 
-    virtual bool execute(Environment2D &env, bool show = false, double *time = nullptr, double *pathLength = nullptr)
+    virtual bool execute(Environment2D &env, bool show = false, double *time = NULL, double *pathLength = NULL)
     {
         bool result = true;
 
         /* instantiate space information */
         control::SpaceInformationPtr si = mySpaceInformation(env);
-        auto pdef(std::make_shared<base::ProblemDefinition>(si));
+        base::ProblemDefinitionPtr pdef(new base::ProblemDefinition(si));
 
         /* instantiate motion planner */
         base::PlannerPtr planner = newPlanner(si);
@@ -245,7 +249,7 @@ public:
         pdef->addStartState(state);
 
         /* set the goal state; the memory for this is automatically cleaned by SpaceInformation */
-        auto goal(std::make_shared<base::GoalState>(si));
+        base::GoalState *goal = new base::GoalState(si);
         base::ScopedState<base::RealVectorStateSpace> gstate(si);
         gstate->values[0] = env.goal.first;
         gstate->values[1] = env.goal.second;
@@ -253,7 +257,7 @@ public:
         gstate->values[3] = 0.0;
         goal->setState(gstate);
         goal->setThreshold(1e-3); // this is basically 0, but we want to account for numerical instabilities
-        pdef->setGoal(goal);
+        pdef->setGoal(base::GoalPtr(goal));
 
         planner->getProblemDefinition()->isStraightLinePathValid();
 
@@ -264,7 +268,7 @@ public:
         if (planner->solve(SOLUTION_TIME))
         {
             ompl::time::duration elapsed = ompl::time::now() - startTime;
-            if (time != nullptr)
+            if (time)
                 *time += ompl::time::seconds(elapsed);
             if (show)
                 printf("Found solution in %f seconds!\n", ompl::time::seconds(elapsed));
@@ -277,10 +281,10 @@ public:
 
             elapsed = ompl::time::now() - startTime;
 
-            if (time != nullptr)
+            if (time)
                 *time += ompl::time::seconds(elapsed);
 
-            if (pathLength != nullptr)
+            if (pathLength)
                 *pathLength += path->length();
 
             if (show)
@@ -293,8 +297,8 @@ public:
             /* display the solution */
             for (unsigned int i = 0 ; i < path->getStateCount() ; ++i)
             {
-                auto x = (int)(path->getState(i)->as<base::RealVectorStateSpace::StateType>()->values[0]);
-                auto y = (int)(path->getState(i)->as<base::RealVectorStateSpace::StateType>()->values[1]);
+                int x = (int)(path->getState(i)->as<base::RealVectorStateSpace::StateType>()->values[0]);
+                int y = (int)(path->getState(i)->as<base::RealVectorStateSpace::StateType>()->values[1]);
                 if (temp.grid[x][y] == T_FREE || temp.grid[x][y] == T_PATH)
                     temp.grid[x][y] = T_PATH;
                 else
@@ -323,11 +327,11 @@ class RRTTest : public TestPlanner
 {
 protected:
 
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
-        auto rrt(std::make_shared<control::RRT>(si));
+        control::RRT *rrt = new control::RRT(si);
         rrt->setIntermediateStates(false);
-        return rrt;
+        return base::PlannerPtr(rrt);
     }
 };
 
@@ -335,11 +339,11 @@ class RRTIntermediateTest : public TestPlanner
 {
 protected:
 
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
-        auto rrt(std::make_shared<control::RRT>(si));
+        control::RRT *rrt = new control::RRT(si);
         rrt->setIntermediateStates(true);
-        return rrt;
+        return base::PlannerPtr(rrt);
     }
 };
 
@@ -349,14 +353,14 @@ class SyclopDecomposition : public control::GridDecomposition
     public:
         SyclopDecomposition(const int len, const base::RealVectorBounds& b) : GridDecomposition(len, 2, b) {}
 
-        void project(const base::State* s, std::vector<double>& coord) const override
+        virtual void project(const base::State* s, std::vector<double>& coord) const
         {
             coord.resize(2);
             coord[0] = s->as<base::RealVectorStateSpace::StateType>()->values[0];
             coord[1] = s->as<base::RealVectorStateSpace::StateType>()->values[1];
         }
 
-        void sampleFullState(const base::StateSamplerPtr& sampler, const std::vector<double>& coord, base::State* s) const override
+        virtual void sampleFullState(const base::StateSamplerPtr& sampler, const std::vector<double>& coord, base::State* s) const
         {
             sampler->sampleUniform(s);
             s->as<base::RealVectorStateSpace::StateType>()->values[0] = coord[0];
@@ -369,7 +373,7 @@ class SyclopDecomposition : public control::GridDecomposition
 
 class SyclopRRTTest : public TestPlanner
 {
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
         base::RealVectorBounds bounds(2);
 
@@ -380,20 +384,20 @@ class SyclopRRTTest : public TestPlanner
         bounds.setHigh(1, spacebounds.high[1]);
 
         // Create a 10x10 grid decomposition for Syclop
-        auto decomp(std::make_shared<SyclopDecomposition>(10, bounds));
+        control::DecompositionPtr decomp(new SyclopDecomposition (10, bounds));
 
-        auto srrt(std::make_shared<control::SyclopRRT>(si, decomp));
+        control::SyclopRRT *srrt = new control::SyclopRRT(si, decomp);
         // Set syclop parameters conducive to a tiny workspace
         srrt->setNumFreeVolumeSamples(1000);
         srrt->setNumRegionExpansions(10);
         srrt->setNumTreeExpansions(5);
-        return srrt;
+        return base::PlannerPtr(srrt);
     }
 };
 
 class SyclopESTTest : public TestPlanner
 {
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
         base::RealVectorBounds bounds(2);
 
@@ -404,14 +408,14 @@ class SyclopESTTest : public TestPlanner
         bounds.setHigh(1, spacebounds.high[1]);
 
         // Create a 10x10 grid decomposition for Syclop
-        auto decomp(std::make_shared<SyclopDecomposition>(10, bounds));
+        control::DecompositionPtr decomp(new SyclopDecomposition (10, bounds));
 
-        auto sest(std::make_shared<control::SyclopEST>(si, decomp));
+        control::SyclopEST *sest = new control::SyclopEST(si, decomp);
         // Set syclop parameters conducive to a tiny workspace
         sest->setNumFreeVolumeSamples(1000);
         sest->setNumRegionExpansions(10);
         sest->setNumTreeExpansions(5);
-        return sest;
+        return base::PlannerPtr(sest);
     }
 };
 
@@ -419,15 +423,18 @@ class KPIECETest : public TestPlanner
 {
 protected:
 
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
-        auto kpiece(std::make_shared<control::KPIECE1>(si));
+        control::KPIECE1 *kpiece = new control::KPIECE1(si);
 
-        std::vector<double> cdim = {1, 1};
-        kpiece->setProjectionEvaluator(std::make_shared<myProjectionEvaluator>(
-            si->getStateSpace(), cdim));
+        std::vector<double> cdim;
+        cdim.push_back(1);
+        cdim.push_back(1);
+        base::ProjectionEvaluatorPtr ope(new myProjectionEvaluator(si->getStateSpace(), cdim));
 
-        return kpiece;
+        kpiece->setProjectionEvaluator(ope);
+
+        return base::PlannerPtr(kpiece);
     }
 };
 
@@ -435,15 +442,18 @@ class ESTTest : public TestPlanner
 {
 protected:
 
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
-        auto est(std::make_shared<control::EST>(si));
+        control::EST *est = new control::EST(si);
 
-        std::vector<double> cdim = {1, 1};
-        est->setProjectionEvaluator(std::make_shared<myProjectionEvaluator>(
-            si->getStateSpace(), cdim));
+        std::vector<double> cdim;
+        cdim.push_back(1);
+        cdim.push_back(1);
+        base::ProjectionEvaluatorPtr ope(new myProjectionEvaluator(si->getStateSpace(), cdim));
 
-        return est;
+        est->setProjectionEvaluator(ope);
+
+        return base::PlannerPtr(est);
     }
 };
 
@@ -451,15 +461,18 @@ class PDSTTest : public TestPlanner
 {
 protected:
 
-    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si) override
+    base::PlannerPtr newPlanner(const control::SpaceInformationPtr &si)
     {
-        auto pdst(std::make_shared<control::PDST>(si));
+        control::PDST *pdst = new control::PDST(si);
 
-        std::vector<double> cdim = {1, 1};
-        pdst->setProjectionEvaluator(std::make_shared<myProjectionEvaluator>(
-            si->getStateSpace(), cdim));
+        std::vector<double> cdim;
+        cdim.push_back(1);
+        cdim.push_back(1);
+        base::ProjectionEvaluatorPtr ope(new myProjectionEvaluator(si->getStateSpace(), cdim));
 
-        return pdst;
+        pdst->setProjectionEvaluator(ope);
+
+        return base::PlannerPtr(pdst);
     }
 };
 
@@ -508,7 +521,7 @@ public:
 
 protected:
 
-    PlanTest()
+    PlanTest(void)
     {
         verbose = true;
         boost::filesystem::path path(TEST_RESOURCES_DIR);

@@ -44,13 +44,11 @@
 
 namespace
 {
-    struct AStarFoundGoal
-    {
-    };  // exception for termination
+    struct AStarFoundGoal {}; // exception for termination
 
     // visitor that terminates when we find the goal
     // V is the vertex type
-    template <typename V>
+    template<typename V>
     class AStarGoalVisitor : public boost::default_astar_visitor
     {
     public:
@@ -59,8 +57,8 @@ namespace
         }
 
         // G is the graph type
-        template <typename G>
-        void examine_vertex(const V &u, const G & /*unused*/)
+        template<typename G>
+        void examine_vertex(const V &u, const G &)
         {
             if (u == goal_)
                 throw AStarFoundGoal();

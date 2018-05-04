@@ -60,8 +60,8 @@ namespace og = ompl::geometric;
 // runs.
 int main(int argc, char** argv)
 {
-    auto space(std::make_shared<ob::RealVectorStateSpace>(2));
-    space->setBounds(0, 1);
+    ob::StateSpacePtr space(new ob::RealVectorStateSpace(2));
+    space->as<ob::RealVectorStateSpace>()->setBounds(0, 1);
     og::SimpleSetup ss(space);
 
     // Set our robot's starting state to be the bottom-left corner of
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     // RRTstar algorithm reports interesting planner progress
     // properties.
     ompl::tools::Benchmark b(ss, "my experiment");
-    auto rrt(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
+    og::RRTstar* rrt = new og::RRTstar(ss.getSpaceInformation());
     rrt->setName("rrtstar");
 
     // We disable goal biasing so that the straight-line path doesn't
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     // downward trend in path cost that characterizes RRTstar.
     rrt->setGoalBias(0.0);
 
-    b.addPlanner(rrt);
+    b.addPlanner(ob::PlannerPtr(rrt));
 
     // Here we specify options for this benchmark. Maximum time spent
     // per planner execution is 2.0 seconds, maximum memory is 100MB,

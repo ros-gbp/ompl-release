@@ -1,17 +1,13 @@
 option(OMPL_BUILD_TESTS "Build OMPL tests" ON)
 
-# configure location of resources (which are used by some demos, so this needs
-# to be outside of if-statement below)
-file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources" TEST_RESOURCES_DIR)
-if(WIN32)
-    # Correct directory separator for Windows
-    string(REPLACE "\\" "\\\\" TEST_RESOURCES_DIR "${TEST_RESOURCES_DIR}")
-endif(WIN32)
-configure_file("${TEST_RESOURCES_DIR}/config.h.in" "${TEST_RESOURCES_DIR}/config.h")
-
 if (OMPL_BUILD_TESTS)
-    find_package(Boost 1.54 COMPONENTS unit_test_framework REQUIRED)
-
+    # configure location of resources
+    file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources" TEST_RESOURCES_DIR)
+    if(WIN32)
+        # Correct directory separator for Windows
+        string(REPLACE "\\" "\\\\" TEST_RESOURCES_DIR "${TEST_RESOURCES_DIR}")
+    endif(WIN32)
+    configure_file("${TEST_RESOURCES_DIR}/config.h.in" "${TEST_RESOURCES_DIR}/config.h")
 
     # Disable teamcity reporting for tests by default
     option(OMPL_TESTS_TEAMCITY "Enable unit test reporting to TeamCity" OFF)
@@ -55,7 +51,7 @@ if (OMPL_BUILD_TESTS)
     endif(OMPL_EXTENSION_MORSE)
 
     # Python unit tests
-    if(PYTHON_FOUND AND OMPL_BUILD_PYTESTS AND EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../py-bindings/bindings")
+    if(PYTHON_FOUND AND OMPL_BUILD_PYTESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../py-bindings/bindings")
         add_ompl_python_test(util/test_util.py)
         add_ompl_python_test(base/test_base.py)
         add_ompl_python_test(geometric/test_geometric.py)

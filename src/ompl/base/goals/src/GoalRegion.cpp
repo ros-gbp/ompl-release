@@ -38,8 +38,7 @@
 #include "ompl/base/SpaceInformation.h"
 #include <limits>
 
-ompl::base::GoalRegion::GoalRegion(const SpaceInformationPtr &si)
-  : Goal(si), threshold_(std::numeric_limits<double>::epsilon())
+ompl::base::GoalRegion::GoalRegion(const SpaceInformationPtr &si) : Goal(si), threshold_(std::numeric_limits<double>::epsilon())
 {
     type_ = GOAL_REGION;
 }
@@ -52,7 +51,7 @@ bool ompl::base::GoalRegion::isSatisfied(const State *st) const
 bool ompl::base::GoalRegion::isSatisfied(const State *st, double *distance) const
 {
     double d2g = distanceGoal(st);
-    if (distance != nullptr)
+    if (distance)
         *distance = d2g;
     return d2g < threshold_;
 }

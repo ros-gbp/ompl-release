@@ -42,8 +42,11 @@
 
 namespace ompl
 {
+
     namespace geometric
     {
+
+
         /**
            @anchor gKPIECE1
            @par Short description
@@ -71,14 +74,15 @@ namespace ompl
         class KPIECE1 : public base::Planner
         {
         public:
+
             /** \brief Constructor */
             KPIECE1(const base::SpaceInformationPtr &si);
 
-            ~KPIECE1() override;
+            virtual ~KPIECE1();
 
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
-            void clear() override;
+            virtual void clear();
 
             /** \brief Set the goal bias.
 
@@ -182,75 +186,81 @@ namespace ompl
             }
 
             /** \brief Get the projection evaluator */
-            const base::ProjectionEvaluatorPtr &getProjectionEvaluator() const
+            const base::ProjectionEvaluatorPtr& getProjectionEvaluator() const
             {
                 return projectionEvaluator_;
             }
 
-            void setup() override;
+            virtual void setup();
 
-            void getPlannerData(base::PlannerData &data) const override;
+            virtual void getPlannerData(base::PlannerData &data) const;
 
         protected:
+
             /** \brief Representation of a motion for this algorithm */
             class Motion
             {
             public:
-                Motion() = default;
 
-                /** \brief Constructor that allocates memory for the state */
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState())
+                Motion() : state(nullptr), parent(nullptr)
                 {
                 }
 
-                ~Motion() = default;
+                /** \brief Constructor that allocates memory for the state */
+                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(nullptr)
+                {
+                }
+
+                ~Motion()
+                {
+                }
 
                 /** \brief The state contained by this motion */
-                base::State *state{nullptr};
+                base::State       *state;
 
                 /** \brief The parent motion in the exploration tree */
-                Motion *parent{nullptr};
+                Motion            *parent;
             };
 
             /** \brief Free the memory for a motion */
             void freeMotion(Motion *motion);
 
             /** \brief A state space sampler */
-            base::StateSamplerPtr sampler_;
+            base::StateSamplerPtr                      sampler_;
 
             /** \brief The tree datastructure and the grid that covers it */
-            Discretization<Motion> disc_;
+            Discretization<Motion>                     disc_;
 
             /** \brief This algorithm uses a discretization (a grid)
                 to guide the exploration. The exploration is imposed
                 on a projection of the state space. */
-            base::ProjectionEvaluatorPtr projectionEvaluator_;
+            base::ProjectionEvaluatorPtr               projectionEvaluator_;
 
             /** \brief When extending a motion from a cell, the
                 extension can fail. If it is, the score of the cell is
                 multiplied by this factor. */
-            double failedExpansionScoreFactor_{0.5};
+            double                                     failedExpansionScoreFactor_;
 
-            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is
-             * available) */
-            double goalBias_{0.05};
+            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available) */
+            double                                     goalBias_;
 
             /** \brief When extending a motion, the planner can decide
                 to keep the first valid part of it, even if invalid
                 states are found, as long as the valid part represents
                 a sufficiently large fraction from the original
                 motion */
-            double minValidPathFraction_{0.2};
+            double                                     minValidPathFraction_;
 
             /** \brief The maximum length of a motion to be added to a tree */
-            double maxDistance_{0.};
+            double                                     maxDistance_;
 
             /** \brief The random number generator */
-            RNG rng_;
+            RNG                                        rng_;
 
             /** \brief The most recent goal motion.  Used for PlannerData computation */
-            Motion *lastGoalMotion_{nullptr};
+            Motion                                     *lastGoalMotion_;
         };
+
     }
 }
 

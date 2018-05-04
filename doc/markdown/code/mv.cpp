@@ -6,5 +6,5 @@ public:
 };
 
 base::SpaceInformationPtr si(space);
-si->setMotionValidator(std::make_shared<myMotionValidator>(si));
+si->setMotionValidator(base::MotionValidatorPtr(new myMotionValidator(si)));
 si->setup();

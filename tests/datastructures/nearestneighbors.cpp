@@ -78,7 +78,9 @@ struct NearestNeighborConfig
         b.setHigh(1);
         space1.setBounds(b);
     }
-    ~NearestNeighborConfig() = default;
+    ~NearestNeighborConfig()
+    {
+    }
 
     base::DiscreteStateSpace space0;
     base::SE3StateSpace     space1;
@@ -109,8 +111,8 @@ NearestNeighborConfig nnConfig;
 // helper function to determine if a state is stored in a vector of states
 bool find(base::State* s, std::vector<base::State*> states)
 {
-    for (auto & state : states)
-        if (s == state)
+    for (unsigned int k=0; k<states.size(); ++k)
+        if (s == states[k])
             return true;
     return false;
 }
@@ -123,14 +125,8 @@ void stateSpaceTest(base::StateSpace& space, NearestNeighbors<base::State*>& pro
     NearestNeighborsLinear<base::State*> proximityLinear;
     base::State* s;
 
-    proximity.setDistanceFunction([&space](const base::State *a, const base::State *b)
-        {
-            return space.distance(a, b);
-        });
-    proximityLinear.setDistanceFunction([&space](const base::State *a, const base::State *b)
-        {
-            return space.distance(a, b);
-        });
+    proximity.setDistanceFunction(std::bind(&base::StateSpace::distance, &space, std::placeholders::_1, std::placeholders::_2));
+    proximityLinear.setDistanceFunction(std::bind(&base::StateSpace::distance, &space, std::placeholders::_1, std::placeholders::_2));
 
     for(i=0; i<n; ++i)
     {
@@ -219,14 +215,8 @@ void randomAccessPatternTest(base::StateSpace& space, NearestNeighbors<base::Sta
     base::State* s;
     double r;
 
-    proximity.setDistanceFunction([&space](const base::State *a, const base::State *b)
-        {
-            return space.distance(a, b);
-        });
-    proximityLinear.setDistanceFunction([&space](const base::State *a, const base::State *b)
-        {
-            return space.distance(a, b);
-        });
+    proximity.setDistanceFunction(std::bind(&base::StateSpace::distance, &space, std::placeholders::_1, std::placeholders::_2));
+    proximityLinear.setDistanceFunction(std::bind(&base::StateSpace::distance, &space, std::placeholders::_1, std::placeholders::_2));
 
     for (i=0; i<m; ++i)
     {

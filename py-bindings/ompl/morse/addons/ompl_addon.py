@@ -114,12 +114,12 @@ class Plan(bpy.types.Operator):
                 else:
                     obj.game.physics_type = 'NO_COLLISION'
 
-        if not context.scene.objects.get('ompl_settings'):
+        if not context.scene.objects.get('__settings'):
             # Bounds Configuration hasn't been setup for this file yet
             bpy.ops.ompl.boundsconfig('INVOKE_DEFAULT')
         else:
-            settings = context.scene.objects['ompl_settings']
-            if settings.get('autopb') is None:
+            settings = context.scene.objects['__settings']
+            if not settings.get('autopb'):
                 # Bounds Configuration hasn't been setup for this file yet
                 bpy.ops.ompl.boundsconfig('INVOKE_DEFAULT')
 
@@ -130,22 +130,6 @@ class Plan(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-@bpy.app.handlers.persistent
-def import_and_resave(animpath):
-    bpy.app.handlers.load_post.clear()
-    animtmppath = animpath + ".tmp"
-    print("OMPL: appending animation data")
-    with bpy.data.libraries.load(filepath=animtmppath) as (f,t):
-        t.scenes = ['S.MORSE_LOGIC']
-    print("OMPL: deleting tmp file")
-    import os
-    os.remove(animtmppath)
-    bpy.data.scenes.remove(bpy.data.scenes['Scene'])
-    bpy.data.scenes['S.MORSE_LOGIC'].name = 'Scene'
-    bpy.context.screen.scene = bpy.data.scenes['Scene']
-    bpy.ops.wm.save_mainfile(filepath=animpath)
-
-    
 ##
 # \brief Invoke Path Playback
 class Play(bpy.types.Operator):
@@ -161,34 +145,20 @@ class Play(bpy.types.Operator):
     # \brief Called when the dialogs finish; starts up the simulation
     def execute(self, context):
 
-        animpath = context.scene.objects['ompl_settings']['Animpath']
-        if animpath == '':
-            self.report({'ERROR'}, "Choose animation save file first!")
-            return {'FINISHED'}
-        self.report({'WARNING'}, "Switching to .blend file: '" + animpath + "'")
-        
         print('Starting player...')
         print("Playing %s with %s" % (bpy.data.filepath, self.filepath))
-        subprocess.run(['morse', '-c', 'run', 'ompl', OMPL_DIR+'/builder.py', '--', bpy.data.filepath, self.filepath, 'PLAY'])
+        subprocess.Popen(['morse', '-c', 'run', 'ompl', OMPL_DIR+'/builder.py', '--', bpy.data.filepath, self.filepath, 'PLAY'])
 
-        # Load blank file. Append animated objects. Re-save.
-        print("OMPL: Will save animation data to '" + animpath + "'")
-        cont = bpy.app.handlers.persistent(lambda _: import_and_resave(animpath))
-        bpy.app.handlers.load_post.append(cont)
-        blankpath = OMPL_DIR + '/resources/blank.blend'
-        print("OMPL: Loading blank file")
-        bpy.ops.wm.open_mainfile(filepath=blankpath)
-        
         return {'FINISHED'}
 
     ##
     # \brief Called when the button is pressed; prompts for the path file
     def invoke(self, context, event):
 
-        if not context.scene.objects.get('ompl_settings'):
+        if not context.scene.objects.get('__settings'):
             # Select an animation save file
             bpy.ops.ompl.animfile('INVOKE_DEFAULT')
-        elif not context.scene.objects['ompl_settings'].get('Animpath'):
+        elif not context.scene.objects['__settings'].get('Animpath'):
             # Select an animation save file
             bpy.ops.ompl.animfile('INVOKE_DEFAULT')
 
@@ -243,8 +213,11 @@ def getControllers():
         c = getattr(morse.builder.actuators, cname)
         # Is c a class?
         if isinstance(c, type):
-            # Does it inherit from ActuatorCreator and is it not ActuatorCreator?
-            if (issubclass(c, morse.builder.creator.ActuatorCreator) and
+            # Does it inherit from Actuator and is it not Actuator?
+            # OR does it inherit from ActuatorCreator and is it not ActuatorCreator?
+            if (issubclass(c, morse.builder.Actuator) and
+                c != morse.builder.Actuator) or \
+                (issubclass(c, morse.builder.creator.ActuatorCreator) and
                 c != morse.builder.creator.ActuatorCreator):
                 # Is it not in our exclusions list?
                 if cname not in excluded_controllers:
@@ -346,7 +319,7 @@ class AddGoal(bpy.types.Operator):
 
         # Check that the object exists
         if not bpy.data.objects.get(self.body):
-            self.report({'ERROR'}, "No such object: '%s'" % self.body)
+            print("No such object: '%s'" % self.body)
             return {'FINISHED'}
 
         goalname = self.body + '.' + self.goal_type
@@ -399,7 +372,7 @@ class AnimFile(bpy.types.Operator):
     # \brief Save the name of the file for later
     def execute(self, context):
 
-        context.scene.objects['ompl_settings']['Animpath'] = self.filepath
+        context.scene.objects['__settings']['Animpath'] = self.filepath
         return {'FINISHED'}
 
     ##
@@ -407,10 +380,10 @@ class AnimFile(bpy.types.Operator):
     def invoke(self, context, event):
 
         # Add the settings object if it doesn't exist
-        if not context.scene.objects.get('ompl_settings'):
+        if not context.scene.objects.get('__settings'):
             bpy.ops.object.add()
-            context.object.name = 'ompl_settings'
-        settings = context.scene.objects['ompl_settings']
+            context.object.name = '__settings'
+        settings = context.scene.objects['__settings']
 
         # Get the settings object out of the way
         settings.hide = True
@@ -485,7 +458,7 @@ class BoundsConfiguration(bpy.types.Operator):
     def execute(self, context):
 
         # Save settings to the scene
-        settings = context.scene.objects['ompl_settings']
+        settings = context.scene.objects['__settings']
         settings['autopb'] = self.autopb
         settings['pbx'] = self.pbx
         settings['pbX'] = self.pbX
@@ -538,10 +511,10 @@ class BoundsConfiguration(bpy.types.Operator):
     def invoke(self, context, event):
 
         # If the settings have not been set before, initialize them
-        if not context.scene.objects.get('ompl_settings'):
+        if not context.scene.objects.get('__settings'):
             bpy.ops.object.add()
             settings = context.object
-            settings.name = 'ompl_settings'
+            settings.name = '__settings'
             settings['autopb'] = True
             settings['pbx'] = -1000
             settings['pbX'] = 1000
@@ -568,7 +541,6 @@ class BoundsConfiguration(bpy.types.Operator):
         sockC = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         while True:
             try:
-                print("Waiting for port 50007 to connect.")
                 sockS.connect(('localhost', 50007))
             except:
                 time.sleep(0.5)
@@ -576,7 +548,6 @@ class BoundsConfiguration(bpy.types.Operator):
             break
         while True:
             try:
-                print("Waiting for port 4000 to connect.")
                 sockC.connect(('localhost', 4000))
             except:
                 time.sleep(0.5)
@@ -586,7 +557,7 @@ class BoundsConfiguration(bpy.types.Operator):
         # Retrieve the control description
         self.cdesc = ompl.morse.environment.MyEnvironment(sockS, sockC, True).cdesc
         if self.cdesc[0] > 16:
-            self.report({'ERROR'}, "OMPL Error: Control dimension exceeds 16! This dialog won't be able to accomdate that many.")
+            print("Control dimension exceeds 16! This dialog won't be able to accomdate that many.")
             return {'FINISHED'}
 
         # Invoke bounds dialog

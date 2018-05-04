@@ -46,7 +46,7 @@ class KoulesStateSpace : public ompl::base::RealVectorStateSpace
 public:
     KoulesStateSpace(unsigned int numKoules);
 
-    virtual void registerProjections();
+    virtual void registerProjections(void);
 
     double getMass(unsigned int i) const
     {

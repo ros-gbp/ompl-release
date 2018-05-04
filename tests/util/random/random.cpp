@@ -36,7 +36,6 @@
 
 #define BOOST_TEST_MODULE "Random"
 #include <boost/test/unit_test.hpp>
-#include <boost/version.hpp>
 
 #include "ompl/config.h"
 #include "ompl/util/RandomNumbers.h"
@@ -45,19 +44,11 @@
 #include <vector>
 #include <cstdio>
 
-// workaround for bug in boost versions < 1.61
-// see fix at https://github.com/boostorg/random/commit/29e8bd59a24ac2f6023c3706916f829b0d416297
-#if BOOST_VERSION >= 106100
-#define DIMSTART 1u
-#else
-#define DIMSTART 2u
-#endif
-
 using namespace ompl;
 
 struct SetSeedTo1
 {
-    SetSeedTo1()
+    SetSeedTo1(void)
     {
         ompl::RNG::setSeed(1);
     }
@@ -111,8 +102,8 @@ BOOST_AUTO_TEST_CASE(ValidRangeInts)
         c[v]++;
     }
 
-    for (int i : c)
-        BOOST_CHECK(i > V/N/3);
+    for (unsigned int i = 0 ; i < c.size() ; ++i)
+        BOOST_CHECK(c[i] > V/N/3);
 }
 
 static const double NUM_INT_SAMPLES =  1000000;
@@ -215,6 +206,7 @@ BOOST_AUTO_TEST_CASE(NormalReals)
     BOOST_OMPL_EXPECT_NEAR(avgNormalReals(10.0, 1.0), 10.0, errNormal(1.0));
 }
 
+
 BOOST_AUTO_TEST_CASE(SampleUnitSphere)
 {
     // Variables
@@ -228,7 +220,7 @@ BOOST_AUTO_TEST_CASE(SampleUnitSphere)
     double testTol = 10.0*std::numeric_limits<double>::epsilon();
 
     // Iterate over a sequence of dimensions
-    for (unsigned int dim = DIMSTART; dim <= numDims; ++dim)
+    for (unsigned int dim = 1u; dim <= numDims; ++dim)
     {
         // Iterate over a sequence of random samples
         for (unsigned int j = 0u; j < numSamples; ++j)
@@ -303,6 +295,7 @@ BOOST_AUTO_TEST_CASE(SampleBall)
 }
 
 #if OMPL_HAVE_EIGEN3
+
 BOOST_AUTO_TEST_CASE(SamplePhsSurface)
 {
     // Variables
@@ -316,7 +309,7 @@ BOOST_AUTO_TEST_CASE(SamplePhsSurface)
     double testTol = 1E5*std::numeric_limits<double>::epsilon();
 
     // Iterate over a sequence of dimensions
-    for (unsigned int dim = DIMSTART; dim <= numDims; ++dim)
+    for (unsigned int dim = 1u; dim <= numDims; ++dim)
     {
         // Variables
         // The foci
@@ -358,6 +351,7 @@ BOOST_AUTO_TEST_CASE(SamplePhsSurface)
         }
     }
 }
+
 
 BOOST_AUTO_TEST_CASE(SampleInPhs)
 {

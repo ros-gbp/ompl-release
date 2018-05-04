@@ -42,8 +42,10 @@
 
 namespace ompl
 {
+
     namespace geometric
     {
+
         /**
            @anchor gRRT
            @par Short description
@@ -54,9 +56,7 @@ namespace ompl
            qr, until a state @b qm is reached. @b qm is then added to
            the exploration tree.
            @par External documentation
-           J. Kuffner and S.M. LaValle, RRT-connect: An efficient approach to single-query path planning, in <em>Proc.
-           2000 IEEE Intl. Conf. on Robotics and Automation</em>, pp. 995–1001, Apr. 2000. DOI:
-           [10.1109/ROBOT.2000.844730](http://dx.doi.org/10.1109/ROBOT.2000.844730)<br>
+           J. Kuffner and S.M. LaValle, RRT-connect: An efficient approach to single-query path planning, in <em>Proc. 2000 IEEE Intl. Conf. on Robotics and Automation</em>, pp. 995–1001, Apr. 2000. DOI: [10.1109/ROBOT.2000.844730](http://dx.doi.org/10.1109/ROBOT.2000.844730)<br>
            [[PDF]](http://ieeexplore.ieee.org/ielx5/6794/18246/00844730.pdf?tp=&arnumber=844730&isnumber=18246)
            [[more]](http://msl.cs.uiuc.edu/~lavalle/rrtpubs.html)
         */
@@ -65,16 +65,17 @@ namespace ompl
         class RRT : public base::Planner
         {
         public:
+
             /** \brief Constructor */
             RRT(const base::SpaceInformationPtr &si);
 
-            ~RRT() override;
+            virtual ~RRT();
 
-            void getPlannerData(base::PlannerData &data) const override;
+            virtual void getPlannerData(base::PlannerData &data) const;
 
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
-            void clear() override;
+            virtual void clear();
 
             /** \brief Set the goal bias
 
@@ -113,19 +114,17 @@ namespace ompl
             }
 
             /** \brief Set a different nearest neighbors datastructure */
-            template <template <typename T> class NN>
+            template<template<typename T> class NN>
             void setNearestNeighbors()
             {
-                if (nn_ && nn_->size() != 0)
-                    OMPL_WARN("Calling setNearestNeighbors will clear all states.");
-                clear();
-                nn_ = std::make_shared<NN<Motion *>>();
-                setup();
+                nn_.reset(new NN<Motion*>());
             }
 
-            void setup() override;
+            virtual void setup();
 
         protected:
+
+
             /** \brief Representation of a motion
 
                 This only contains pointers to parent motions as we
@@ -133,20 +132,26 @@ namespace ompl
             class Motion
             {
             public:
-                Motion() = default;
 
-                /** \brief Constructor that allocates memory for the state */
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState())
+                Motion() : state(nullptr), parent(nullptr)
                 {
                 }
 
-                ~Motion() = default;
+                /** \brief Constructor that allocates memory for the state */
+                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(nullptr)
+                {
+                }
+
+                ~Motion()
+                {
+                }
 
                 /** \brief The state contained by the motion */
-                base::State *state{nullptr};
+                base::State       *state;
 
                 /** \brief The parent motion in the exploration tree */
-                Motion *parent{nullptr};
+                Motion            *parent;
+
             };
 
             /** \brief Free the memory allocated by this planner */
@@ -159,24 +164,24 @@ namespace ompl
             }
 
             /** \brief State sampler */
-            base::StateSamplerPtr sampler_;
+            base::StateSamplerPtr                          sampler_;
 
             /** \brief A nearest-neighbors datastructure containing the tree of motions */
-            std::shared_ptr<NearestNeighbors<Motion *>> nn_;
+            std::shared_ptr< NearestNeighbors<Motion*> > nn_;
 
-            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is
-             * available) */
-            double goalBias_{.05};
+            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available) */
+            double                                         goalBias_;
 
             /** \brief The maximum length of a motion to be added to a tree */
-            double maxDistance_{0.};
+            double                                         maxDistance_;
 
             /** \brief The random number generator */
-            RNG rng_;
+            RNG                                            rng_;
 
             /** \brief The most recent goal motion.  Used for PlannerData computation */
-            Motion *lastGoalMotion_{nullptr};
+            Motion                                         *lastGoalMotion_;
         };
+
     }
 }
 

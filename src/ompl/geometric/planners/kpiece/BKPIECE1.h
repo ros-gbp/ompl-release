@@ -42,8 +42,10 @@
 
 namespace ompl
 {
+
     namespace geometric
     {
+
         /**
            @anchor gBKPIECE1
            @par Short description
@@ -73,10 +75,11 @@ namespace ompl
         class BKPIECE1 : public base::Planner
         {
         public:
+
             /** \brief Constructor */
             BKPIECE1(const base::SpaceInformationPtr &si);
 
-            ~BKPIECE1() override;
+            virtual ~BKPIECE1();
 
             /** \brief Set the projection evaluator. This class is
                 able to compute the projection of a given state. */
@@ -93,7 +96,7 @@ namespace ompl
             }
 
             /** \brief Get the projection evaluator. */
-            const base::ProjectionEvaluatorPtr &getProjectionEvaluator() const
+            const base::ProjectionEvaluatorPtr& getProjectionEvaluator() const
             {
                 return projectionEvaluator_;
             }
@@ -166,74 +169,82 @@ namespace ompl
                 return minValidPathFraction_;
             }
 
-            void setup() override;
+            virtual void setup();
 
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
-            void clear() override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
+            virtual void clear();
 
-            void getPlannerData(base::PlannerData &data) const override;
+            virtual void getPlannerData(base::PlannerData &data) const;
 
         protected:
+
             /** \brief Representation of a motion for this algorithm */
             class Motion
             {
             public:
-                Motion() = default;
 
-                /** \brief Constructor that allocates memory for the state */
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState())
+                Motion() : root(nullptr), state(nullptr), parent(nullptr)
                 {
                 }
 
-                ~Motion() = default;
+                /** \brief Constructor that allocates memory for the state */
+                Motion(const base::SpaceInformationPtr &si) : root(nullptr), state(si->allocState()), parent(nullptr)
+                {
+                }
+
+                ~Motion()
+                {
+                }
 
                 /** \brief The root state (start state) that leads to this motion */
-                const base::State *root{nullptr};
+                const base::State   *root;
 
                 /** \brief The state contained by this motion */
-                base::State *state{nullptr};
+                base::State         *state;
 
                 /** \brief The parent motion in the exploration tree */
-                Motion *parent{nullptr};
+                Motion              *parent;
             };
 
             /** \brief Free the memory for a motion */
             void freeMotion(Motion *motion);
 
             /** \brief The employed state sampler */
-            base::ValidStateSamplerPtr sampler_;
+            base::ValidStateSamplerPtr                 sampler_;
 
             /** \brief The employed projection evaluator */
-            base::ProjectionEvaluatorPtr projectionEvaluator_;
+            base::ProjectionEvaluatorPtr               projectionEvaluator_;
 
             /** \brief The start tree */
-            Discretization<Motion> dStart_;
+            Discretization<Motion>                     dStart_;
 
             /** \brief The goal tree */
-            Discretization<Motion> dGoal_;
+            Discretization<Motion>                     dGoal_;
 
             /** \brief When extending a motion from a cell, the
                 extension can fail. If it is, the score of the cell is
                 multiplied by this factor. */
-            double failedExpansionScoreFactor_{.5};
+            double                                     failedExpansionScoreFactor_;
 
             /** \brief When extending a motion, the planner can decide
                 to keep the first valid part of it, even if invalid
                 states are found, as long as the valid part represents
                 a sufficiently large fraction from the original
                 motion */
-            double minValidPathFraction_{.5};
+            double                                     minValidPathFraction_;
 
             /** \brief The maximum length of a motion to be added to a tree */
-            double maxDistance_{0.};
+            double                                     maxDistance_;
 
             /** \brief The random number generator */
-            RNG rng_;
+            RNG                                        rng_;
 
             /** \brief The pair of states in each tree connected during planning.  Used for PlannerData computation */
-            std::pair<base::State *, base::State *> connectionPoint_{nullptr, nullptr};
+            std::pair<base::State*, base::State*>      connectionPoint_;
         };
+
     }
 }
+
 
 #endif

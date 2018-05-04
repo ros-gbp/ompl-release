@@ -55,12 +55,12 @@ namespace ompl
             {
             }
 
-            ~PlannerTest()
+            ~PlannerTest(void)
             {
             }
 
             /** \brief Test that solve() and clear() work as expected */
-            void testSolveAndClear()
+            void testSolveAndClear(void)
             {
                 planner_->clear();
 
@@ -91,7 +91,7 @@ namespace ompl
             }
 
             /** \brief Call all tests for the planner */
-            void test()
+            void test(void)
             {
                 testSolveAndClear();
             }

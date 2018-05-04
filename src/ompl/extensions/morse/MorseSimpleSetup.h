@@ -43,13 +43,16 @@
 
 namespace ompl
 {
+
     namespace control
     {
+
         /** \brief Create the set of classes typically needed to solve a
             control problem when forward propagation is computed with MORSE */
         class MorseSimpleSetup : public SimpleSetup
         {
         public:
+
             /** \brief Pointer to the environment representing the MORSE simulation */
             const base::MorseEnvironmentPtr env_;
 
@@ -64,7 +67,7 @@ namespace ompl
             }
 
             /** \brief Get the MORSE environment associated with this setup */
-            const base::MorseEnvironmentPtr &getEnvironment() const
+            const base::MorseEnvironmentPtr& getEnvironment() const
             {
                 return env_;
             }
@@ -81,7 +84,7 @@ namespace ompl
             /** \brief This method will create the necessary classes
                 for planning. The solve() method will call this
                 function automatically. */
-            void setup() override;
+            void setup();
 
             /** \brief Run the planner until solution is found or user shuts down MORSE */
             base::PlannerStatus solve();
@@ -93,13 +96,11 @@ namespace ompl
             /** \brief Call playPath() on the solution path, if one is available */
             void playSolutionPath() const;
 
-            /** \brief Simulate the MORSE environment forward for \e steps simulation steps, using the control \e
-               control.
+            /** \brief Simulate the MORSE environment forward for \e steps simulation steps, using the control \e control.
                 Construct a path representing this action. */
             base::PathPtr simulateControl(const double *control, unsigned int steps) const;
 
-            /** \brief Simulate the MORSE environment forward for \e steps simulation steps, using the control \e
-               control.
+            /** \brief Simulate the MORSE environment forward for \e steps simulation steps, using the control \e control.
                 Construct a path representing this action. */
             base::PathPtr simulateControl(const Control *control, unsigned int steps) const;
 
@@ -108,6 +109,7 @@ namespace ompl
                 (ompl::control::ControlSpace::nullControl()).
                 Construct a path representing this action. */
             base::PathPtr simulate(unsigned int steps) const;
+
         };
     }
 }

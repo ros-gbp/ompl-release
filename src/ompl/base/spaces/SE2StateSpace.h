@@ -45,15 +45,19 @@ namespace ompl
 {
     namespace base
     {
+
         /** \brief A state space representing SE(2) */
         class SE2StateSpace : public CompoundStateSpace
         {
         public:
+
             /** \brief A state in SE(2): (x, y, yaw) */
             class StateType : public CompoundStateSpace::StateType
             {
             public:
-                StateType() = default;
+                StateType() : CompoundStateSpace::StateType()
+                {
+                }
 
                 /** \brief Get the X component of the state */
                 double getX() const
@@ -101,18 +105,22 @@ namespace ompl
                 {
                     as<SO2StateSpace::StateType>(1)->value = yaw;
                 }
+
             };
 
-            SE2StateSpace()
+
+            SE2StateSpace() : CompoundStateSpace()
             {
                 setName("SE2" + getName());
                 type_ = STATE_SPACE_SE2;
-                addSubspace(std::make_shared<RealVectorStateSpace>(2), 1.0);
-                addSubspace(std::make_shared<SO2StateSpace>(), 0.5);
+                addSubspace(StateSpacePtr(new RealVectorStateSpace(2)), 1.0);
+                addSubspace(StateSpacePtr(new SO2StateSpace()), 0.5);
                 lock();
             }
 
-            ~SE2StateSpace() override = default;
+            virtual ~SE2StateSpace()
+            {
+            }
 
             /** \copydoc RealVectorStateSpace::setBounds() */
             void setBounds(const RealVectorBounds &bounds)
@@ -121,15 +129,16 @@ namespace ompl
             }
 
             /** \copydoc RealVectorStateSpace::getBounds() */
-            const RealVectorBounds &getBounds() const
+            const RealVectorBounds& getBounds() const
             {
                 return as<RealVectorStateSpace>(0)->getBounds();
             }
 
-            State *allocState() const override;
-            void freeState(State *state) const override;
+            virtual State* allocState() const;
+            virtual void freeState(State *state) const;
 
-            void registerProjections() override;
+            virtual void registerProjections();
+
         };
     }
 }

@@ -45,15 +45,19 @@ namespace ompl
 {
     namespace base
     {
+
         /** \brief A state space representing SE(3) */
         class SE3StateSpace : public CompoundStateSpace
         {
         public:
+
             /** \brief A state in SE(3): position = (x, y, z), quaternion = (x, y, z, w) */
             class StateType : public CompoundStateSpace::StateType
             {
             public:
-                StateType() = default;
+                StateType() : CompoundStateSpace::StateType()
+                {
+                }
 
                 /** \brief Get the X component of the state */
                 double getX() const
@@ -74,13 +78,13 @@ namespace ompl
                 }
 
                 /** \brief Get the rotation component of the state */
-                const SO3StateSpace::StateType &rotation() const
+                const SO3StateSpace::StateType& rotation() const
                 {
                     return *as<SO3StateSpace::StateType>(1);
                 }
 
                 /** \brief Get the rotation component of the state and allow changing it as well */
-                SO3StateSpace::StateType &rotation()
+                SO3StateSpace::StateType& rotation()
                 {
                     return *as<SO3StateSpace::StateType>(1);
                 }
@@ -110,18 +114,21 @@ namespace ompl
                     setY(y);
                     setZ(z);
                 }
+
             };
 
-            SE3StateSpace()
+            SE3StateSpace() : CompoundStateSpace()
             {
                 setName("SE3" + getName());
                 type_ = STATE_SPACE_SE3;
-                addSubspace(std::make_shared<RealVectorStateSpace>(3), 1.0);
-                addSubspace(std::make_shared<SO3StateSpace>(), 1.0);
+                addSubspace(StateSpacePtr(new RealVectorStateSpace(3)), 1.0);
+                addSubspace(StateSpacePtr(new SO3StateSpace()), 1.0);
                 lock();
             }
 
-            ~SE3StateSpace() override = default;
+            virtual ~SE3StateSpace()
+            {
+            }
 
             /** \copydoc RealVectorStateSpace::setBounds() */
             void setBounds(const RealVectorBounds &bounds)
@@ -130,15 +137,15 @@ namespace ompl
             }
 
             /** \copydoc RealVectorStateSpace::getBounds() */
-            const RealVectorBounds &getBounds() const
+            const RealVectorBounds& getBounds() const
             {
                 return as<RealVectorStateSpace>(0)->getBounds();
             }
 
-            State *allocState() const override;
-            void freeState(State *state) const override;
+            virtual State* allocState() const;
+            virtual void freeState(State *state) const;
 
-            void registerProjections() override;
+            virtual void registerProjections();
         };
     }
 }

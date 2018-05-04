@@ -40,6 +40,7 @@ namespace ompl
 {
     namespace magic
     {
+
         /** \brief Maximum number of consecutive failures to allow
             before giving up on improving a state. A failure consists
             of being unable to sample a state that is closer to the
@@ -48,8 +49,7 @@ namespace ompl
     }
 }
 
-bool ompl::geometric::HillClimbing::tryToImprove(const base::GoalRegion &goal, base::State *state, double nearDistance,
-                                                 double *betterGoalDistance) const
+bool ompl::geometric::HillClimbing::tryToImprove(const base::GoalRegion &goal, base::State *state, double nearDistance, double *betterGoalDistance) const
 {
     double tempDistance;
     double initialDistance;
@@ -66,7 +66,7 @@ bool ompl::geometric::HillClimbing::tryToImprove(const base::GoalRegion &goal, b
     base::State *test = si_->allocState();
     unsigned int noUpdateSteps = 0;
 
-    for (unsigned int i = 0; noUpdateSteps < magic::MAX_CLIMB_NO_UPDATE_STEPS && i < maxImproveSteps_; ++i)
+    for (unsigned int i = 0 ; noUpdateSteps < magic::MAX_CLIMB_NO_UPDATE_STEPS && i < maxImproveSteps_ ; ++i)
     {
         bool update = false;
         ss->sampleUniformNear(test, state, nearDistance);
@@ -79,24 +79,26 @@ bool ompl::geometric::HillClimbing::tryToImprove(const base::GoalRegion &goal, b
             wasSatisfied = isSatisfied;
             update = true;
         }
-        else if (wasValid == isValid)
-        {
-            if (!wasSatisfied && isSatisfied)
+        else
+            if (wasValid == isValid)
             {
-                si_->copyState(state, test);
-                wasSatisfied = true;
-                update = true;
-            }
-            else if (wasSatisfied == isSatisfied)
-            {
-                if (tempDistance < bestDist)
+                if (!wasSatisfied && isSatisfied)
                 {
                     si_->copyState(state, test);
-                    bestDist = tempDistance;
+                    wasSatisfied = true;
                     update = true;
                 }
+                else
+                    if (wasSatisfied == isSatisfied)
+                    {
+                        if (tempDistance < bestDist)
+                        {
+                            si_->copyState(state, test);
+                            bestDist = tempDistance;
+                            update = true;
+                        }
+                    }
             }
-        }
         if (update)
             noUpdateSteps = 0;
         else

@@ -68,10 +68,9 @@ def planWithMorse(sockS, sockC):
         # Alternative setup with a planner using a projection
         planner = oc.KPIECE1(si)
         space = si.getStateSpace()
-        # This projection uses the x,y coords of every rigid body in the state space.
-        proj = om.MorseProjection(space)
-        space.registerProjection("MorseProjection", proj)
-        planner.setProjectionEvaluator("MorseProjection")
+        proj = ExampleProjection(space)
+        space.registerProjection("ExampleProjection", proj)
+        planner.setProjectionEvaluator("ExampleProjection")
         """
 
         ss.setPlanner(planner)
@@ -81,8 +80,7 @@ def planWithMorse(sockS, sockC):
 
         # Write the solution path to file
         if ss.haveSolutionPath():
-            solnFileName = sys.argv[sys.argv.index('--') + 1]
-            print("Saving solution to '" + solnFileName + "'...")
+            print("Saving solution.")
             cpath = ss.getSolutionPath()
             # Save the states, controls, and durations
             st = []
@@ -93,10 +91,9 @@ def planWithMorse(sockS, sockC):
                 con.append(tuple(cpath.getControl(i)[j] for j in range(env.cdesc[0])))
                 dur.append(cpath.getControlDuration(i))
             st.append(env.stateToList(cpath.getState(cpath.getControlCount())))
-            with open(solnFileName, 'wb') as f:
+            with open(sys.argv[1], 'wb') as f:
                 # Pickle it all into a file
                 pickle.dump((st,con,dur), f)
-            print("...done.")
         else:
             print("No solution found.")
 
@@ -120,7 +117,5 @@ sockC.connect(('localhost', 4000))
 # Plan
 planWithMorse(sockS, sockC)
 
-# Quit this instance of Blender.
-exit(0)
 
 

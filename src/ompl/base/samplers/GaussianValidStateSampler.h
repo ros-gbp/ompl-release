@@ -44,17 +44,21 @@ namespace ompl
 {
     namespace base
     {
+
         /** \brief Generate valid samples using the Gaussian sampling strategy */
         class GaussianValidStateSampler : public ValidStateSampler
         {
         public:
+
             /** \brief Constructor */
             GaussianValidStateSampler(const SpaceInformation *si);
 
-            ~GaussianValidStateSampler() override = default;
+            virtual ~GaussianValidStateSampler()
+            {
+            }
 
-            bool sample(State *state) override;
-            bool sampleNear(State *state, const State *near, double distance) override;
+            virtual bool sample(State *state);
+            virtual bool sampleNear(State *state, const State *near, const double distance);
 
             /** \brief Get the standard deviation used when sampling */
             double getStdDev() const
@@ -69,13 +73,16 @@ namespace ompl
             }
 
         protected:
+
             /** \brief The sampler to build upon */
             StateSamplerPtr sampler_;
 
             /** \brief The standard deviation to use in the sampling process */
-            double stddev_;
+            double                  stddev_;
         };
+
     }
 }
+
 
 #endif

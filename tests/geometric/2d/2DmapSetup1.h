@@ -57,7 +57,7 @@ namespace ompl
         {
         public:
 
-            StateSpace2DMap1() : base::RealVectorStateSpace(1)
+            StateSpace2DMap1(void) : base::RealVectorStateSpace(1)
             {
             }
 
@@ -110,13 +110,13 @@ namespace ompl
 
         protected:
 
-            base::StateSpacePtr constructSpace()
+            base::StateSpacePtr constructSpace(void)
             {
-                return std::make_shared<StateSpace2DMap1>() + std::make_shared<StateSpace2DMap1>();
+                return base::StateSpacePtr(new StateSpace2DMap1()) + base::StateSpacePtr(new StateSpace2DMap1());
             }
 
             /** \brief Set the bounds and the state validity checker */
-            void configure2DMap1()
+            void configure2DMap1(void)
             {
                 base::RealVectorBounds bounds(1);
                 bounds.low[0] = 0.0;
@@ -126,10 +126,7 @@ namespace ompl
                 bounds.high[0] = (double)env_.height - 0.000000001;
                 getStateSpace()->as<base::CompoundStateSpace>()->as<StateSpace2DMap1>(1)->setBounds(bounds);
 
-                setStateValidityChecker([this](const base::State *state)
-                    {
-                        return isValidFn2DMap1(&env_.grid, state);
-                    });
+                setStateValidityChecker(std::bind(&isValidFn2DMap1, &env_.grid, std::placeholders::_1));
 
                 base::ScopedState<base::CompoundStateSpace> state(getSpaceInformation());
                 state->as<base::RealVectorStateSpace::StateType>(0)->values[0] = env_.start.first;

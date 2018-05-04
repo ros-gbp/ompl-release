@@ -53,6 +53,7 @@
 
 namespace ompl
 {
+
     namespace tools
     {
         /**
@@ -72,6 +73,7 @@ namespace ompl
         class LightningDB
         {
         public:
+
             /** \brief Constructor needs the state space used for planning.
              *  \param space - state space
              */
@@ -121,8 +123,8 @@ namespace ompl
             /**
              * \brief Find the k nearest paths to our queries one
              */
-            std::vector<ompl::base::PlannerDataPtr> findNearestStartGoal(int nearestK, const base::State *start,
-                                                                         const base::State *goal);
+            std::vector<ompl::base::PlannerDataPtr> findNearestStartGoal(int nearestK,
+                const base::State *start, const base::State *goal);
 
             /** \brief Get the total number of paths stored in the database */
             std::size_t getExperiencesCount() const;
@@ -146,12 +148,14 @@ namespace ompl
             }
 
         private:
+
             /**
              * \brief Add the distance between both path's starts and the distance between both path's ends together
              */
-            double distanceFunction(const ompl::base::PlannerDataPtr &a, const ompl::base::PlannerDataPtr &b) const;
+            double distanceFunction(const ompl::base::PlannerDataPtr a, const ompl::base::PlannerDataPtr b) const;
 
         protected:
+
             /// The created space information
             base::SpaceInformationPtr si_;
 
@@ -159,17 +163,17 @@ namespace ompl
             ompl::base::PlannerDataStorage plannerDataStorage_;
 
             // A nearest-neighbors datastructure containing the tree of start/goal states combined
-            std::shared_ptr<NearestNeighbors<ompl::base::PlannerDataPtr>> nn_;
+            std::shared_ptr< NearestNeighbors<ompl::base::PlannerDataPtr> > nn_;
 
             // Reusable plannerData instance for filling in start and goal and performing searches on the tree
             ompl::base::PlannerDataPtr nnSearchKey_;
 
             // Track unsaved paths to determine if a save is required
-            int numUnsavedPaths_{0};
+            int numUnsavedPaths_;
 
-        };  // end of class LightningDB
+        }; // end of class LightningDB
 
-    }  // end of namespace
+    } // end of namespace
 
-}  // end of namespace
+} // end of namespace
 #endif
