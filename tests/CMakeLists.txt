@@ -19,10 +19,13 @@ if (OMPL_BUILD_TESTS)
     add_ompl_test(test_grid datastructures/grid.cpp)
     add_ompl_test(test_gridb datastructures/gridb.cpp)
     add_ompl_test(test_nearestneighbors datastructures/nearestneighbors.cpp)
+    if(FLANN_FOUND)
+        target_link_libraries(test_nearestneighbors ${FLANN_LIBRARIES})
+    endif()
     add_ompl_test(test_pdf datastructures/pdf.cpp)
 
     # Test utilities
-#    add_ompl_test(test_random util/random/random.cpp)
+    add_ompl_test(test_random util/random/random.cpp)
     add_ompl_test(test_machine_specs benchmark/machine_specs.cpp)
 
     # Test base code
