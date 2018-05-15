@@ -1,3 +1,72 @@
+## ompl (kinetic) - 1.2.3-0
+
+The packages in the `ompl` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release ompl -r kinetic -t kinetic` on `Fri, 04 May 2018 14:03:17 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.2.1-1`
+- old version: `1.2.1-1`
+- new version: `1.2.3-0`
+
+Versions of tools used:
+
+- bloom version: `0.6.4`
+- catkin_pkg version: `0.4.1`
+- rosdep version: `0.12.2`
+- rosdistro version: `0.6.8`
+- vcstools version: `0.1.40`
+
+
+## ompl (lunar) - 1.3.2-2
+
+The packages in the `ompl` repository were released into the `lunar` distro by running `/usr/bin/bloom-release ompl -r lunar -t lunar` on `Mon, 13 Nov 2017 03:17:00 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.3.1-3`
+- old version: `1.3.2-1`
+- new version: `1.3.2-2`
+
+Versions of tools used:
+
+- bloom version: `0.6.1`
+- catkin_pkg version: `0.3.9`
+- rosdep version: `0.11.8`
+- rosdistro version: `0.6.2`
+- vcstools version: `0.1.39`
+
+
+## ompl (lunar) - 1.3.2-1
+
+The packages in the `ompl` repository were released into the `lunar` distro by running `/usr/bin/bloom-release ompl -r lunar -t lunar` on `Mon, 13 Nov 2017 02:45:33 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.3.1-3`
+- old version: `1.3.2-0`
+- new version: `1.3.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.6.1`
+- catkin_pkg version: `0.3.9`
+- rosdep version: `0.11.8`
+- rosdistro version: `0.6.2`
+- vcstools version: `0.1.39`
+
+
 ## ompl (lunar) - 1.3.1-3
 
 The packages in the `ompl` repository were released into the `lunar` distro by running `/usr/bin/bloom-release ompl -r lunar -t lunar` on `Thu, 25 May 2017 22:58:57 -0000`
