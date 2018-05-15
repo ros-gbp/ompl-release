@@ -1,36 +1,36 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2010, Rice University
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2010, Rice University
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Rice University nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Ioan Sucan */
 
@@ -54,8 +54,8 @@ void ompl::base::SO2StateSampler::sampleUniform(State *state)
 
 void ompl::base::SO2StateSampler::sampleUniformNear(State *state, const State *near, const double distance)
 {
-    state->as<SO2StateSpace::StateType>()->value = rng_.uniformReal(near->as<SO2StateSpace::StateType>()->value - distance,
-                                                                       near->as<SO2StateSpace::StateType>()->value + distance);
+    state->as<SO2StateSpace::StateType>()->value = rng_.uniformReal(
+        near->as<SO2StateSpace::StateType>()->value - distance, near->as<SO2StateSpace::StateType>()->value + distance);
     space_->enforceBounds(state);
 }
 
@@ -85,9 +85,8 @@ void ompl::base::SO2StateSpace::enforceBounds(State *state) const
     double v = fmod(state->as<StateType>()->value, 2.0 * boost::math::constants::pi<double>());
     if (v < -boost::math::constants::pi<double>())
         v += 2.0 * boost::math::constants::pi<double>();
-    else
-        if (v >= boost::math::constants::pi<double>())
-            v -= 2.0 * boost::math::constants::pi<double>();
+    else if (v >= boost::math::constants::pi<double>())
+        v -= 2.0 * boost::math::constants::pi<double>();
     state->as<StateType>()->value = v;
 }
 
@@ -121,16 +120,20 @@ double ompl::base::SO2StateSpace::distance(const State *state1, const State *sta
 {
     // assuming the states 1 & 2 are within bounds
     double d = fabs(state1->as<StateType>()->value - state2->as<StateType>()->value);
-    BOOST_ASSERT_MSG(satisfiesBounds(state1) && satisfiesBounds(state2),
-        "The states passed to SO2StateSpace::distance are not within bounds. Call "
-        "SO2StateSpace::enforceBounds() in, e.g., ompl::control::ODESolver::PostPropagationEvent, "
-        "ompl::control::StatePropagator, or ompl::base::StateValidityChecker");
+    BOOST_ASSERT_MSG(satisfiesBounds(state1) && satisfiesBounds(state2), "The states passed to SO2StateSpace::distance "
+                                                                         "are not within bounds. Call "
+                                                                         "SO2StateSpace::enforceBounds() in, e.g., "
+                                                                         "ompl::control::ODESolver::"
+                                                                         "PostPropagationEvent, "
+                                                                         "ompl::control::StatePropagator, or "
+                                                                         "ompl::base::StateValidityChecker");
     return (d > boost::math::constants::pi<double>()) ? 2.0 * boost::math::constants::pi<double>() - d : d;
 }
 
 bool ompl::base::SO2StateSpace::equalStates(const State *state1, const State *state2) const
 {
-    return fabs(state1->as<StateType>()->value - state2->as<StateType>()->value) < std::numeric_limits<double>::epsilon() * 2.0;
+    return fabs(state1->as<StateType>()->value - state2->as<StateType>()->value) <
+           std::numeric_limits<double>::epsilon() * 2.0;
 }
 
 void ompl::base::SO2StateSpace::interpolate(const State *from, const State *to, const double t, State *state) const
@@ -149,25 +152,24 @@ void ompl::base::SO2StateSpace::interpolate(const State *from, const State *to, 
         // input states are within bounds, so the following check is sufficient
         if (v > boost::math::constants::pi<double>())
             v -= 2.0 * boost::math::constants::pi<double>();
-        else
-            if (v < -boost::math::constants::pi<double>())
-                v += 2.0 * boost::math::constants::pi<double>();
+        else if (v < -boost::math::constants::pi<double>())
+            v += 2.0 * boost::math::constants::pi<double>();
     }
 }
 
 ompl::base::StateSamplerPtr ompl::base::SO2StateSpace::allocDefaultStateSampler() const
 {
-    return StateSamplerPtr(new SO2StateSampler(this));
+    return std::make_shared<SO2StateSampler>(this);
 }
 
-ompl::base::State* ompl::base::SO2StateSpace::allocState() const
+ompl::base::State *ompl::base::SO2StateSpace::allocState() const
 {
     return new StateType();
 }
 
 void ompl::base::SO2StateSpace::freeState(State *state) const
 {
-    delete static_cast<StateType*>(state);
+    delete static_cast<StateType *>(state);
 }
 
 void ompl::base::SO2StateSpace::registerProjections()
@@ -175,17 +177,16 @@ void ompl::base::SO2StateSpace::registerProjections()
     class SO2DefaultProjection : public ProjectionEvaluator
     {
     public:
-
         SO2DefaultProjection(const StateSpace *space) : ProjectionEvaluator(space)
         {
         }
 
-        virtual unsigned int getDimension() const
+        unsigned int getDimension() const override
         {
             return 1;
         }
 
-        virtual void defaultCellSizes()
+        void defaultCellSizes() override
         {
             cellSizes_.resize(1);
             cellSizes_[0] = boost::math::constants::pi<double>() / magic::PROJECTION_DIMENSION_SPLITS;
@@ -194,16 +195,16 @@ void ompl::base::SO2StateSpace::registerProjections()
             bounds_.high[0] = boost::math::constants::pi<double>();
         }
 
-        virtual void project(const State *state, EuclideanProjection &projection) const
+        void project(const State *state, Eigen::Ref<Eigen::VectorXd> projection) const override
         {
             projection(0) = state->as<SO2StateSpace::StateType>()->value;
         }
     };
 
-    registerDefaultProjection(ProjectionEvaluatorPtr(dynamic_cast<ProjectionEvaluator*>(new SO2DefaultProjection(this))));
+    registerDefaultProjection(std::make_shared<SO2DefaultProjection>(this));
 }
 
-double* ompl::base::SO2StateSpace::getValueAddressAtIndex(State *state, const unsigned int index) const
+double *ompl::base::SO2StateSpace::getValueAddressAtIndex(State *state, const unsigned int index) const
 {
     return index == 0 ? &(state->as<StateType>()->value) : nullptr;
 }
@@ -211,7 +212,7 @@ double* ompl::base::SO2StateSpace::getValueAddressAtIndex(State *state, const un
 void ompl::base::SO2StateSpace::printState(const State *state, std::ostream &out) const
 {
     out << "SO2State [";
-    if (state)
+    if (state != nullptr)
         out << state->as<StateType>()->value;
     else
         out << "nullptr";

@@ -39,7 +39,7 @@
 #include "ompl/util/Exception.h"
 
 ompl::base::MorseProjection::MorseProjection(const StateSpacePtr &space)
-: ProjectionEvaluator(space), space_(dynamic_cast<MorseStateSpace*>(space.get()))
+  : ProjectionEvaluator(space), space_(dynamic_cast<MorseStateSpace *>(space.get()))
 {
     if (!space_)
         throw Exception("MORSE State Space needed for Morse Projection");
@@ -53,19 +53,15 @@ void ompl::base::MorseProjection::setup()
 unsigned int ompl::base::MorseProjection::getDimension() const
 {
     // default projection uses 2 coordinates for each rigid body
-    return 2*space_->getEnvironment()->rigidBodies_;
+    return 2 * space_->getEnvironment()->rigidBodies_;
 }
 
 void ompl::base::MorseProjection::defaultCellSizes()
 {
-    cellSizes_.resize(getDimension());
-    for (unsigned int i = 0; i < getDimension(); i++)
-    {
-        cellSizes_[i] = 1.0;
-    }
+    cellSizes_ = std::vector<double>(getDimension(), 1.0);
 }
 
-void ompl::base::MorseProjection::project(const State *state, EuclideanProjection &projection) const
+void ompl::base::MorseProjection::project(const State *state, Eigen::Ref<Eigen::VectorXd> projection) const
 {
     // this projection uses the x and y coordinates of every rigid body
     const MorseStateSpace::StateType *mstate = state->as<MorseStateSpace::StateType>();
@@ -73,9 +69,8 @@ void ompl::base::MorseProjection::project(const State *state, EuclideanProjectio
     for (unsigned int i = 0; i < space_->getEnvironment()->rigidBodies_; i++)
     {
         // for each rigid body, grab the x and y coords
-        const double *values = mstate->as<RealVectorStateSpace::StateType>(4*i)->values;
-        projection[2*i] = values[0];
-        projection[2*i+1] = values[1];
+        const double *values = mstate->as<RealVectorStateSpace::StateType>(4 * i)->values;
+        projection[2 * i] = values[0];
+        projection[2 * i + 1] = values[1];
     }
 }
-

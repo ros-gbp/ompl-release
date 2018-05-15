@@ -37,15 +37,13 @@
 #ifndef OMPL_GEOMETRIC_PLANNERS_RRT_RRT_
 #define OMPL_GEOMETRIC_PLANNERS_RRT_RRT_
 
-#include "ompl/geometric/planners/PlannerIncludes.h"
 #include "ompl/datastructures/NearestNeighbors.h"
+#include "ompl/geometric/planners/PlannerIncludes.h"
 
 namespace ompl
 {
-
     namespace geometric
     {
-
         /**
            @anchor gRRT
            @par Short description
@@ -56,7 +54,9 @@ namespace ompl
            qr, until a state @b qm is reached. @b qm is then added to
            the exploration tree.
            @par External documentation
-           J. Kuffner and S.M. LaValle, RRT-connect: An efficient approach to single-query path planning, in <em>Proc. 2000 IEEE Intl. Conf. on Robotics and Automation</em>, pp. 995–1001, Apr. 2000. DOI: [10.1109/ROBOT.2000.844730](http://dx.doi.org/10.1109/ROBOT.2000.844730)<br>
+           J. Kuffner and S.M. LaValle, RRT-connect: An efficient approach to single-query path planning, in <em>Proc.
+           2000 IEEE Intl. Conf. on Robotics and Automation</em>, pp. 995–1001, Apr. 2000. DOI:
+           [10.1109/ROBOT.2000.844730](http://dx.doi.org/10.1109/ROBOT.2000.844730)<br>
            [[PDF]](http://ieeexplore.ieee.org/ielx5/6794/18246/00844730.pdf?tp=&arnumber=844730&isnumber=18246)
            [[more]](http://msl.cs.uiuc.edu/~lavalle/rrtpubs.html)
         */
@@ -65,17 +65,16 @@ namespace ompl
         class RRT : public base::Planner
         {
         public:
-
             /** \brief Constructor */
-            RRT(const base::SpaceInformationPtr &si);
+            RRT(const base::SpaceInformationPtr &si, bool addIntermediateStates = false);
 
-            virtual ~RRT();
+            ~RRT() override;
 
-            virtual void getPlannerData(base::PlannerData &data) const;
+            void getPlannerData(base::PlannerData &data) const override;
 
-            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
+            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
 
-            virtual void clear();
+            void clear() override;
 
             /** \brief Set the goal bias
 
@@ -97,6 +96,20 @@ namespace ompl
                 return goalBias_;
             }
 
+            /** \brief Return true if the intermediate states generated along motions are to be added to the tree itself
+             */
+            bool getIntermediateStates() const
+            {
+                return addIntermediateStates_;
+            }
+
+            /** \brief Specify whether the intermediate states generated along motions are to be added to the tree
+             * itself */
+            void setIntermediateStates(bool addIntermediateStates)
+            {
+                addIntermediateStates_ = addIntermediateStates;
+            }
+
             /** \brief Set the range the planner is supposed to use.
 
                 This parameter greatly influences the runtime of the
@@ -114,17 +127,19 @@ namespace ompl
             }
 
             /** \brief Set a different nearest neighbors datastructure */
-            template<template<typename T> class NN>
+            template <template <typename T> class NN>
             void setNearestNeighbors()
             {
-                nn_.reset(new NN<Motion*>());
+                if (nn_ && nn_->size() != 0)
+                    OMPL_WARN("Calling setNearestNeighbors will clear all states.");
+                clear();
+                nn_ = std::make_shared<NN<Motion *>>();
+                setup();
             }
 
-            virtual void setup();
+            void setup() override;
 
         protected:
-
-
             /** \brief Representation of a motion
 
                 This only contains pointers to parent motions as we
@@ -132,26 +147,20 @@ namespace ompl
             class Motion
             {
             public:
-
-                Motion() : state(nullptr), parent(nullptr)
-                {
-                }
+                Motion() = default;
 
                 /** \brief Constructor that allocates memory for the state */
-                Motion(const base::SpaceInformationPtr &si) : state(si->allocState()), parent(nullptr)
+                Motion(const base::SpaceInformationPtr &si) : state(si->allocState())
                 {
                 }
 
-                ~Motion()
-                {
-                }
+                ~Motion() = default;
 
                 /** \brief The state contained by the motion */
-                base::State       *state;
+                base::State *state{nullptr};
 
                 /** \brief The parent motion in the exploration tree */
-                Motion            *parent;
-
+                Motion *parent{nullptr};
             };
 
             /** \brief Free the memory allocated by this planner */
@@ -164,24 +173,27 @@ namespace ompl
             }
 
             /** \brief State sampler */
-            base::StateSamplerPtr                          sampler_;
+            base::StateSamplerPtr sampler_;
 
             /** \brief A nearest-neighbors datastructure containing the tree of motions */
-            std::shared_ptr< NearestNeighbors<Motion*> > nn_;
+            std::shared_ptr<NearestNeighbors<Motion *>> nn_;
 
-            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available) */
-            double                                         goalBias_;
+            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is
+             * available) */
+            double goalBias_{.05};
 
             /** \brief The maximum length of a motion to be added to a tree */
-            double                                         maxDistance_;
+            double maxDistance_{0.};
+
+            /** \brief Flag indicating whether intermediate states are added to the built tree of motions */
+            bool addIntermediateStates_;
 
             /** \brief The random number generator */
-            RNG                                            rng_;
+            RNG rng_;
 
             /** \brief The most recent goal motion.  Used for PlannerData computation */
-            Motion                                         *lastGoalMotion_;
+            Motion *lastGoalMotion_{nullptr};
         };
-
     }
 }
 

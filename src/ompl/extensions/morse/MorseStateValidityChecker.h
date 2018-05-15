@@ -44,21 +44,18 @@ namespace ompl
 {
     namespace base
     {
-
         /** \brief The simplest state validity checker: all states are valid if
             they are within bounds */
         class MorseStateValidityChecker : public StateValidityChecker
         {
         public:
-
             /** \brief Constructor */
             MorseStateValidityChecker(const SpaceInformationPtr &si);
 
             /** \brief A state is always considered valid if it satisfies the bounds */
-            virtual bool isValid(const State *state) const;
+            bool isValid(const State *state) const override;
 
         protected:
-
             /** \brief The corresponding MORSE state space */
             MorseStateSpace *mss_;
         };

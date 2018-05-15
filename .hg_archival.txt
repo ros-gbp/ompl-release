@@ -1,4 +1,4 @@
 repo: acc0a7de5b906703869dd1e58b000b426d18be78
-node: 623833e13073301782064b42f979cc7e28a6cb4e
-branch: kinetic-devel
-tag: 1.2.3
+node: 2aecd52ba9dea1b069b510419cd1f01b26af2e1f
+branch: default
+tag: 1.4.0beta

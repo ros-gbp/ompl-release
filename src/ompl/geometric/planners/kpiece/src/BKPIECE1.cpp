@@ -1,36 +1,36 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2011, Rice University,
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2011, Rice University,
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Rice University nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Ioan Sucan */
 
@@ -39,26 +39,23 @@
 #include "ompl/tools/config/SelfConfig.h"
 #include <cassert>
 
-ompl::geometric::BKPIECE1::BKPIECE1(const base::SpaceInformationPtr &si) : base::Planner(si, "BKPIECE1"),
-                                                                           dStart_(std::bind(&BKPIECE1::freeMotion, this, std::placeholders::_1)),
-                                                                           dGoal_(std::bind(&BKPIECE1::freeMotion, this, std::placeholders::_1))
+ompl::geometric::BKPIECE1::BKPIECE1(const base::SpaceInformationPtr &si)
+  : base::Planner(si, "BKPIECE1")
+  , dStart_([this](Motion *m) { freeMotion(m); })
+  , dGoal_([this](Motion *m) { freeMotion(m); })
 {
     specs_.recognizedGoal = base::GOAL_SAMPLEABLE_REGION;
 
-    minValidPathFraction_ = 0.5;
-    failedExpansionScoreFactor_ = 0.5;
-    maxDistance_ = 0.0;
-    connectionPoint_ = std::make_pair<base::State*, base::State*>(nullptr, nullptr);
-
     Planner::declareParam<double>("range", this, &BKPIECE1::setRange, &BKPIECE1::getRange, "0.:1.:10000.");
-    Planner::declareParam<double>("border_fraction", this, &BKPIECE1::setBorderFraction, &BKPIECE1::getBorderFraction, "0.:.05:1.");
-    Planner::declareParam<double>("failed_expansion_score_factor", this, &BKPIECE1::setFailedExpansionCellScoreFactor, &BKPIECE1::getFailedExpansionCellScoreFactor);
-    Planner::declareParam<double>("min_valid_path_fraction", this, &BKPIECE1::setMinValidPathFraction, &BKPIECE1::getMinValidPathFraction);
+    Planner::declareParam<double>("border_fraction", this, &BKPIECE1::setBorderFraction, &BKPIECE1::getBorderFraction,
+                                  "0.:.05:1.");
+    Planner::declareParam<double>("failed_expansion_score_factor", this, &BKPIECE1::setFailedExpansionCellScoreFactor,
+                                  &BKPIECE1::getFailedExpansionCellScoreFactor);
+    Planner::declareParam<double>("min_valid_path_fraction", this, &BKPIECE1::setMinValidPathFraction,
+                                  &BKPIECE1::getMinValidPathFraction);
 }
 
-ompl::geometric::BKPIECE1::~BKPIECE1()
-{
-}
+ompl::geometric::BKPIECE1::~BKPIECE1() = default;
 
 void ompl::geometric::BKPIECE1::setup()
 {
@@ -79,19 +76,19 @@ void ompl::geometric::BKPIECE1::setup()
 ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTerminationCondition &ptc)
 {
     checkValidity();
-    base::GoalSampleableRegion *goal = dynamic_cast<base::GoalSampleableRegion*>(pdef_->getGoal().get());
+    auto *goal = dynamic_cast<base::GoalSampleableRegion *>(pdef_->getGoal().get());
 
-    if (!goal)
+    if (goal == nullptr)
     {
         OMPL_ERROR("%s: Unknown type of goal", getName().c_str());
         return base::PlannerStatus::UNRECOGNIZED_GOAL_TYPE;
     }
 
-    Discretization<Motion>::Coord xcoord;
+    Discretization<Motion>::Coord xcoord(projectionEvaluator_->getDimension());
 
     while (const base::State *st = pis_.nextStart())
     {
-        Motion *motion = new Motion(si_);
+        auto *motion = new Motion(si_);
         si_->copyState(motion->state, st);
         motion->root = motion->state;
         projectionEvaluator_->computeCoordinates(motion->state, xcoord);
@@ -113,16 +110,17 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
     if (!sampler_)
         sampler_ = si_->allocValidStateSampler();
 
-    OMPL_INFORM("%s: Starting planning with %d states already in datastructure", getName().c_str(), (int)(dStart_.getMotionCount() + dGoal_.getMotionCount()));
+    OMPL_INFORM("%s: Starting planning with %d states already in datastructure", getName().c_str(),
+                (int)(dStart_.getMotionCount() + dGoal_.getMotionCount()));
 
-    std::vector<Motion*> solution;
+    std::vector<Motion *> solution;
     base::State *xstate = si_->allocState();
-    bool      startTree = true;
-    bool         solved = false;
+    bool startTree = true;
+    bool solved = false;
 
-    while (ptc == false)
+    while (!ptc)
     {
-        Discretization<Motion> &disc      = startTree ? dStart_ : dGoal_;
+        Discretization<Motion> &disc = startTree ? dStart_ : dGoal_;
         startTree = !startTree;
         Discretization<Motion> &otherDisc = startTree ? dStart_ : dGoal_;
         disc.countIteration();
@@ -131,9 +129,9 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
         if (dGoal_.getMotionCount() == 0 || pis_.getSampledGoalsCount() < dGoal_.getMotionCount() / 2)
         {
             const base::State *st = dGoal_.getMotionCount() == 0 ? pis_.nextGoal(ptc) : pis_.nextGoal();
-            if (st)
+            if (st != nullptr)
             {
-                Motion *motion = new Motion(si_);
+                auto *motion = new Motion(si_);
                 si_->copyState(motion->state, st);
                 motion->root = motion->state;
                 projectionEvaluator_->computeCoordinates(motion->state, xcoord);
@@ -146,13 +144,13 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
             }
         }
 
-        Discretization<Motion>::Cell *ecell    = nullptr;
-        Motion                       *existing = nullptr;
+        Discretization<Motion>::Cell *ecell = nullptr;
+        Motion *existing = nullptr;
         disc.selectMotion(existing, ecell);
         assert(existing);
         if (sampler_->sampleNear(xstate, existing->state, maxDistance_))
         {
-            std::pair<base::State*, double> fail(xstate, 0.0);
+            std::pair<base::State *, double> fail(xstate, 0.0);
             bool keep = si_->checkMotion(existing->state, xstate, fail);
             if (!keep && fail.second > minValidPathFraction_)
                 keep = true;
@@ -160,7 +158,7 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
             if (keep)
             {
                 /* create a motion */
-                Motion *motion = new Motion(si_);
+                auto *motion = new Motion(si_);
                 si_->copyState(motion->state, xstate);
                 motion->root = existing->root;
                 motion->parent = existing;
@@ -168,13 +166,14 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
                 projectionEvaluator_->computeCoordinates(motion->state, xcoord);
                 disc.addMotion(motion, xcoord);
 
-                Discretization<Motion>::Cell* cellC = otherDisc.getGrid().getCell(xcoord);
+                Discretization<Motion>::Cell *cellC = otherDisc.getGrid().getCell(xcoord);
 
-                if (cellC && !cellC->data->motions.empty())
+                if ((cellC != nullptr) && !cellC->data->motions.empty())
                 {
                     Motion *connectOther = cellC->data->motions[rng_.uniformInt(0, cellC->data->motions.size() - 1)];
 
-                    if (goal->isStartGoalPairValid(startTree ? connectOther->root : motion->root, startTree ? motion->root : connectOther->root) &&
+                    if (goal->isStartGoalPairValid(startTree ? connectOther->root : motion->root,
+                                                   startTree ? motion->root : connectOther->root) &&
                         si_->checkMotion(motion->state, connectOther->state))
                     {
                         if (startTree)
@@ -184,14 +183,14 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
 
                         /* extract the motions and put them in solution vector */
 
-                        std::vector<Motion*> mpath1;
+                        std::vector<Motion *> mpath1;
                         while (motion != nullptr)
                         {
                             mpath1.push_back(motion);
                             motion = motion->parent;
                         }
 
-                        std::vector<Motion*> mpath2;
+                        std::vector<Motion *> mpath2;
                         while (connectOther != nullptr)
                         {
                             mpath2.push_back(connectOther);
@@ -201,21 +200,21 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
                         if (startTree)
                             mpath1.swap(mpath2);
 
-                        PathGeometric *path = new PathGeometric(si_);
+                        auto path(std::make_shared<PathGeometric>(si_));
                         path->getStates().reserve(mpath1.size() + mpath2.size());
-                        for (int i = mpath1.size() - 1 ; i >= 0 ; --i)
+                        for (int i = mpath1.size() - 1; i >= 0; --i)
                             path->append(mpath1[i]->state);
-                        for (unsigned int i = 0 ; i < mpath2.size() ; ++i)
-                            path->append(mpath2[i]->state);
+                        for (auto &i : mpath2)
+                            path->append(i->state);
 
-                        pdef_->addSolutionPath(base::PathPtr(path), false, 0.0, getName());
+                        pdef_->addSolutionPath(path, false, 0.0, getName());
                         solved = true;
                         break;
                     }
                 }
             }
             else
-              ecell->data->score *= failedExpansionScoreFactor_;
+                ecell->data->score *= failedExpansionScoreFactor_;
         }
         else
             ecell->data->score *= failedExpansionScoreFactor_;
@@ -224,18 +223,18 @@ ompl::base::PlannerStatus ompl::geometric::BKPIECE1::solve(const base::PlannerTe
 
     si_->freeState(xstate);
 
-    OMPL_INFORM("%s: Created %u (%u start + %u goal) states in %u cells (%u start (%u on boundary) + %u goal (%u on boundary))",
-                getName().c_str(),
-                dStart_.getMotionCount() + dGoal_.getMotionCount(), dStart_.getMotionCount(), dGoal_.getMotionCount(),
-                dStart_.getCellCount() + dGoal_.getCellCount(), dStart_.getCellCount(), dStart_.getGrid().countExternal(),
-                dGoal_.getCellCount(), dGoal_.getGrid().countExternal());
+    OMPL_INFORM("%s: Created %u (%u start + %u goal) states in %u cells (%u start (%u on boundary) + %u goal (%u on "
+                "boundary))",
+                getName().c_str(), dStart_.getMotionCount() + dGoal_.getMotionCount(), dStart_.getMotionCount(),
+                dGoal_.getMotionCount(), dStart_.getCellCount() + dGoal_.getCellCount(), dStart_.getCellCount(),
+                dStart_.getGrid().countExternal(), dGoal_.getCellCount(), dGoal_.getGrid().countExternal());
 
     return solved ? base::PlannerStatus::EXACT_SOLUTION : base::PlannerStatus::TIMEOUT;
 }
 
 void ompl::geometric::BKPIECE1::freeMotion(Motion *motion)
 {
-    if (motion->state)
+    if (motion->state != nullptr)
         si_->freeState(motion->state);
     delete motion;
 }
@@ -247,7 +246,7 @@ void ompl::geometric::BKPIECE1::clear()
     sampler_.reset();
     dStart_.clear();
     dGoal_.clear();
-    connectionPoint_ = std::make_pair<base::State*, base::State*>(nullptr, nullptr);
+    connectionPoint_ = std::make_pair<base::State *, base::State *>(nullptr, nullptr);
 }
 
 void ompl::geometric::BKPIECE1::getPlannerData(base::PlannerData &data) const
@@ -257,5 +256,5 @@ void ompl::geometric::BKPIECE1::getPlannerData(base::PlannerData &data) const
     dGoal_.getPlannerData(data, 2, false, nullptr);
 
     // Insert the edge connecting the two trees
-    data.addEdge (data.vertexIndex(connectionPoint_.first), data.vertexIndex(connectionPoint_.second));
+    data.addEdge(data.vertexIndex(connectionPoint_.first), data.vertexIndex(connectionPoint_.second));
 }

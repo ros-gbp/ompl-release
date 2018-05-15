@@ -1,36 +1,36 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2010, Rice University
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2010, Rice University
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Rice University nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Ioan Sucan */
 
@@ -49,13 +49,12 @@ namespace oc = ompl::control;
 class RigidBodyEnvironment : public oc::OpenDEEnvironment
 {
 public:
-
-    RigidBodyEnvironment(void) : oc::OpenDEEnvironment()
+    RigidBodyEnvironment()
     {
         createWorld();
     }
 
-    virtual ~RigidBodyEnvironment(void)
+    ~RigidBodyEnvironment() override
     {
         destroyWorld();
     }
@@ -64,12 +63,12 @@ public:
      * Implementation of functions needed by planning *
      **************************************************/
 
-    virtual unsigned int getControlDimension(void) const
+    unsigned int getControlDimension() const override
     {
         return 3;
     }
 
-    virtual void getControlBounds(std::vector<double> &lower, std::vector<double> &upper) const
+    void getControlBounds(std::vector<double> &lower, std::vector<double> &upper) const override
     {
         static double maxForce = 0.2;
         lower.resize(3);
@@ -83,17 +82,17 @@ public:
         upper[2] = maxForce;
     }
 
-    virtual void applyControl(const double *control) const
+    void applyControl(const double *control) const override
     {
         dBodyAddForce(boxBody, control[0], control[1], control[2]);
     }
 
-    virtual bool isValidCollision(dGeomID /*geom1*/, dGeomID /*geom2*/, const dContact& /*contact*/) const
+    bool isValidCollision(dGeomID /*geom1*/, dGeomID /*geom2*/, const dContact & /*contact*/) const override
     {
         return false;
     }
 
-    virtual void setupContact(dGeomID /*geom1*/, dGeomID /*geom2*/, dContact &contact) const
+    void setupContact(dGeomID /*geom1*/, dGeomID /*geom2*/, dContact &contact) const override
     {
         contact.surface.mode = dContactSoftCFM | dContactApprox1;
         contact.surface.mu = 0.9;
@@ -102,20 +101,19 @@ public:
 
     /**************************************************/
 
-
     // OMPL does not require this function here; we implement it here
     // for convenience. This function is only OpenDE code to create a
     // simulation environment. At the end of the function, there is a
     // call to setPlanningParameters(), which configures members of
     // the base class needed by planners.
-    void createWorld(void);
+    void createWorld();
 
     // Clear all OpenDE objects
-    void destroyWorld(void);
+    void destroyWorld();
 
     // Set parameters needed by the base class (such as the bodies
     // that make up to state of the system we are planning for)
-    void setPlanningParameters(void);
+    void setPlanningParameters();
 
     // the simulation world
     dWorldID bodyWorld;
@@ -124,28 +122,25 @@ public:
     dSpaceID space;
 
     // the car mass
-    dMass    m;
+    dMass m;
 
     // the body geom
-    dGeomID  boxGeom;
+    dGeomID boxGeom;
 
     // the body
-    dBodyID  boxBody;
-
+    dBodyID boxBody;
 };
-
 
 // Define the goal we want to reach
 class RigidBodyGoal : public ob::GoalRegion
 {
 public:
-
     RigidBodyGoal(const ob::SpaceInformationPtr &si) : ob::GoalRegion(si)
     {
         threshold_ = 0.5;
     }
 
-    virtual double distanceGoal(const ob::State *st) const
+    double distanceGoal(const ob::State *st) const override
     {
         const double *pos = st->as<oc::OpenDEStateSpace::StateType>()->getBodyPosition(0);
         double dx = fabs(pos[0] - 30);
@@ -153,25 +148,22 @@ public:
         double dz = fabs(pos[2] - 35);
         return sqrt(dx * dx + dy * dy + dz * dz);
     }
-
 };
-
 
 // Define how we project a state
 class RigidBodyStateProjectionEvaluator : public ob::ProjectionEvaluator
 {
 public:
-
     RigidBodyStateProjectionEvaluator(const ob::StateSpace *space) : ob::ProjectionEvaluator(space)
     {
     }
 
-    virtual unsigned int getDimension(void) const
+    unsigned int getDimension() const override
     {
         return 3;
     }
 
-    virtual void defaultCellSizes(void)
+    void defaultCellSizes() override
     {
         cellSizes_.resize(3);
         cellSizes_[0] = 1;
@@ -179,26 +171,24 @@ public:
         cellSizes_[2] = 1;
     }
 
-    virtual void project(const ob::State *state, ob::EuclideanProjection &projection) const
+    void project(const ob::State *state, Eigen::Ref<Eigen::VectorXd> projection) const override
     {
         const double *pos = state->as<oc::OpenDEStateSpace::StateType>()->getBodyPosition(0);
         projection[0] = pos[0];
         projection[1] = pos[1];
         projection[2] = pos[2];
     }
-
 };
 
 // Define our own space, to include a distance function we want and register a default projection
 class RigidBodyStateSpace : public oc::OpenDEStateSpace
 {
 public:
-
     RigidBodyStateSpace(const oc::OpenDEEnvironmentPtr &env) : oc::OpenDEStateSpace(env)
     {
     }
 
-    virtual double distance(const ob::State *s1, const ob::State *s2) const
+    double distance(const ob::State *s1, const ob::State *s2) const override
     {
         const double *p1 = s1->as<oc::OpenDEStateSpace::StateType>()->getBodyPosition(0);
         const double *p2 = s2->as<oc::OpenDEStateSpace::StateType>()->getBodyPosition(0);
@@ -208,32 +198,31 @@ public:
         return sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    virtual void registerProjections(void)
+    void registerProjections() override
     {
-            registerDefaultProjection(ob::ProjectionEvaluatorPtr(new RigidBodyStateProjectionEvaluator(this)));
+        registerDefaultProjection(std::make_shared<RigidBodyStateProjectionEvaluator>(this));
     }
-
 };
 
 /// @endcond
 
-int main(int, char **)
+int main(int /*argc*/, char ** /*argv*/)
 {
     // initialize OpenDE
     dInitODE2(0);
 
     // create the OpenDE environment
-    oc::OpenDEEnvironmentPtr env(new RigidBodyEnvironment());
+    oc::OpenDEEnvironmentPtr env(std::make_shared<RigidBodyEnvironment>());
 
     // create the state space and the control space for planning
-    RigidBodyStateSpace *stateSpace = new RigidBodyStateSpace(env);
-    ob::StateSpacePtr stateSpacePtr = ob::StateSpacePtr(stateSpace);
+    auto stateSpace = std::make_shared<RigidBodyStateSpace>(env);
 
-    // this will take care of setting a proper collision checker and the starting state for the planner as the initial OpenDE state
-    oc::OpenDESimpleSetup ss(stateSpacePtr);
+    // this will take care of setting a proper collision checker and the starting state for the planner as the initial
+    // OpenDE state
+    oc::OpenDESimpleSetup ss(stateSpace);
 
     // set the goal we would like to reach
-    ss.setGoal(ob::GoalPtr(new RigidBodyGoal(ss.getSpaceInformation())));
+    ss.setGoal(std::make_shared<RigidBodyGoal>(ss.getSpaceInformation()));
 
     ob::RealVectorBounds bounds(3);
     bounds.setLow(-200);
@@ -256,26 +245,19 @@ int main(int, char **)
     return 0;
 }
 
-
-
-
-
-
-
-
 /// @cond IGNORE
 
 /***********************************************
  * Member function implementations             *
  ***********************************************/
 
-void RigidBodyEnvironment::createWorld(void)
+void RigidBodyEnvironment::createWorld()
 {
     // BEGIN SETTING UP AN OPENDE ENVIRONMENT
     // ***********************************
 
     bodyWorld = dWorldCreate();
-    space = dHashSpaceCreate(0);
+    space = dHashSpaceCreate(nullptr);
 
     dWorldSetGravity(bodyWorld, 0, 0, -0.981);
 
@@ -296,13 +278,13 @@ void RigidBodyEnvironment::createWorld(void)
     setPlanningParameters();
 }
 
-void RigidBodyEnvironment::destroyWorld(void)
+void RigidBodyEnvironment::destroyWorld()
 {
     dSpaceDestroy(space);
     dWorldDestroy(bodyWorld);
 }
 
-void RigidBodyEnvironment::setPlanningParameters(void)
+void RigidBodyEnvironment::setPlanningParameters()
 {
     // Fill in parameters for OMPL:
     world_ = bodyWorld;

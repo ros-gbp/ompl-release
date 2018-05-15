@@ -40,7 +40,6 @@
 #include "ompl/base/ScopedState.h"
 #include "ompl/base/spaces/SE3StateSpace.h"
 #include "ompl/base/spaces/SE2StateSpace.h"
-#include "../BoostTestTeamCityReporter.h"
 
 using namespace ompl;
 
@@ -49,12 +48,10 @@ using namespace ompl;
 
 struct Metadata
 {
-    Metadata(void) : tag1(0), tag2(0.5f)
-    {
-    }
+    Metadata() = default;
 
-    int   tag1;
-    float tag2;
+    int   tag1{0};
+    float tag2{0.5f};
 
     template<typename Archive>
     void serialize(Archive & ar, const unsigned int /*version*/)
@@ -67,11 +64,11 @@ struct Metadata
 
 BOOST_AUTO_TEST_CASE(Store)
 {
-    base::StateSpacePtr space(new base::SE3StateSpace());
+    auto space(std::make_shared<base::SE3StateSpace>());
     base::RealVectorBounds bounds(3);
     bounds.setLow(-1);
     bounds.setHigh(1);
-    space->as<base::SE3StateSpace>()->setBounds(bounds);
+    space->setBounds(bounds);
     space->setup();
 
     base::StateStorage ss(space);
@@ -95,11 +92,11 @@ BOOST_AUTO_TEST_CASE(Store)
 
 BOOST_AUTO_TEST_CASE(Load)
 {
-    base::StateSpacePtr space(new base::SE3StateSpace());
+    auto space(std::make_shared<base::SE3StateSpace>());
     base::RealVectorBounds bounds(3);
     bounds.setLow(-1);
     bounds.setHigh(1);
-    space->as<base::SE3StateSpace>()->setBounds(bounds);
+    space->setBounds(bounds);
     space->setup();
 
     base::StateStorage ss(space);

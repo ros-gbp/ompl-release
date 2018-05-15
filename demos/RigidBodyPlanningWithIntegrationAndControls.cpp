@@ -117,7 +117,7 @@ public:
         }
     }
 
-    double getTimeStep(void) const
+    double getTimeStep() const
     {
         return timeStep_;
     }
@@ -139,13 +139,13 @@ bool isStateValid(const oc::SpaceInformation *si, const ob::State *state)
 {
     //    ob::ScopedState<ob::SE2StateSpace>
     /// cast the abstract state type to the type we expect
-    const ob::SE2StateSpace::StateType *se2state = state->as<ob::SE2StateSpace::StateType>();
+    const auto *se2state = state->as<ob::SE2StateSpace::StateType>();
 
     /// extract the first component of the state and cast it to what we expect
-    const ob::RealVectorStateSpace::StateType *pos = se2state->as<ob::RealVectorStateSpace::StateType>(0);
+    const auto *pos = se2state->as<ob::RealVectorStateSpace::StateType>(0);
 
     /// extract the second component of the state and cast it to what we expect
-    const ob::SO2StateSpace::StateType *rot = se2state->as<ob::SO2StateSpace::StateType>(1);
+    const auto *rot = se2state->as<ob::SO2StateSpace::StateType>(1);
 
     /// check validity of state defined by pos & rot
 
@@ -168,12 +168,12 @@ class DemoStatePropagator : public oc::StatePropagator
 {
 public:
 
-    DemoStatePropagator(const oc::SpaceInformationPtr &si) : oc::StatePropagator(si),
-                                                             integrator_(si->getStateSpace().get(), 0.0)
+    DemoStatePropagator(oc::SpaceInformation *si) : oc::StatePropagator(si),
+                                                    integrator_(si->getStateSpace().get(), 0.0)
     {
     }
 
-    virtual void propagate(const ob::State *state, const oc::Control* control, const double duration, ob::State *result) const
+    void propagate(const ob::State *state, const oc::Control* control, const double duration, ob::State *result) const override
     {
         integrator_.propagate(state, control, duration, result);
     }
@@ -183,7 +183,7 @@ public:
         integrator_.setTimeStep(timeStep);
     }
 
-    double getIntegrationTimeStep(void) const
+    double getIntegrationTimeStep() const
     {
         return integrator_.getTimeStep();
     }
@@ -193,36 +193,39 @@ public:
 
 /// @endcond
 
-void planWithSimpleSetup(void)
+void planWithSimpleSetup()
 {
     /// construct the state space we are planning in
-    ob::StateSpacePtr space(new ob::SE2StateSpace());
+    auto space(std::make_shared<ob::SE2StateSpace>());
 
     /// set the bounds for the R^2 part of SE(2)
     ob::RealVectorBounds bounds(2);
     bounds.setLow(-1);
     bounds.setHigh(1);
 
-    space->as<ob::SE2StateSpace>()->setBounds(bounds);
+    space->setBounds(bounds);
 
     // create a control space
-    oc::ControlSpacePtr cspace(new DemoControlSpace(space));
+    auto cspace(std::make_shared<DemoControlSpace>(space));
 
     // set the bounds for the control space
     ob::RealVectorBounds cbounds(2);
     cbounds.setLow(-0.3);
     cbounds.setHigh(0.3);
 
-    cspace->as<DemoControlSpace>()->setBounds(cbounds);
+    cspace->setBounds(cbounds);
 
     // define a simple setup class
     oc::SimpleSetup ss(cspace);
 
     /// set state validity checking for this space
-    ss.setStateValidityChecker(std::bind(&isStateValid, ss.getSpaceInformation().get(), std::placeholders::_1));
+    oc::SpaceInformation *si = ss.getSpaceInformation().get();
+    ss.setStateValidityChecker(
+        [si](const ob::State *state) { return isStateValid(si, state); });
 
     /// set the propagation routine for this space
-    ss.setStatePropagator(oc::StatePropagatorPtr(new DemoStatePropagator(ss.getSpaceInformation())));
+    auto propagator(std::make_shared<DemoStatePropagator>(si));
+    ss.setStatePropagator(propagator);
 
     /// create a start state
     ob::ScopedState<ob::SE2StateSpace> start(space);
@@ -241,7 +244,7 @@ void planWithSimpleSetup(void)
 
     /// we want to have a reasonable value for the propagation step size
     ss.setup();
-    static_cast<DemoStatePropagator*>(ss.getStatePropagator().get())->setIntegrationTimeStep(ss.getSpaceInformation()->getPropagationStepSize());
+    propagator->setIntegrationTimeStep(si->getPropagationStepSize());
 
     /// attempt to solve the problem within one second of planning time
     ob::PlannerStatus solved = ss.solve(10.0);
@@ -257,7 +260,7 @@ void planWithSimpleSetup(void)
         std::cout << "No solution found" << std::endl;
 }
 
-int main(int, char **)
+int main(int /*argc*/, char ** /*argv*/)
 {
     std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 

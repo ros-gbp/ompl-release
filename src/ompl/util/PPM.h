@@ -41,7 +41,6 @@
 
 namespace ompl
 {
-
     /** \brief Load and save .ppm files - "portable pixmap format" an image file formats designed
         to be easily exchanged between platforms. */
     class PPM
@@ -58,7 +57,13 @@ namespace ompl
             }
         };
 
-        PPM();
+        PPM() = default;
+
+        /* \brief Load a .ppm file. Throw an exception in case of an error. */
+        PPM(const char *filename)
+        {
+            loadFile(filename);
+        }
 
         /** \brief Load a .ppm file. Throw an exception in case of an error. */
         void loadFile(const char *filename);
@@ -107,21 +112,21 @@ namespace ompl
         }
 
         /** \brief Directly access a pixel in the image */
-        const Color& getPixel(const int row, const int col) const
+        const Color &getPixel(const int row, const int col) const
         {
             return pixels_[row * width_ + col];
         }
 
         /** \brief Directly access a pixel in the image */
-        Color& getPixel(const int row, const int col)
+        Color &getPixel(const int row, const int col)
         {
             return pixels_[row * width_ + col];
         }
-    private:
 
+    private:
         std::vector<Color> pixels_;
-        unsigned int       width_;
-        unsigned int       height_;
+        unsigned int width_{0};
+        unsigned int height_{0};
     };
 }
 

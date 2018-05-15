@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2010, Rice University
+*  Copyright (c) 2014, University of Toronto
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
 *     copyright notice, this list of conditions and the following
 *     disclaimer in the documentation and/or other materials provided
 *     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
+*   * Neither the name of the University of Toronto nor the names of its
 *     contributors may be used to endorse or promote products derived
 *     from this software without specific prior written permission.
 *
@@ -32,12 +32,34 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Author: Caleb Voss */
+/* Authors: Jonathan Gammell */
 
-#include "ompl/extensions/morse/MorseTerminationCondition.h"
+#ifndef OMPL_GEOMETRIC_PLANNERS_RRT_SORRTSTAR_
+#define OMPL_GEOMETRIC_PLANNERS_RRT_SORRTSTAR_
 
-bool ompl::base::MorseTerminationCondition::eval() const
+#include "ompl/geometric/planners/rrt/InformedRRTstar.h"
+
+namespace ompl
 {
-    // the Python object will unset this if we should stop
-    return !env_->simRunning_;
+    namespace geometric
+    {
+        /**
+            @anchor gSORRTstar
+
+            Run \ref gRRTstar "RRT*" as SORRT* using an ordered informed search strategy that considers states in the
+           subproblem that could provide a better solution in order of their potential solution cost.
+            A sorted version \ref gInformedRRTstar "Informed RRT*".
+            To be published along with an extended version of \ref gBITstar "BIT*".
+        */
+
+        /** \brief SORRT* */
+        class SORRTstar : public InformedRRTstar
+        {
+        public:
+            /** \brief Constructor */
+            SORRTstar(const base::SpaceInformationPtr &si);
+        };
+    }
 }
+
+#endif

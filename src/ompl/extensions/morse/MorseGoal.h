@@ -44,16 +44,13 @@
 
 namespace ompl
 {
-
     namespace base
     {
-
         /** \brief This is a goal class that is more amenable to Python  */
         class MorseGoal : public Goal
         {
         public:
-            MorseGoal(SpaceInformationPtr si)
-                : Goal(si), distance_(std::numeric_limits<double>::max())
+            MorseGoal(SpaceInformationPtr si) : Goal(si), distance_(std::numeric_limits<double>::max())
             {
             }
 
@@ -61,11 +58,11 @@ namespace ompl
             mutable double distance_;
 
             /** \brief Return true if \e state satisfies the goal */
-            bool isSatisfied(const State *state) const;
+            bool isSatisfied(const State *state) const override;
 
             /** \brief Return true if \e state satisfies the goal, and store the distance
                 to the goal in \e distance */
-            bool isSatisfied(const State *state, double *distance) const;
+            bool isSatisfied(const State *state, double *distance) const override;
 
             /** \brief To be implemented in Python; behaves like isSatisfied(state, &distance_) */
             virtual bool isSatisfied_Py(const State *state) const = 0;
@@ -74,5 +71,3 @@ namespace ompl
 }
 
 #endif
-
-

@@ -85,32 +85,32 @@ void propagate(const oc::SpaceInformation *si, const ob::State *state,
 // To make the turn, the car will have to downshift.
 bool isStateValid(const oc::SpaceInformation *si, const ob::State *state)
 {
-  const ob::SE2StateSpace::StateType *se2 =
+  const auto *se2 =
       state->as<ob::CompoundState>()->as<ob::SE2StateSpace::StateType>(0);
   return si->satisfiesBounds(state) && (se2->getX() < -80. || se2->getY() > 80.);
 }
 
 
-int main(int, char**)
+int main(int /*argc*/, char** /*argv*/)
 {
     // plan for hybrid car in SE(2) with discrete gears
-    ob::StateSpacePtr SE2(new ob::SE2StateSpace());
-    ob::StateSpacePtr velocity(new ob::RealVectorStateSpace(1));
+    auto SE2(std::make_shared<ob::SE2StateSpace>());
+    auto velocity(std::make_shared<ob::RealVectorStateSpace>(1));
     // set the range for gears: [-1,3] inclusive
-    ob::StateSpacePtr gear(new ob::DiscreteStateSpace(-1,3));
+    auto gear(std::make_shared<ob::DiscreteStateSpace>(-1,3));
     ob::StateSpacePtr stateSpace = SE2 + velocity + gear;
 
     // set the bounds for the R^2 part of SE(2)
     ob::RealVectorBounds bounds(2);
     bounds.setLow(-100);
     bounds.setHigh(100);
-    SE2->as<ob::SE2StateSpace>()->setBounds(bounds);
+    SE2->setBounds(bounds);
 
     // set the bounds for the velocity
     ob::RealVectorBounds velocityBound(1);
     velocityBound.setLow(0);
     velocityBound.setHigh(60);
-    velocity->as<ob::RealVectorStateSpace>()->setBounds(velocityBound);
+    velocity->setBounds(velocityBound);
 
     // create start and goal states
     ob::ScopedState<> start(stateSpace);
@@ -129,7 +129,7 @@ int main(int, char**)
     goal[3] = 40.; // velocity
     goal->as<ob::CompoundState>()->as<ob::DiscreteStateSpace::StateType>(2)->value = 3; // gear
 
-    oc::ControlSpacePtr cmanifold(new oc::RealVectorControlSpace(stateSpace, 2));
+    oc::ControlSpacePtr cmanifold(std::make_shared<oc::RealVectorControlSpace>(stateSpace, 2));
 
     // set the bounds for the control manifold
     ob::RealVectorBounds cbounds(2);
@@ -142,13 +142,17 @@ int main(int, char**)
     cmanifold->as<oc::RealVectorControlSpace>()->setBounds(cbounds);
 
     oc::SimpleSetup setup(cmanifold);
+    const oc::SpaceInformation *si = setup.getSpaceInformation().get();
     setup.setStartAndGoalStates(start, goal, 5.);
-    setup.setStateValidityChecker(std::bind(
-        &isStateValid, setup.getSpaceInformation().get(), std::placeholders::_1));
-    setup.setStatePropagator(std::bind(
-        &propagate, setup.getSpaceInformation().get(),
-        std::placeholders::_1, std::placeholders::_2,
-        std::placeholders::_3, std::placeholders::_4));
+    setup.setStateValidityChecker([si](const ob::State *state)
+        {
+            return isStateValid(si, state);
+        });
+    setup.setStatePropagator([si](const ob::State *state, const oc::Control* control,
+        const double duration, ob::State *result)
+        {
+            propagate(si, state, control, duration, result);
+        });
     setup.getSpaceInformation()->setPropagationStepSize(.1);
     setup.getSpaceInformation()->setMinMaxControlDuration(2, 3);
 
@@ -164,11 +168,11 @@ int main(int, char**)
         for(unsigned int i=0; i<path.getStateCount(); ++i)
         {
             const ob::State* state = path.getState(i);
-            const ob::SE2StateSpace::StateType *se2 =
+            const auto *se2 =
                 state->as<ob::CompoundState>()->as<ob::SE2StateSpace::StateType>(0);
-            const ob::RealVectorStateSpace::StateType *velocity =
+            const auto *velocity =
                 state->as<ob::CompoundState>()->as<ob::RealVectorStateSpace::StateType>(1);
-            const ob::DiscreteStateSpace::StateType *gear =
+            const auto *gear =
                 state->as<ob::CompoundState>()->as<ob::DiscreteStateSpace::StateType>(2);
             std::cout << se2->getX() << ' ' << se2->getY() << ' ' << se2->getYaw()
                 << ' ' << velocity->values[0] << ' ' << gear->value << ' ';
