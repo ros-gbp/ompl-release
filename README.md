@@ -1,3 +1,26 @@
+## ompl (kinetic) - 1.2.3-1
+
+The packages in the `ompl` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release ompl -r kinetic -t kinetic` on `Wed, 23 May 2018 22:46:36 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.2.3-0`
+- old version: `1.2.3-0`
+- new version: `1.2.3-1`
+
+Versions of tools used:
+
+- bloom version: `0.6.4`
+- catkin_pkg version: `0.4.2`
+- rosdep version: `0.12.2`
+- rosdistro version: `0.6.8`
+- vcstools version: `0.1.40`
+
+
 ## ompl (melodic) - 1.4.0-0
 
 The packages in the `ompl` repository were released into the `melodic` distro by running `/usr/bin/bloom-release ompl -r melodic -t melodic` on `Tue, 15 May 2018 02:28:36 -0000`
