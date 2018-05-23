@@ -41,6 +41,7 @@
 
 #include "ompl/geometric/GeneticSearch.h"
 #include "ompl/util/Time.h"
+#include "../../BoostTestTeamCityReporter.h"
 
 using namespace ompl;
 

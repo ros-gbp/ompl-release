@@ -24,12 +24,13 @@ if (OMPL_BUILD_PYBINDINGS)
             "${CMAKE_CURRENT_SOURCE_DIR}/ompl/bindings_generator.py" @ONLY)
 
         create_module_generation_targets(util)
-        if(OMPL_HAVE_NUMPY)
+        if(OMPL_HAVE_EIGEN3)
             create_module_generation_targets(base)
+            create_module_generation_targets(geometric)
         else()
-            create_module_generation_targets(base "[Cc]onstrain")
+            create_module_generation_targets(base PathLengthDirectInfSampler)
+            create_module_generation_targets(geometric bitstar)
         endif()
-        create_module_generation_targets(geometric)
         create_module_generation_targets(control)
         create_module_generation_targets(tools)
         if(OMPL_EXTENSION_MORSE)
@@ -51,9 +52,6 @@ if (OMPL_BUILD_PYBINDINGS)
         foreach(module ${OMPL_MODULES})
             create_module_target(${module})
         endforeach(module)
-        if(OMPL_HAVE_NUMPY AND TARGET py_ompl_base)
-            target_link_libraries(py_ompl_base ${Boost_NUMPY_LIBRARY})
-        endif()
 
         install(DIRECTORY ompl DESTINATION "${OMPL_PYTHON_INSTALL_DIR}"
             COMPONENT python
@@ -82,7 +80,7 @@ if (OMPL_BUILD_PYBINDINGS)
                 PATTERN "addons" EXCLUDE)
             # blender add-on
             install(DIRECTORY ompl/morse/addons
-                DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/ompl"
+                DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}"
                 COMPONENT morse
                 PATTERN "*.pyc" EXCLUDE)
         endif()

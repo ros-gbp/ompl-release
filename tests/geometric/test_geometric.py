@@ -38,8 +38,9 @@
 
 import sys
 from os.path import abspath, dirname, join
-sys.path.insert(0, join(dirname(dirname(dirname(abspath(__file__)))), 'py-bindings'))
+sys.path.insert(0, join(dirname(dirname(dirname(abspath(__file__)))),'py-bindings') )
 from functools import partial
+from os.path import dirname
 from time import clock
 from math import fabs
 import unittest
@@ -62,7 +63,7 @@ class Environment(object):
         self.goal = [int(i) for i in lines[2].split(' ')[1:3]]
         for i in range(self.width):
             self.grid.append(
-                [int(j) for j in lines[4+i].split(' ')[0:self.height]])
+                [int(i) for i in lines[4+i].split(' ')[0:self.height]])
         self.char_mapping = ['__', '##', 'oo', 'XX']
 
     def __str__(self):
@@ -114,7 +115,7 @@ class mySpaceInformation(ob.SpaceInformation):
 
 class TestPlanner(object):
 
-    def execute(self, env, time, pathLength, show=False):
+    def execute(self, env, time, pathLength, show = False):
         result = True
         # instantiate space information
         si = mySpaceInformation(env)
@@ -163,7 +164,7 @@ class TestPlanner(object):
                 for i in range(len(path.states)):
                     x = int(path.states[i][0])
                     y = int(path.states[i][1])
-                    if temp.grid[x][y] in [0, 2]:
+                    if temp.grid[x][y] in [0,2]:
                         temp.grid[x][y] = 2
                     else:
                         temp.grid[x][y] = 3
@@ -173,7 +174,7 @@ class TestPlanner(object):
 
         return (result, time, pathLength)
 
-    def newplanner(self, si):
+    def newPlanner(si):
         raise NotImplementedError('pure virtual method')
 
 class RRTTest(TestPlanner):
@@ -298,10 +299,9 @@ class PlanTest(unittest.TestCase):
         good = 0
         N = 50
 
-        for _ in range(N):
+        for i in range(N):
             (result, time, length) = planner.execute(self.env, time, length, False)
-            if result:
-                good = good + 1
+            if result: good = good + 1
 
         success = 100.0 * float(good) / float(N)
         avgruntime = time / float(N)
@@ -396,7 +396,7 @@ class PlanTest(unittest.TestCase):
         self.assertTrue(avglength < 100.0)
 
 def suite():
-    suites = (unittest.makeSuite(PlanTest))
+    suites = ( unittest.makeSuite(PlanTest) )
     return unittest.TestSuite(suites)
 
 if __name__ == '__main__':

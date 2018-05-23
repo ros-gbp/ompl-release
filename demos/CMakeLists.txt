@@ -27,21 +27,14 @@ if (OMPL_BUILD_DEMOS)
   add_ompl_demo(demo_PlannerData PlannerData.cpp)
   add_ompl_demo(demo_ThunderLightning ThunderLightning.cpp)
 
-
   add_ompl_demo(demo_OptimalPlanning OptimalPlanning.cpp)
   add_ompl_demo(demo_PlannerProgressProperties PlannerProgressProperties.cpp)
   add_ompl_demo(demo_CForestCircleGridBenchmark CForestCircleGridBenchmark.cpp)
 
-  add_ompl_demo(demo_Diagonal Diagonal.cpp)
-
-  add_ompl_demo(demo_VectorFieldConservative VFRRT/VectorFieldConservative.cpp)
-  add_ompl_demo(demo_VectorFieldNonconservative VFRRT/VectorFieldNonconservative.cpp)
-
-  add_ompl_demo(demo_ConstrainedPlanningSphere constraint/ConstrainedPlanningSphere.cpp)
-  add_ompl_demo(demo_ConstrainedPlanningTorus constraint/ConstrainedPlanningTorus.cpp)
-  add_ompl_demo(demo_ConstrainedPlanningImplicitChain constraint/ConstrainedPlanningImplicitChain.cpp)
-  add_ompl_demo(demo_ConstrainedPlanningImplicitParallel constraint/ConstrainedPlanningImplicitParallel.cpp)
-  add_ompl_demo(demo_ConstrainedPlanningKinematicChain constraint/ConstrainedPlanningKinematicChain.cpp)
+  if(OMPL_HAVE_EIGEN3)
+    add_ompl_demo(demo_VectorFieldConservative VFRRT/VectorFieldConservative.cpp)
+    add_ompl_demo(demo_VectorFieldNonconservative VFRRT/VectorFieldNonconservative.cpp)
+  endif()
 
   if (OMPL_EXTENSION_OPENDE)
     add_ompl_demo(demo_OpenDERigidBodyPlanning OpenDERigidBodyPlanning.cpp)
@@ -55,12 +48,9 @@ if (OMPL_BUILD_DEMOS)
 
 endif(OMPL_BUILD_DEMOS)
 
-file(GLOB OMPL_DEMO_PY_FILES "*.py")
-install_python(PROGRAMS ${OMPL_DEMO_PY_FILES}
-  DESTINATION "${OMPL_DEMO_INSTALL_DIR}"
-  COMPONENT ompl)
 file(GLOB OMPL_DEMO_CXX_FILES "*.cpp")
-install(FILES ${OMPL_DEMO_CXX_FILES}
+file(GLOB OMPL_DEMO_PY_FILES "*.py")
+install(FILES ${OMPL_DEMO_CXX_FILES} ${OMPL_DEMO_PY_FILES}
     DESTINATION "${OMPL_DEMO_INSTALL_DIR}"
     COMPONENT ompl)
 install(DIRECTORY Koules

@@ -59,22 +59,23 @@ namespace ompl
         class SST : public base::Planner
         {
         public:
+
             /** \brief Constructor */
             SST(const base::SpaceInformationPtr &si);
 
-            ~SST() override;
+            virtual ~SST();
 
-            void setup() override;
+            virtual void setup();
 
             /** \brief Continue solving for some amount of time. Return true if solution was found. */
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
-            void getPlannerData(base::PlannerData &data) const override;
+            virtual void getPlannerData(base::PlannerData &data) const;
 
             /** \brief Clear datastructures. Call this function if the
                 input data to the planner has changed and you do not
                 want to continue planning */
-            void clear() override;
+            virtual void clear();
 
             /** In the process of randomly selecting states in the state
                 space to attempt to go towards, the algorithm may in fact
@@ -93,6 +94,7 @@ namespace ompl
             {
                 return goalBias_;
             }
+
 
             /** \brief Set the range the planner is supposed to use.
 
@@ -120,7 +122,7 @@ namespace ompl
                 around the boundary of the state space may become impossible. */
             void setSelectionRadius(double selectionRadius)
             {
-                selectionRadius_ = selectionRadius;
+                selectionRadius_  = selectionRadius;
             }
 
             /** \brief Get the selection radius the planner is using */
@@ -128,6 +130,7 @@ namespace ompl
             {
                 return selectionRadius_;
             }
+
 
             /**
                 \brief Set the radius for pruning nodes.
@@ -141,7 +144,7 @@ namespace ompl
                 from their parent nodes.*/
             void setPruningRadius(double pruningRadius)
             {
-                pruningRadius_ = pruningRadius;
+                pruningRadius_  = pruningRadius;
             }
 
             /** \brief Get the pruning radius the planner is using */
@@ -151,18 +154,17 @@ namespace ompl
             }
 
             /** \brief Set a different nearest neighbors datastructure */
-            template <template <typename T> class NN>
+            template<template<typename T> class NN>
             void setNearestNeighbors()
             {
-                if (nn_ && nn_->size() != 0)
-                    OMPL_WARN("Calling setNearestNeighbors will clear all states.");
-                clear();
-                nn_ = std::make_shared<NN<Motion *>>();
-                witnesses_ = std::make_shared<NN<Motion *>>();
-                setup();
+                nn_.reset(new NN<Motion*>());
+                witnesses_.reset(new NN<Motion*>());
             }
 
+
         protected:
+
+
             /** \brief Representation of a motion
 
                 This only contains pointers to parent motions as we
@@ -170,52 +172,61 @@ namespace ompl
             class Motion
             {
             public:
-                Motion() = default;
 
-                /** \brief Constructor that allocates memory for the state and the control */
-                Motion(const base::SpaceInformationPtr &si)
-                  : state_(si->allocState())
+                Motion() : accCost_(0), state_(nullptr), parent_(nullptr), numChildren_(0), inactive_(false)
                 {
                 }
 
-                virtual ~Motion() = default;
+                /** \brief Constructor that allocates memory for the state and the control */
+                Motion(const base::SpaceInformationPtr& si) : accCost_(0), state_(si->allocState()), parent_(nullptr), numChildren_(0), inactive_(false)
+                {
+                }
 
-                virtual base::State *getState() const
+                virtual ~Motion()
+                {
+                }
+
+                virtual base::State* getState() const
                 {
                     return state_;
                 }
-                virtual Motion *getParent() const
+                virtual Motion* getParent() const
                 {
                     return parent_;
                 }
-                base::Cost accCost_{0.};
+                base::Cost accCost_;
 
                 /** \brief The state contained by the motion */
-                base::State *state_{nullptr};
+                base::State       *state_;
 
                 /** \brief The parent motion in the exploration tree */
-                Motion *parent_{nullptr};
+                Motion            *parent_;
 
                 /** \brief Number of children */
-                unsigned numChildren_{0};
+                unsigned numChildren_;
 
                 /** \brief If inactive, this node is not considered for selection.*/
-                bool inactive_{false};
+                bool inactive_;
+
+
             };
 
             class Witness : public Motion
             {
             public:
-                Witness() = default;
 
-                Witness(const base::SpaceInformationPtr &si) : Motion(si)
+                Witness() : Motion(), rep_(nullptr)
                 {
                 }
-                base::State *getState() const override
+
+                Witness(const base::SpaceInformationPtr& si) : Motion(si), rep_(nullptr)
+                {
+                }
+                virtual base::State* getState() const
                 {
                     return rep_->state_;
                 }
-                Motion *getParent() const override
+                virtual Motion* getParent() const
                 {
                     return rep_->parent_;
                 }
@@ -226,17 +237,18 @@ namespace ompl
                 }
 
                 /** \brief The node in the tree that is within the pruning radius.*/
-                Motion *rep_{nullptr};
+                Motion* rep_;
             };
 
+
             /** \brief Finds the best node in the tree withing the selection radius around a random sample.*/
-            Motion *selectNode(Motion *sample);
+            Motion* selectNode(Motion *sample);
 
             /** \brief Find the closest witness node to a newly generated potential node.*/
-            Witness *findClosestWitness(Motion *node);
+            Witness* findClosestWitness(Motion *node);
 
             /** \brief Randomly propagate a new edge.*/
-            base::State *monteCarloProp(Motion *m);
+            base::State* monteCarloProp(Motion *m);
 
             /** \brief Free the memory allocated by this planner */
             void freeMemory();
@@ -248,38 +260,38 @@ namespace ompl
             }
 
             /** \brief State sampler */
-            base::StateSamplerPtr sampler_;
+            base::StateSamplerPtr                          sampler_;
 
             /** \brief A nearest-neighbors datastructure containing the tree of motions */
-            std::shared_ptr<NearestNeighbors<Motion *>> nn_;
+            std::shared_ptr< NearestNeighbors<Motion*> > nn_;
 
             /** \brief A nearest-neighbors datastructure containing the tree of witness motions */
-            std::shared_ptr<NearestNeighbors<Motion *>> witnesses_;
+            std::shared_ptr< NearestNeighbors<Motion*> > witnesses_;
 
-            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is
-             * available) */
-            double goalBias_{.05};
+            /** \brief The fraction of time the goal is picked as the state to expand towards (if such a state is available) */
+            double                                         goalBias_;
 
             /** \brief The maximum length of a motion to be added to a tree */
-            double maxDistance_{5.};
+            double                                         maxDistance_;
 
             /** \brief The radius for determining the node selected for extension. */
-            double selectionRadius_{5.};
+            double                                         selectionRadius_;
 
             /** \brief The radius for determining the size of the pruning region. */
-            double pruningRadius_{3.};
+            double                                         pruningRadius_;
 
             /** \brief The random number generator */
-            RNG rng_;
+            RNG                                            rng_;
 
             /** \brief The best solution we found so far. */
-            std::vector<base::State *> prevSolution_;
+            std::vector<base::State*>                      prevSolution_;
 
             /** \brief The best solution cost we found so far. */
-            base::Cost prevSolutionCost_;
+            base::Cost                                     prevSolutionCost_;
 
             /** \brief The optimization objective. */
-            base::OptimizationObjectivePtr opt_;
+            base::OptimizationObjectivePtr                 opt_;
+
         };
     }
 }

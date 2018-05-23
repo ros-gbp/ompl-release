@@ -38,7 +38,7 @@
 #ifndef OMPL_TOOLS_THUNDER_THUNDER_
 #define OMPL_TOOLS_THUNDER_THUNDER_
 
-#include <ompl/tools/experience/ExperienceSetup.h>  // the parent class
+#include <ompl/tools/experience/ExperienceSetup.h> // the parent class
 
 #include <ompl/tools/thunder/ThunderDB.h>
 #include <ompl/geometric/planners/experience/ThunderRetrieveRepair.h>
@@ -48,7 +48,7 @@
 #include <ompl/base/ProblemDefinition.h>
 #include <ompl/base/SpaceInformation.h>
 #include <ompl/base/ProblemDefinition.h>
-#include <ompl/base/StateSpace.h>  // for storing to file
+#include <ompl/base/StateSpace.h> // for storing to file
 
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
@@ -60,6 +60,7 @@
 
 namespace ompl
 {
+
     namespace tools
     {
         /**
@@ -68,10 +69,8 @@ namespace ompl
            Thunder is an experience-based planning framework that learns to reduce computation time
            required to solve high-dimensional planning problems in varying environments.
            @par External documentation
-           Berenson, Dmitry, Pieter Abbeel, and Ken Goldberg: A robot path planning framework that learns from
-           experience, in <em>Robotics and Automation (ICRA), 2012 IEEE International Conference on. IEEE</em>, 2012.
-           David Coleman, Ioan A. Sucan, Mark Moll, Kei Okada, Nikolaus Correll, "Experience-Based Planning with Sparse
-           Roadmap Spanners"
+           Berenson, Dmitry, Pieter Abbeel, and Ken Goldberg: A robot path planning framework that learns from experience, in <em>Robotics and Automation (ICRA), 2012 IEEE International Conference on. IEEE</em>, 2012.
+           David Coleman, Ioan A. Sucan, Mark Moll, Kei Okada, Nikolaus Correll, "Experience-Based Planning with Sparse Roadmap Spanners"
            <a href="http://arxiv.org/pdf/1410.1950.pdf">[PDF]</a>
         */
 
@@ -86,43 +85,48 @@ namespace ompl
         class Thunder : public ompl::tools::ExperienceSetup
         {
         public:
+
             /** \brief Constructor needs the state space used for planning. */
-            explicit Thunder(const base::SpaceInformationPtr &si);
+            explicit
+            Thunder(const base::SpaceInformationPtr &si);
 
             /** \brief Constructor needs the state space used for planning.
              *  \param space - the state space to plan in
              */
-            explicit Thunder(const base::StateSpacePtr &space);
+            explicit
+            Thunder(const base::StateSpacePtr &space);
 
         private:
+
             /** \brief Shared constructor functions */
             void initialize();
 
         public:
+
             /** \brief Display debug data about potential available solutions */
-            void printResultsInfo(std::ostream &out = std::cout) const override;
+            void printResultsInfo(std::ostream &out = std::cout) const;
 
             /** \brief Display debug data about overall results from Thunder since being loaded */
-            void printLogs(std::ostream &out = std::cout) const override;
+            void printLogs(std::ostream &out = std::cout) const;
 
             /** \brief Get the current planner */
-            ompl::base::PlannerPtr &getPlanner()
+            ompl::base::PlannerPtr& getPlanner()
             {
                 return planner_;
             }
 
             /** \brief Get a pointer to the retrieve repair planner */
-            ompl::geometric::ThunderRetrieveRepair &getRetrieveRepairPlanner() const
+            ompl::geometric::ThunderRetrieveRepair& getRetrieveRepairPlanner() const
             {
-                return static_cast<ompl::geometric::ThunderRetrieveRepair &>(*rrPlanner_);
+                return static_cast<ompl::geometric::ThunderRetrieveRepair&>(*rrPlanner_);
             }
 
             /** \brief Set the planner to use for repairing experience paths
                 inside the ThunderRetrieveRepair planner. If the planner is not
                 set, a default planner is set. */
-            void setRepairPlanner(const base::PlannerPtr &planner) override
+            void setRepairPlanner(const base::PlannerPtr &planner)
             {
-                static_cast<ompl::geometric::ThunderRetrieveRepair &>(*rrPlanner_).setRepairPlanner(planner);
+                static_cast<ompl::geometric::ThunderRetrieveRepair&>(*rrPlanner_).setRepairPlanner(planner);
             }
 
             /** \brief Set the planner allocator to use. This is only
@@ -131,38 +135,37 @@ namespace ompl
             void setPlannerAllocator(const base::PlannerAllocator &pa);
 
             /** \brief Run the planner for up to a specified amount of time (default is 1 second) */
-            base::PlannerStatus solve(double time = 1.0) override;
+            virtual base::PlannerStatus solve(double time = 1.0);
 
             /** \brief Run the planner until \e ptc becomes true (at most) */
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
             /** \brief Save the experience database to file */
-            bool save() override;
+            bool save();
 
             /** \brief Save the experience database to file if there has been a change */
-            bool saveIfChanged() override;
+            bool saveIfChanged();
 
             /** \brief Clear all planning data. This only includes
                 data generated by motion plan computation. Planner
                 settings, start & goal states are not affected. */
-            void clear() override;
+            virtual void clear(void);
 
             /** \brief Print information about the current setup */
-            void print(std::ostream &out = std::cout) const override;
+            virtual void print(std::ostream &out = std::cout) const;
 
             /** \brief This method will create the necessary classes
                 for planning. The solve() method will call this function automatically. */
-            void setup() override;
+            virtual void setup(void);
 
             /** \brief Get a vector of all the planning data in the database */
-            void getAllPlannerDatas(std::vector<ompl::base::PlannerDataPtr> &plannerDatas) const override;
+            void getAllPlannerDatas(std::vector<ompl::base::PlannerDataPtr> &plannerDatas) const;
 
             /** \brief Get the total number of paths stored in the database */
-            std::size_t getExperiencesCount() const override;
+            std::size_t getExperiencesCount() const;
 
             /** \brief Convert PlannerData to PathGeometric. Assume ordering of verticies is order of path */
-            void convertPlannerData(const ompl::base::PlannerDataPtr &plannerData,
-                                    ompl::geometric::PathGeometric &path);
+            void convertPlannerData(const ompl::base::PlannerDataPtr plannerData, ompl::geometric::PathGeometric &path);
 
             /**
              * \brief If path1 and path2 have a better start/goal match when reverse, then reverse path2
@@ -176,30 +179,32 @@ namespace ompl
             ompl::tools::ThunderDBPtr getExperienceDB();
 
             /** \brief Allow accumlated experiences to be processed */
-            bool doPostProcessing() override;
+            bool doPostProcessing();
 
         protected:
+
             /**  The maintained experience planner instance */
-            base::PlannerPtr rrPlanner_;
+            base::PlannerPtr                             rrPlanner_;
 
             /**  A third planner used for testing dual-thread scratch-only planning */
-            base::PlannerPtr planner2_;
+            base::PlannerPtr                             planner2_;
 
             /**  Flag indicating whether dual thread scratch planning is enabled */
-            bool dualThreadScratchEnabled_{true};
+            bool                                         dualThreadScratchEnabled_;
 
             /** \brief Instance of parallel planning to use for computing solutions in parallel */
-            ompl::tools::ParallelPlanPtr pp_;
+            ompl::tools::ParallelPlanPtr                 pp_;
 
             /** \brief A shared object between all the planners for saving and loading previous experience */
-            ompl::tools::ThunderDBPtr experienceDB_;
+            ompl::tools::ThunderDBPtr                    experienceDB_;
 
             /** \brief Accumulated experiences to be later added to experience database */
-            std::vector<ompl::geometric::PathGeometric> queuedSolutionPaths_;
+            std::vector<ompl::geometric::PathGeometric>  queuedSolutionPaths_;
 
-        };  // end of class Thunder
+        }; // end of class Thunder
 
-    }  // end of namespace
+    } // end of namespace
 
-}  // end of namespace
+} // end of namespace
 #endif
+

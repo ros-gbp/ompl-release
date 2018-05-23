@@ -52,16 +52,16 @@ void ompl::base::GoalStates::clear()
 
 void ompl::base::GoalStates::freeMemory()
 {
-    for (auto &state : states_)
-        si_->freeState(state);
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
+        si_->freeState(states_[i]);
 }
 
 double ompl::base::GoalStates::distanceGoal(const State *st) const
 {
     double dist = std::numeric_limits<double>::infinity();
-    for (auto state : states_)
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
     {
-        double d = si_->distance(st, state);
+        double d = si_->distance(st, states_[i]);
         if (d < dist)
             dist = d;
     }
@@ -71,9 +71,9 @@ double ompl::base::GoalStates::distanceGoal(const State *st) const
 void ompl::base::GoalStates::print(std::ostream &out) const
 {
     out << states_.size() << " goal states, threshold = " << threshold_ << ", memory address = " << this << std::endl;
-    for (auto state : states_)
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
     {
-        si_->printState(state, out);
+        si_->printState(states_[i], out);
         out << std::endl;
     }
 }
@@ -106,11 +106,11 @@ void ompl::base::GoalStates::addState(const ScopedState<> &st)
     addState(st.get());
 }
 
-const ompl::base::State *ompl::base::GoalStates::getState(unsigned int index) const
+const ompl::base::State* ompl::base::GoalStates::getState(unsigned int index) const
 {
     if (index >= states_.size())
-        throw Exception("Index " + std::to_string(index) + " out of range. Only " + std::to_string(states_.size()) +
-                        " states are available");
+        throw Exception("Index " + std::to_string(index) + " out of range. Only " +
+                        std::to_string(states_.size()) + " states are available");
     return states_[index];
 }
 

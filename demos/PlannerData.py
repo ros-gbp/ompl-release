@@ -36,6 +36,9 @@
 
 # Author: Ryan Luna
 
+from math import sqrt
+from functools import partial
+
 try:
     # graph-tool and py-OMPL have some minor issues coexisting with each other.  Both modules
     # define conversions to C++ STL containers (i.e. std::vector), and the module that is imported
@@ -43,31 +46,40 @@ try:
     # but on Apple, graph_tool will not be imported properly if OMPL comes first.
     import graph_tool.all as gt
     graphtool = True
-except ImportError:
+except:
     print('Failed to import graph-tool.  PlannerData will not be analyzed or plotted')
     graphtool = False
 
 try:
+    from ompl import util as ou
     from ompl import base as ob
     from ompl import geometric as og
-except ImportError:
+except:
     # if the ompl module is not in the PYTHONPATH assume it is installed in a
     # subdirectory of the parent directory called "py-bindings."
     from os.path import abspath, dirname, join
     import sys
-    sys.path.insert(0, join(dirname(dirname(abspath(__file__))), 'py-bindings'))
+    sys.path.insert(0, join(dirname(dirname(abspath(__file__))),'py-bindings'))
+    from ompl import util as ou
     from ompl import base as ob
     from ompl import geometric as og
 
 
 # Create a narrow passage between y=[-3,3].  Only a 6x6x6 cube will be valid, centered at origin
 def isStateValid(state):
-    if state.getY() >= -3 and state.getY() <= 3:
-        return state.getX() >= -3 and state.getX() <= 3 and \
-            state.getZ() >= -3 and state.getZ() <= 3
-    return True
+    if (state.getY() >= -3 and state.getY() <= 3):
+        if (state.getX() >= -3 and state.getX() <= 3 and state.getZ() >= -3 and state.getZ() <= 3):
+            return True
+        else:
+            return False
+    else:
+        return True
 
-def useGraphTool(pd):
+# Returns the distance between the states contained in v1 and v2.
+def edgeWeight(space, v1, v2, edge):
+    return space.distance(v1.getState(), v2.getState())
+
+def useGraphTool(pd, space):
     # Extract the graphml representation of the planner data
     graphml = pd.printGraphML()
     f = open("graph.graphml", 'w')
@@ -87,12 +99,11 @@ def useGraphTool(pd):
     print("Average vertex degree (in+out) = " + str(avgdeg) + "  St. Dev = " + str(stddevdeg))
     print("Average edge weight = " + str(avgwt)  + "  St. Dev = " + str(stddevwt))
 
-    _, hist = gt.label_components(graph)
+    comps, hist = gt.label_components(graph)
     print("Strongly connected components: " + str(len(hist)))
 
-    # Make the graph undirected (for weak components, and a simpler drawing)
-    graph.set_directed(False)
-    _, hist = gt.label_components(graph)
+    graph.set_directed(False)  # Make the graph undirected (for weak components, and a simpler drawing)
+    comps, hist = gt.label_components(graph)
     print("Weakly connected components: " + str(len(hist)))
 
     # Plotting the graph
@@ -108,11 +119,11 @@ def useGraphTool(pd):
     for v in range(graph.num_vertices()):
 
         # Color and size vertices by type: start, goal, other
-        if pd.isStartVertex(v):
+        if (pd.isStartVertex(v)):
             start = v
             colorprops[graph.vertex(v)] = "cyan"
             vertexsize[graph.vertex(v)] = 10
-        elif pd.isGoalVertex(v):
+        elif (pd.isGoalVertex(v)):
             goal = v
             colorprops[graph.vertex(v)] = "green"
             vertexsize[graph.vertex(v)] = 10
@@ -125,11 +136,11 @@ def useGraphTool(pd):
     edgesize = graph.new_edge_property("double")
     for e in graph.edges():
         edgecolor[e] = "black"
-        edgesize[e] = 0.5
+        edgesize[e]  = 0.5
 
     # using A* to find shortest path in planner data
     if start != -1 and goal != -1:
-        _, pred = gt.astar_search(graph, graph.vertex(start), edgeweights)
+        dist, pred = gt.astar_search(graph, graph.vertex(start), edgeweights)
 
         # Color edges along shortest path red with size 3.0
         v = graph.vertex(goal)
@@ -138,15 +149,15 @@ def useGraphTool(pd):
             for e in p.out_edges():
                 if e.target() == v:
                     edgecolor[e] = "red"
-                    edgesize[e] = 2.0
+                    edgesize[e]  = 2.0
             v = p
 
     # Writing graph to file:
     # pos indicates the desired vertex positions, and pin=True says that we
     # really REALLY want the vertices at those positions
-    gt.graph_draw(graph, vertex_size=vertexsize, vertex_fill_color=colorprops,
-                  edge_pen_width=edgesize, edge_color=edgecolor,
-                  output="graph.png")
+    gt.graph_draw (graph, vertex_size=vertexsize, vertex_fill_color=colorprops,
+                   edge_pen_width=edgesize, edge_color=edgecolor,
+                   output="graph.png")
     print('\nGraph written to graph.png')
 
 def plan():
@@ -201,7 +212,7 @@ def plan():
         pd.computeEdgeWeights()
 
         if graphtool:
-            useGraphTool(pd)
+            useGraphTool(pd, space)
 
 if __name__ == "__main__":
     plan()

@@ -1,4 +1,4 @@
-#How to Benchmark Planners
+# How to Benchmark Planners
 
 OMPL contains a ompl::Benchmark class that facilitates solving a motion planning problem repeatedly with different parameters, different planners, different samplers, or even differently configured versions of the same planning algorithm. Below, we will describe how you can use this class.
 
@@ -18,9 +18,7 @@ For a command line program for rigid body motion planning and basic kinodynamic 
 For interactive visualization of benchmark databases, please see [plannerarena.org](http://plannerarena.org).
 
 \if OMPLAPP
-
 # Create a benchmark configuration file {#benchmark_config}
-
 
 OMPL.app contains a command line program called `ompl_benchmark`, that can read a text based configuration file using an ini style format with key/value pairs. This is the same format that can be read and saved with the OMPL.app GUI. The GUI ignores the settings related to benchmarking. However, it is often convenient to create an initial configuration with the GUI and add the benchmark settings with a text editor. Currently the base functionality of the `ompl_benchmark` program only applies to geometric planning in SE(2) and SE(3) and kinodynamic planning for certain systems, but the program can be extended by the user to other types of planning problems.
 
@@ -53,6 +51,7 @@ The last required element to specify are the planners to benchmark.  These are s
 `kpiece`,  `bkpiece`,  `lbkpiece`,  `est`,  `sbl`,  `prm`,  `lazyprm`,  `lazyprmstar`,  `rrt`,  `rrtconnect`,  `lazyrrt`,  `rrtstar`,  `lbtrrt`,  `trrt`,  `spars`,  `spars2`,  `stride`,  `pdst`,  `fmt`, and  `aps`.
 The following planners are valid for kinodynamic planning (i.e., when the  `control` parameter is set):
  `kpiece`,  `rrt`,  `est`,  `pdst`,  `sycloprrt`, and  `syclopest`.
+
 
 An example of a minimal SE(2) configuration comparing the rrt and est planners is given below:
 
@@ -111,8 +110,7 @@ When using multiple planner instances, a useful parameter is “name”, as it c
 Finally, to execute the benchmark configuration file, simply run the `ompl_benchmark` executable in the OMPL.app bin directory, and supply the path to the config file as the first argument.
 \endif
 
-Writing benchmarking code {#benchmark_code}
--------------------------------------------
+# Writing benchmarking code {#benchmark_code}
 
 Benchmarking a set of planners on a specified problem using the Benchmark class in your own code is a simple task in OMPL. The steps involved are as follows:
 
@@ -214,6 +212,7 @@ b.setPreRunEvent(std::bind(&optionalPreRunEvent, std::placeholders::_1));
 b.setPostRunEvent(std::bind(&optionalPostRunEvent, std::placeholders::_1, std::placeholders::_2));
 ~~~
 
+
 # Processing the benchmarking log file {#benchmark_log}
 
 Once the C++ code computing the results has been executed, a log file is generated. This contains information about the settings of the planners, the parameters of the problem tested on, etc. To visualize this information, we provide a script that parses the log files:
@@ -301,19 +300,16 @@ The benchmark log files have a pretty simple structure. Below we have included t
 
 ~~~
 logfile               ::= preamble planners_data;
-preamble              ::= [version] experiment [exp_property_count exp_properties] hostname date setup [cpuinfo]
+preamble              ::= [version] experiment hostname date setup [cpuinfo]
                           random_seed time_limit memory_limit [num_runs]
                           total_time [num_enums enums] num_planners;
 version               ::= library_name " version " version_number EOL;
 experiment            ::= "Experiment " experiment_name EOL;
-exp_property_count    ::= int " experiment properties" EOL;
-exp_properties        ::= exp_property | exp_property exp_properties;
-exp_property          ::= name property_type "=" num EOL;
 hostname              ::= "Running on " host EOL;
 date                  ::= "Starting at " date_string EOL;
 setup                 ::= multi_line_string;
 cpuinfo               ::= multi_line_string;
-multi_line_string     ::= "<<<|" EOL strings "|>>>" EOL;
+multi_line_string     ::= "<<<|" EOL strings "|>>>" EOL
 strings               ::= string EOL | string EOL strings
 random_seed           ::= int " is the random seed" EOL;
 time_limit            ::= float " seconds per run" EOL;
@@ -346,7 +342,6 @@ progress_measurements ::= progress_measurement EOL
 progress_measurement  ::= prog_run_data | prog_run_data ";" progress_measurement;
 prog_run_data         ::= data "," | data "," prog_run_data;
 ~~~
-
 Here, `EOL` denotes a newline character, `int` denotes an integer, `float` denotes a floating point number, `num` denotes an integer or float value and undefined symbols correspond to strings without whitespace characters. The exception is `property_name` which is a string that _can_ have whitespace characters. It is also assumed that if the log file says there is data for _k_ planners that that really is the case (likewise for the number of run measurements and the optional progress measurements).
 
 # The benchmark database schema {#benchmark_database}
@@ -430,3 +425,4 @@ For a small database with 1 experiment (the “cubicles” problem from OMPL.app
 \endhtmlonly
 
 \note Similar code is used for [Planner Arena](http://plannerarena.org), a web site for interactive visualization of benchmark databases. The Planner Arena code is part of the OMPL source. Instructions for running Planner Arena locally can be found [here](plannerarena.html).
+

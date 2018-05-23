@@ -56,7 +56,7 @@ struct Circles2D
         double startX_, startY_, goalX_, goalY_;
     };
 
-    Circles2D()
+    Circles2D(void)
     {
         minX_ = minY_ = 0.0;
         maxX_ = maxY_ = 0.0;
@@ -77,7 +77,7 @@ struct Circles2D
             fin >> id >> x >> y >> r;
             if (fin.eof() || !fin.good())
                 break;
-            circles_.emplace_back(x,y,r);
+            circles_.push_back(Circle(x,y,r));
             //      std::cout << "Added circle " << id << " at center " << x << ", " << y << " of radius " << r << std::endl;
         }
         fin.close();
@@ -127,18 +127,18 @@ struct Circles2D
         return queries_[index];
     }
 
-    std::size_t getQueryCount() const
+    std::size_t getQueryCount(void) const
     {
         return queries_.size();
     }
 
     bool noOverlap(double x, double y) const
     {
-        for (const auto &circle : circles_)
+        for (std::size_t i = 0 ; i < circles_.size() ; ++i)
         {
-            double dx = circle.x_ - x;
-            double dy = circle.y_ - y;
-            if (dx * dx + dy * dy < circle.r2_)
+            double dx = circles_[i].x_ - x;
+            double dy = circles_[i].y_ - y;
+            if (dx * dx + dy * dy < circles_[i].r2_)
                 return false;
         }
         return true;

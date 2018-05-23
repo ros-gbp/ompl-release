@@ -70,9 +70,9 @@ class KoulesControlSpace : public ompl::control::RealVectorControlSpace
 public:
     KoulesControlSpace(unsigned int numKoules);
 
-    virtual ompl::control::ControlSamplerPtr allocDefaultControlSampler() const
+    virtual ompl::control::ControlSamplerPtr allocDefaultControlSampler(void) const
     {
-        return std::make_shared<KoulesControlSampler>(this);
+        return ompl::control::ControlSamplerPtr(new KoulesControlSampler(this));
     }
 };
 

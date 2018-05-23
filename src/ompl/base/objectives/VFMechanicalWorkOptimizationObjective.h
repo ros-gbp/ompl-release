@@ -37,8 +37,6 @@
 #ifndef OMPL_BASE_OBJECTIVES_VF_MECHANICAL_WORK_OPTIMIZATION_OBJECTIVE_
 #define OMPL_BASE_OBJECTIVES_VF_MECHANICAL_WORK_OPTIMIZATION_OBJECTIVE_
 
-#include <utility>
-
 #include "ompl/base/objectives/MechanicalWorkOptimizationObjective.h"
 #include "ompl/geometric/planners/rrt/VFRRT.h"
 
@@ -46,27 +44,30 @@ namespace ompl
 {
     namespace base
     {
+
         /**
          * Optimization objective that computes mechanical work between two states by following a vector field.
          */
         class VFMechanicalWorkOptimizationObjective : public ompl::base::MechanicalWorkOptimizationObjective
         {
+
         public:
+
             /** Constructor. */
             VFMechanicalWorkOptimizationObjective(const ompl::base::SpaceInformationPtr &si,
-                                                  geometric::VFRRT::VectorField vf)
-              : ompl::base::MechanicalWorkOptimizationObjective(si), vf_(std::move(vf))
+                const geometric::VFRRT::VectorField& vf)
+                : ompl::base::MechanicalWorkOptimizationObjective(si), vf_(vf)
             {
             }
 
             /** Assume we can always do better. */
-            bool isSatisfied(ompl::base::Cost c) const override
+            bool isSatisfied(ompl::base::Cost c) const
             {
                 return false;
             }
 
             /** Compute mechanical work between two states. */
-            ompl::base::Cost motionCost(const ompl::base::State *s1, const ompl::base::State *s2) const override
+            ompl::base::Cost motionCost(const ompl::base::State *s1, const ompl::base::State *s2) const
             {
                 const base::StateSpacePtr &space = si_->getStateSpace();
                 // Per equation 7 in the paper
@@ -75,14 +76,15 @@ namespace ompl
                 Eigen::VectorXd qprime(vfdim);
 
                 for (unsigned int i = 0; i < vfdim; i++)
-                    qprime[i] = *space->getValueAddressAtIndex(s2, i) - *space->getValueAddressAtIndex(s1, i);
+                    qprime[i] = *space->getValueAddressAtIndex(s2, i)
+                        - *space->getValueAddressAtIndex(s1, i);
 
                 // Don't included negative work
                 double positiveCostAccrued = std::max(-(f.dot(qprime)), 0.);
                 return ompl::base::Cost(positiveCostAccrued + pathLengthWeight_ * si_->distance(s1, s2));
             }
 
-            bool isSymmetric() const override
+            bool isSymmetric(void) const
             {
                 return false;
             }

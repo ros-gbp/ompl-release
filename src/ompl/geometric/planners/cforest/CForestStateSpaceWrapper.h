@@ -56,167 +56,169 @@ namespace ompl
         {
         public:
             CForestStateSpaceWrapper(geometric::CForest *cforest, base::StateSpace *space)
-              : cforest_(cforest), space_(space), planner_(nullptr)
+                : cforest_(cforest), space_(space), planner_(nullptr)
             {
                 setName(space->getName() + "CForestWrapper");
             }
 
-            ~CForestStateSpaceWrapper() override = default;
+            ~CForestStateSpaceWrapper()
+            {
+            }
 
             void setPlanner(base::Planner *planner)
             {
                 planner_ = planner;
             }
 
-            const base::Planner *getPlanner() const
+            const base::Planner* getPlanner() const
             {
                 return planner_;
             }
 
-            geometric::CForest *getCForestInstance() const
+            geometric::CForest* getCForestInstance() const
             {
                 return cforest_;
             }
 
-            StateSamplerPtr allocDefaultStateSampler() const override;
+            virtual StateSamplerPtr allocDefaultStateSampler() const;
 
-            StateSamplerPtr allocStateSampler() const override;
+            virtual StateSamplerPtr allocStateSampler() const;
 
-            void setup() override;
+            virtual void setup();
 
-            bool isCompound() const override
+            virtual bool isCompound() const
             {
                 return space_->isCompound();
             }
-            bool isDiscrete() const override
+            virtual bool isDiscrete() const
             {
                 return space_->isDiscrete();
             }
-            bool isHybrid() const override
+            virtual bool isHybrid() const
             {
                 return space_->isHybrid();
             }
-            bool isMetricSpace() const override
+            virtual bool isMetricSpace() const
             {
                 return space_->isMetricSpace();
             }
-            bool hasSymmetricDistance() const override
+            virtual bool hasSymmetricDistance() const
             {
                 return space_->hasSymmetricDistance();
             }
-            bool hasSymmetricInterpolate() const override
+            virtual bool hasSymmetricInterpolate() const
             {
                 return space_->hasSymmetricInterpolate();
             }
-            double getLongestValidSegmentFraction() const override
+            virtual double getLongestValidSegmentFraction() const
             {
                 return space_->getLongestValidSegmentFraction();
             }
-            void setLongestValidSegmentFraction(double segmentFraction) override
+            virtual void setLongestValidSegmentFraction(double segmentFraction)
             {
                 space_->setLongestValidSegmentFraction(segmentFraction);
             }
-            unsigned int validSegmentCount(const State *state1, const State *state2) const override
+            virtual unsigned int validSegmentCount(const State *state1, const State *state2) const
             {
                 return space_->validSegmentCount(state1, state2);
             }
-            unsigned int getDimension() const override
+            virtual unsigned int getDimension() const
             {
                 return space_->getDimension();
             }
-            double getMaximumExtent() const override
+            virtual double getMaximumExtent() const
             {
                 return space_->getMaximumExtent();
             }
-            double getMeasure() const override
+            virtual double getMeasure() const
             {
                 return space_->getMeasure();
             }
-            void enforceBounds(State *state) const override
+            virtual void enforceBounds(State *state) const
             {
                 space_->enforceBounds(state);
             }
-            bool satisfiesBounds(const State *state) const override
+            virtual bool satisfiesBounds(const State *state) const
             {
                 return space_->satisfiesBounds(state);
             }
-            void copyState(State *destination, const State *source) const override
+            virtual void copyState(State *destination, const State *source) const
             {
                 space_->copyState(destination, source);
             }
-            double distance(const State *state1, const State *state2) const override
+            virtual double distance(const State *state1, const State *state2) const
             {
                 return space_->distance(state1, state2);
             }
-            unsigned int getSerializationLength() const override
+            virtual unsigned int getSerializationLength() const
             {
                 return space_->getSerializationLength();
             }
-            void serialize(void *serialization, const State *state) const override
+            virtual void serialize(void *serialization, const State *state) const
             {
                 space_->serialize(serialization, state);
             }
-            void deserialize(State *state, const void *serialization) const override
+            virtual void deserialize(State *state, const void *serialization) const
             {
                 space_->deserialize(state, serialization);
             }
-            bool equalStates(const State *state1, const State *state2) const override
+            virtual bool equalStates(const State *state1, const State *state2) const
             {
                 return space_->equalStates(state1, state2);
             }
-            void interpolate(const State *from, const State *to, const double t, State *state) const override
+            virtual void interpolate(const State *from, const State *to, const double t, State *state) const
             {
                 space_->interpolate(from, to, t, state);
             }
-            State *allocState() const override
+            virtual State* allocState() const
             {
                 return space_->allocState();
             }
-            void freeState(State *state) const override
+            virtual void freeState(State *state) const
             {
                 space_->freeState(state);
             }
-            double *getValueAddressAtIndex(State *state, const unsigned int index) const override
+            virtual double* getValueAddressAtIndex(State *state, const unsigned int index) const
             {
                 return space_->getValueAddressAtIndex(state, index);
             }
-            void registerProjections() override
+            virtual void registerProjections()
             {
                 space_->registerProjections();
             }
-            void printState(const State *state, std::ostream &out) const override
+            virtual void printState(const State *state, std::ostream &out) const
             {
                 space_->printState(state, out);
             }
-            void printSettings(std::ostream &out) const override
+            virtual void printSettings(std::ostream &out) const
             {
                 space_->printSettings(out);
             }
-            void printProjections(std::ostream &out) const override
+            virtual void printProjections(std::ostream &out) const
             {
                 space_->printProjections(out);
             }
-            void sanityChecks(double zero, double eps, unsigned int flags) const override
+            virtual void sanityChecks(double zero, double eps, unsigned int flags) const
             {
                 space_->sanityChecks(zero, eps, flags);
             }
-            void sanityChecks() const override
+            virtual void sanityChecks() const
             {
                 space_->sanityChecks();
             }
-            StateSamplerPtr allocSubspaceStateSampler(const StateSpace *subspace) const override
+            virtual StateSamplerPtr allocSubspaceStateSampler(const StateSpace *subspace) const
             {
                 return space_->allocSubspaceStateSampler(subspace);
             }
-            void computeLocations() override
+            virtual void computeLocations()
             {
                 space_->computeLocations();
             }
 
         protected:
-            geometric::CForest *cforest_;
-            StateSpace *space_;
-            Planner *planner_;
+            geometric::CForest    *cforest_;
+            StateSpace            *space_;
+            Planner               *planner_;
         };
     }
 }

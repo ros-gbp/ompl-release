@@ -20,8 +20,8 @@ bool myStateValidityCheckerFunction(const base::State *state)
 
 base::SpaceInformationPtr si(space);
 // either this call:
-si->setStateValidityChecker(std::make_shared<myStateValidityCheckerClass>(si));
+si->setStateValidityChecker(base::StateValidityCheckerPtr(new myStateValidityCheckerClass(si)));
 // or this call:
-si->setStateValidityChecker(myStateValidityCheckerFunction);
+si->setStateValidityChecker(std::bind(&myStateValidityCheckerFunction, std::placeholders::_1));
 si->setStateValidityCheckingResolution(0.03); // 3%
 si->setup();

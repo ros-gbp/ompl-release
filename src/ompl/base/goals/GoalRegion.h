@@ -39,26 +39,32 @@
 
 #include "ompl/base/Goal.h"
 
+
 namespace ompl
 {
+
     namespace base
     {
+
         /** \brief Definition of a goal region */
         class GoalRegion : public Goal
         {
         public:
+
             /** \brief Create a goal region */
             GoalRegion(const SpaceInformationPtr &si);
 
-            ~GoalRegion() override = default;
+            virtual ~GoalRegion()
+            {
+            }
 
             /** \brief Equivalent to calling isSatisfied(const State *, double *) with a nullptr second argument. */
-            bool isSatisfied(const State *st) const override;
+            virtual bool isSatisfied(const State *st) const;
 
             /** \brief Decide whether a given state is part of the
                 goal region. Returns true if the distance to goal is
                 less than the threshold (using distanceGoal()) */
-            bool isSatisfied(const State *st, double *distance) const override;
+            virtual bool isSatisfied(const State *st, double *distance) const;
 
             /** \brief Compute the distance to the goal
                 (heuristic). This function is the one used in
@@ -68,7 +74,7 @@ namespace ompl
 
             /** \brief Print information about the goal data structure
                 to a stream */
-            void print(std::ostream &out = std::cout) const override;
+            virtual void print(std::ostream &out = std::cout) const;
 
             /** \brief Set the distance to the goal that is allowed
                 for a state to be considered in the goal region */
@@ -85,6 +91,7 @@ namespace ompl
             }
 
         protected:
+
             /** \brief The maximum distance that is allowed to the
                 goal. By default, this is initialized to the minimum
                 epsilon value a double can represent */

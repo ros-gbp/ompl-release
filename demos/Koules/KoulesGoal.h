@@ -53,9 +53,9 @@ public:
     virtual double distanceGoal(const ompl::base::State *st) const;
     // pick a random state where each koule is on the edge of the workspace
     virtual void sampleGoal(ompl::base::State *st) const;
-    virtual unsigned int maxSampleCount() const
+    virtual unsigned int maxSampleCount(void) const
     {
-        return std::numeric_limits<unsigned int>::max();
+        return 100;
     }
 
 

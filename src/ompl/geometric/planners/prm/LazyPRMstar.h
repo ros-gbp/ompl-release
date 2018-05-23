@@ -41,8 +41,10 @@
 
 namespace ompl
 {
+
     namespace geometric
     {
+
         /**
            @anchor gLazyPRMstar
            Run LazyPRM with the "star strategy". Instead of setting the
@@ -66,6 +68,7 @@ namespace ompl
         class LazyPRMstar : public LazyPRM
         {
         public:
+
             /** \brief Constructor */
             LazyPRMstar(const base::SpaceInformationPtr &si);
         };

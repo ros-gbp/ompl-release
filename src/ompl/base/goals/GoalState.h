@@ -42,32 +42,35 @@
 
 namespace ompl
 {
+
     namespace base
     {
+
         /** \brief Definition of a goal state */
         class GoalState : public GoalSampleableRegion
         {
         public:
+
             /** \brief Create a goal representation that is in fact a state  */
             GoalState(const SpaceInformationPtr &si) : GoalSampleableRegion(si), state_(nullptr)
             {
                 type_ = GOAL_STATE;
             }
 
-            ~GoalState() override;
+            virtual ~GoalState();
 
             /** \brief Sample a state in the goal region */
-            void sampleGoal(State *st) const override;
+            virtual void sampleGoal(State *st) const;
 
             /** \brief Return the maximum number of samples that can be asked for before repeating */
-            unsigned int maxSampleCount() const override;
+            virtual unsigned int maxSampleCount() const;
 
             /** \brief Compute the distance to the goal (heuristic) */
-            double distanceGoal(const State *st) const override;
+            virtual double distanceGoal(const State *st) const;
 
             /** \brief Print information about the goal data structure
                 to a stream */
-            void print(std::ostream &out = std::cout) const override;
+            virtual void print(std::ostream &out = std::cout) const;
 
             /** \brief Set the goal state */
             void setState(const State *st);
@@ -76,15 +79,17 @@ namespace ompl
             void setState(const ScopedState<> &st);
 
             /** \brief Get the goal state */
-            const State *getState() const;
+            const State* getState() const;
 
             /** \brief Get the goal state */
-            State *getState();
+            State* getState();
 
         protected:
+
             /** \brief The goal state */
             State *state_;
         };
+
     }
 }
 

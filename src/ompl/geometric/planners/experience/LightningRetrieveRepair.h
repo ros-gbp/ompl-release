@@ -51,6 +51,7 @@ namespace ompl
 
     namespace geometric
     {
+
         /// @cond IGNORE
         /** \brief Forward declaration of ompl::base::LightningRetrieveRepair */
         OMPL_CLASS_FORWARD(LightningRetrieveRepair);
@@ -76,20 +77,20 @@ namespace ompl
         class LightningRetrieveRepair : public base::Planner
         {
         public:
+
             /** \brief Constructor */
-            LightningRetrieveRepair(const base::SpaceInformationPtr &si, tools::LightningDBPtr experienceDB);
+            LightningRetrieveRepair(const base::SpaceInformationPtr &si, const tools::LightningDBPtr &experienceDB);
 
-            ~LightningRetrieveRepair() override;
+            virtual ~LightningRetrieveRepair();
 
-            /** \brief Get information about the exploration data structure the planning from scratch motion planner
-             * used. */
-            void getPlannerData(base::PlannerData &data) const override;
+            /** \brief Get information about the exploration data structure the planning from scratch motion planner used. */
+            virtual void getPlannerData(base::PlannerData &data) const;
 
             /**
              *  \brief Get debug information about the top recalled paths that were chosen for further filtering
              *  \return data - vector of PlannerData objects that each hold a single path
              */
-            const std::vector<base::PlannerDataPtr> &getLastRecalledNearestPaths() const;
+            const std::vector<base::PlannerDataPtr>& getLastRecalledNearestPaths() const;
 
             /**
              *  \brief Get debug information about the top recalled paths that were chosen for further filtering
@@ -106,9 +107,9 @@ namespace ompl
             /** \brief Get information about the exploration data structure the repair motion planner used each call. */
             void getRepairPlannerDatas(std::vector<base::PlannerDataPtr> &data) const;
 
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
 
-            void clear() override;
+            virtual void clear();
 
             /** \brief Pass a pointer of the database from the lightning framework */
             void setLightningDB(const tools::LightningDBPtr &experienceDB);
@@ -116,7 +117,7 @@ namespace ompl
             /** \brief Set the planner that will be used for repairing invalid paths recalled from experience */
             void setRepairPlanner(const base::PlannerPtr &planner);
 
-            void setup() override;
+            virtual void setup();
 
             /**
              * \brief Repairs a path to be valid in the current planning environment
@@ -124,7 +125,7 @@ namespace ompl
              * \param ptc - when to stop attempting repair
              * \return true if no error
              */
-            bool repairPath(const base::PlannerTerminationCondition &ptc, geometric::PathGeometric &primaryPath);
+            bool repairPath(const base::PlannerTerminationCondition &ptc, geometric::PathGeometric &path);
 
             /**
              * \brief Use our secondary planner to find a valid path between start and goal, and return that path
@@ -141,7 +142,7 @@ namespace ompl
              */
             int getNumNearestSolutions() const
             {
-                return nearestK_;
+              return nearestK_;
             }
 
             /**
@@ -149,51 +150,50 @@ namespace ompl
              */
             void setNumNearestSolutions(int nearestK)
             {
-                nearestK_ = nearestK;
+              nearestK_ = nearestK;
             }
 
         protected:
+
             /**
              * \brief Count the number of states along the discretized path that are in collision
-             *        Note: This is kind of an ill-defined score though. It depends on the resolution of collision
-             * checking.
+             *        Note: This is kind of an ill-defined score though. It depends on the resolution of collision checking.
              *        I am more inclined to try to compute the percent of the length of the motion that is valid.
              *        That could go in SpaceInformation, as a utility function.
              */
             std::size_t checkMotionScore(const base::State *s1, const base::State *s2) const;
 
             /**
-             * \brief Filters the top n paths in nearestPaths_ to the top 1, based on state validity with current
-             * environment
+             * \brief Filters the top n paths in nearestPaths_ to the top 1, based on state validity with current environment
              * \return true if no error
              */
-            bool findBestPath(const base::State *startState, const base::State *goalState,
-                              base::PlannerDataPtr &chosenPath);
+            bool findBestPath(const base::State *startState, const base::State *goalState, base::PlannerDataPtr& chosenPath);
 
             /** \brief The database of motions to search through */
-            tools::LightningDBPtr experienceDB_;
+            tools::LightningDBPtr                            experienceDB_;
 
             /** \brief Recall the nearest paths and store this in planner data for introspection later */
-            std::vector<base::PlannerDataPtr> nearestPaths_;
+            std::vector<base::PlannerDataPtr>                nearestPaths_;
 
             /** \brief the ID within nearestPaths_ of the path that was chosen for repair */
-            std::size_t nearestPathsChosenID_;
+            std::size_t                                      nearestPathsChosenID_;
 
             /** \brief A secondary planner for replanning */
-            base::PlannerPtr repairPlanner_;
+            base::PlannerPtr                                 repairPlanner_;
 
             /** \brief A secondary problem definition for the repair planner to use */
-            base::ProblemDefinitionPtr repairProblemDef_;
+            base::ProblemDefinitionPtr                       repairProblemDef_;
 
             /** \brief Debug the repair planner by saving its planner data each time it is used */
-            std::vector<base::PlannerDataPtr> repairPlannerDatas_;
+            std::vector<base::PlannerDataPtr>                repairPlannerDatas_;
 
             /** \brief The instance of the path simplifier */
-            geometric::PathSimplifierPtr psk_;
+            geometric::PathSimplifierPtr                     psk_;
 
             /** \brief Number of 'k' close solutions to choose from database for further filtering */
-            int nearestK_;
+            int                                              nearestK_;
         };
+
     }
 }
 

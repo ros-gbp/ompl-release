@@ -38,8 +38,9 @@
 
 import sys
 from os.path import abspath, dirname, join
-sys.path.insert(0, join(dirname(dirname(dirname(abspath(__file__)))), 'py-bindings'))
+sys.path.insert(0, join(dirname(dirname(dirname(abspath(__file__)))),'py-bindings') )
 from functools import partial
+from os.path import dirname
 from time import clock
 from math import fabs
 import unittest
@@ -63,7 +64,7 @@ class Environment(object):
         self.goal = [int(i) for i in lines[2].split(' ')[1:3]]
         for i in range(self.width):
             self.grid.append(
-                [int(j) for j in lines[4+i].split(' ')[0:self.height]])
+                [int(i) for i in lines[4+i].split(' ')[0:self.height]])
         self.char_mapping = ['__', '##', 'oo', 'XX']
 
     def __str__(self):
@@ -77,7 +78,7 @@ def isValid(grid, state):
     # representation is discrete
     x = int(state[0])
     y = int(state[1])
-    if x < 0 or y < 0 or x >= len(grid) or y >= len(grid[0]):
+    if x<0 or y<0 or x>=len(grid) or y>=len(grid[0]):
         return False
     return grid[x][y] == 0 # 0 means valid state
 
@@ -105,6 +106,9 @@ class MyProjectionEvaluator(ob.ProjectionEvaluator):
         projection[1] = state[1]
 
 class MyStatePropagator(oc.StatePropagator):
+    def __init__(self, spaceInformation):
+        super(MyStatePropagator, self).__init__(spaceInformation)
+
     def propagate(self, state, control, duration, result):
         result[0] = state[0] + duration*control[0]
         result[1] = state[1] + duration*control[1]
@@ -113,7 +117,7 @@ class MyStatePropagator(oc.StatePropagator):
 
 class TestPlanner(object):
 
-    def execute(self, env, time, pathLength, show=False):
+    def execute(self, env, time, pathLength, show = False):
         result = True
 
         sSpace = MyStateSpace()
@@ -126,8 +130,8 @@ class TestPlanner(object):
         sbounds.low = ou.vectorDouble()
         sbounds.low.extend([0.0, 0.0, -MAX_VELOCITY, -MAX_VELOCITY])
         sbounds.high = ou.vectorDouble()
-        sbounds.high.extend([float(env.width) - 0.000000001, \
-            float(env.height) - 0.000000001, \
+        sbounds.high.extend([float(env.width) - 0.000000001,
+            float(env.height) - 0.000000001,
             MAX_VELOCITY, MAX_VELOCITY])
         sSpace.setBounds(sbounds)
 
@@ -182,7 +186,7 @@ class TestPlanner(object):
                 for i in range(len(path.states)):
                     x = int(path.states[i][0])
                     y = int(path.states[i][1])
-                    if temp.grid[x][y] in [0, 2]:
+                    if temp.grid[x][y] in [0,2]:
                         temp.grid[x][y] = 2
                     else:
                         temp.grid[x][y] = 3
@@ -192,7 +196,7 @@ class TestPlanner(object):
 
         return (result, time, pathLength)
 
-    def newplanner(self, si):
+    def newPlanner(si):
         raise NotImplementedError('pure virtual method')
 
 class RRTTest(TestPlanner):
@@ -210,8 +214,8 @@ class ESTTest(TestPlanner):
         return planner
 
 class SyclopDecomposition(oc.GridDecomposition):
-    def __init__(self, length, bounds):
-        super(SyclopDecomposition, self).__init__(length, 2, bounds)
+    def __init__(self, len, bounds):
+        super(SyclopDecomposition, self).__init__(len, 2, bounds)
 
     def project(self, state, coord):
         coord[0] = state[0]
@@ -227,10 +231,10 @@ class SyclopRRTTest(TestPlanner):
         spacebounds = si.getStateSpace().getBounds()
 
         bounds = ob.RealVectorBounds(2)
-        bounds.setLow(0, spacebounds.low[0])
-        bounds.setLow(1, spacebounds.low[1])
-        bounds.setHigh(0, spacebounds.high[0])
-        bounds.setHigh(1, spacebounds.high[1])
+        bounds.setLow(0, spacebounds.low[0]);
+        bounds.setLow(1, spacebounds.low[1]);
+        bounds.setHigh(0, spacebounds.high[0]);
+        bounds.setHigh(1, spacebounds.high[1]);
 
         # Create a 10x10 grid decomposition for Syclop
         decomp = SyclopDecomposition(10, bounds)
@@ -246,10 +250,10 @@ class SyclopESTTest(TestPlanner):
         spacebounds = si.getStateSpace().getBounds()
 
         bounds = ob.RealVectorBounds(2)
-        bounds.setLow(0, spacebounds.low[0])
-        bounds.setLow(1, spacebounds.low[1])
-        bounds.setHigh(0, spacebounds.high[0])
-        bounds.setHigh(1, spacebounds.high[1])
+        bounds.setLow(0, spacebounds.low[0]);
+        bounds.setLow(1, spacebounds.low[1]);
+        bounds.setHigh(0, spacebounds.high[0]);
+        bounds.setHigh(1, spacebounds.high[1]);
 
         # Create a 10x10 grid decomposition for Syclop
         decomp = SyclopDecomposition(10, bounds)
@@ -282,10 +286,9 @@ class PlanTest(unittest.TestCase):
         good = 0
         N = 25
 
-        for _ in range(N):
+        for i in range(N):
             (result, time, length) = planner.execute(self.env, time, length, False)
-            if result:
-                good = good + 1
+            if result: good = good + 1
 
         success = 100.0 * float(good) / float(N)
         avgruntime = time / float(N)
@@ -335,7 +338,7 @@ class PlanTest(unittest.TestCase):
 
 
 def suite():
-    suites = (unittest.makeSuite(PlanTest))
+    suites = ( unittest.makeSuite(PlanTest) )
     return unittest.TestSuite(suites)
 
 if __name__ == '__main__':

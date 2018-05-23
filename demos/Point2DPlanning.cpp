@@ -67,18 +67,18 @@ public:
         }
         if (ok)
         {
-            auto space(std::make_shared<ob::RealVectorStateSpace>());
+            ob::RealVectorStateSpace *space = new ob::RealVectorStateSpace();
             space->addDimension(0.0, ppm_.getWidth());
             space->addDimension(0.0, ppm_.getHeight());
             maxWidth_ = ppm_.getWidth() - 1;
             maxHeight_ = ppm_.getHeight() - 1;
-            ss_ = std::make_shared<og::SimpleSetup>(space);
+            ss_.reset(new og::SimpleSetup(ob::StateSpacePtr(space)));
 
             // set state validity checking for this space
-            ss_->setStateValidityChecker([this](const ob::State *state) { return isStateValid(state); });
+            ss_->setStateValidityChecker(std::bind(&Plane2DEnvironment::isStateValid, this, std::placeholders::_1));
             space->setup();
             ss_->getSpaceInformation()->setStateValidityCheckingResolution(1.0 / space->getMaximumExtent());
-            //      ss_->setPlanner(std::make_shared<og::RRTConnect>(ss_->getSpaceInformation()));
+            //      ss_->setPlanner(ob::PlannerPtr(new og::RRTConnect(ss_->getSpaceInformation())));
         }
     }
 
@@ -110,7 +110,7 @@ public:
             ss_->getPathSimplifier()->smoothBSpline(p);
             return true;
         }
-        
+        else
             return false;
     }
 
@@ -156,7 +156,7 @@ private:
 
 };
 
-int main(int /*argc*/, char ** /*argv*/)
+int main(int, char **)
 {
     std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 

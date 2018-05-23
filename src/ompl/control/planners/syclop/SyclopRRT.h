@@ -53,29 +53,24 @@ namespace ompl
         {
         public:
             /** \brief Constructor. Requires a Decomposition, which Syclop uses to create high-level leads. */
-            SyclopRRT(const SpaceInformationPtr &si, const DecompositionPtr &d)
-              : Syclop(si, d, "SyclopRRT"), regionalNN_(false)
+            SyclopRRT(const SpaceInformationPtr& si, const DecompositionPtr &d) : Syclop(si,d,"SyclopRRT"), regionalNN_(false)
             {
             }
 
-            ~SyclopRRT() override
+            virtual ~SyclopRRT()
             {
                 freeMemory();
             }
 
-            void setup() override;
-            void clear() override;
-            void getPlannerData(base::PlannerData &data) const override;
+            virtual void setup();
+            virtual void clear();
+            virtual void getPlannerData(base::PlannerData &data) const;
 
-            /** \brief If regionalNearestNeighbors is enabled, then when computing the closest Motion to a generated
-               state
-                in a given Region, SyclopRRT will perform a linear search over the current Region and its neighbors
-               instead of
+            /** \brief If regionalNearestNeighbors is enabled, then when computing the closest Motion to a generated state
+                in a given Region, SyclopRRT will perform a linear search over the current Region and its neighbors instead of
                 querying a NearestNeighbors datastructure over the whole tree.
-                This approach is enabled by default, and should be disabled if there exist Regions of the Decomposition
-               that
-                will be extremely densely populated with states - in such cases, querying a global NearestNeighbors
-               datastructure will
+                This approach is enabled by default, and should be disabled if there exist Regions of the Decomposition that
+                will be extremely densely populated with states - in such cases, querying a global NearestNeighbors datastructure will
                 probably be faster. */
             void setRegionalNearestNeighbors(bool enabled)
             {
@@ -83,20 +78,16 @@ namespace ompl
             }
 
             /** \brief Set a different nearest neighbors datastructure */
-            template <template <typename T> class NN>
+            template<template<typename T> class NN>
             void setNearestNeighbors()
             {
-                if (nn_ && nn_->size() != 0)
-                    OMPL_WARN("Calling setNearestNeighbors will clear all states.");
-                clear();
                 regionalNN_ = false;
-                nn_ = std::make_shared<NN<Motion *>>();
-                setup();
+                nn_.reset(new NN<Motion*>());
             }
 
         protected:
-            Syclop::Motion *addRoot(const base::State *s) override;
-            void selectAndExtend(Region &region, std::vector<Motion *> &newMotions) override;
+            virtual Syclop::Motion* addRoot(const base::State *s);
+            virtual void selectAndExtend(Region &region, std::vector<Motion*> &newMotions);
 
             /** \brief Free the memory allocated by this planner. */
             void freeMemory();
@@ -109,7 +100,7 @@ namespace ompl
 
             base::StateSamplerPtr sampler_;
             DirectedControlSamplerPtr controlSampler_;
-            std::shared_ptr<NearestNeighbors<Motion *>> nn_;
+            std::shared_ptr< NearestNeighbors<Motion*> > nn_;
             bool regionalNN_;
 
             /** \brief The most recent goal motion.  Used for PlannerData computation */

@@ -39,14 +39,14 @@
 
 ompl::base::StateSamplerPtr ompl::base::CForestStateSpaceWrapper::allocDefaultStateSampler() const
 {
-    auto sampler(std::make_shared<CForestStateSampler>(this, space_->allocDefaultStateSampler()));
+    StateSamplerPtr sampler = StateSamplerPtr(new CForestStateSampler(this, space_->allocDefaultStateSampler()));
     cforest_->addSampler(sampler);
     return sampler;
 }
 
 ompl::base::StateSamplerPtr ompl::base::CForestStateSpaceWrapper::allocStateSampler() const
 {
-    auto sampler(std::make_shared<CForestStateSampler>(this, space_->allocStateSampler()));
+    StateSamplerPtr sampler = StateSamplerPtr(new CForestStateSampler(this, space_->allocStateSampler()));
     cforest_->addSampler(sampler);
     return sampler;
 }

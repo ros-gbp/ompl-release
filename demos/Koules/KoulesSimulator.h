@@ -54,15 +54,15 @@ public:
 
 protected:
     // A tuple containing the time and id's of two objects colliding
-    using CollisionEvent = std::tuple<double, unsigned int, unsigned int>;
+    typedef std::tuple<double, unsigned int, unsigned int> CollisionEvent;
     // A priority queue of events, s.t. the top element is the collision
     // that will happen first.
-    using CollisionEventQueue = std::priority_queue<CollisionEvent,
-        std::vector<CollisionEvent>, std::greater<CollisionEvent>>;
+    typedef std::priority_queue<CollisionEvent, std::vector<CollisionEvent>,
+        std::greater<CollisionEvent> > CollisionEventQueue;
 
     // Compute the collision events based on current positions and velocities.
     // Push objects apart if they are slightly overlapping.
-    void initCollisionEvents();
+    void initCollisionEvents(void);
     // Return time when i will return with horizontal (dim==0) or vertical
     // (dim==1) walls.
     double wallCollideEvent(unsigned int i, int dim);

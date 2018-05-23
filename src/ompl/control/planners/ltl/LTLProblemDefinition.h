@@ -55,16 +55,16 @@ namespace ompl
         class LTLProblemDefinition : public base::ProblemDefinition
         {
         public:
-            LTLProblemDefinition(const control::LTLSpaceInformationPtr &ltlsi);
+            LTLProblemDefinition(const control::LTLSpaceInformationPtr& ltlsi);
 
-            ~LTLProblemDefinition() override = default;
+            virtual ~LTLProblemDefinition(void) {}
 
-            void addLowerStartState(const base::State *s);
+            void addLowerStartState(const base::State* s);
 
-            base::PathPtr getLowerSolutionPath() const;
+            base::PathPtr getLowerSolutionPath(void) const;
 
         protected:
-            void createGoal();
+            void createGoal(void);
 
             LTLSpaceInformationPtr ltlsi_;
         };

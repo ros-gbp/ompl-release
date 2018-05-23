@@ -37,9 +37,14 @@
 #ifndef OMPL_UTIL_PROLATE_HYPERSPHEROID_
 #define OMPL_UTIL_PROLATE_HYPERSPHEROID_
 
+#include <ompl/config.h>
+#if !OMPL_HAVE_EIGEN3
+#error The ProlateHyperspheroid class uses Eigen3, which was not detected at build time.
+#endif
+
 #include <memory>
 
-// For ease-of-use shared_ptr definition
+//For ease-of-use shared_ptr definition
 #include <ompl/util/ClassForward.h>
 
 namespace ompl
@@ -51,7 +56,7 @@ namespace ompl
 
     /** \brief A class describing a prolate hyperspheroid, a special symmetric type of n-dimensional ellipse,
     for use in direct informed sampling for problems seeking to minimize path length.
-    @par J. D. Gammell, S. S. Srinivasa, T. D. Barfoot, "Informed RRT*: Optimal Sampling-based
+    @par J D. Gammell, S. S. Srinivasa, T. D. Barfoot, "Informed RRT*: Optimal Sampling-based
     Path Planning Focused via Direct Sampling of an Admissible Ellipsoidal Heuristic." In Proceedings
     of the IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). Chicago, IL, USA,
     14-18 Sept. 2014.
@@ -77,25 +82,25 @@ namespace ompl
         bool isOnPhs(const double point[]) const;
 
         /** \brief The dimension of the PHS */
-        unsigned int getPhsDimension() const;
+        unsigned int getPhsDimension(void) const;
 
         /** \brief The measure of the PHS */
-        double getPhsMeasure() const;
+        double getPhsMeasure(void) const;
 
         /** \brief The measure of the PHS for a given transverse diameter */
         double getPhsMeasure(double tranDiam) const;
 
         /** \brief The minimum transverse diameter of the PHS, i.e., the distance between the foci */
-        double getMinTransverseDiameter() const;
+        double getMinTransverseDiameter(void) const;
 
-        /** \brief Calculate length of a line that originates from one focus, passes through the given point, and
-         * terminates at the other focus, i.e., the transverse diameter of the ellipse on which the given sample lies*/
+        /** \brief Calculate length of a line that originates from one focus, passes through the given point, and terminates at the other focus, i.e., the transverse diameter of the ellipse on which the given sample lies*/
         double getPathLength(const double point[]) const;
 
         /** \brief The state dimension of the PHS */
         unsigned int getDimension() const;
 
     protected:
+
     private:
         /** \brief A forward declaration to the data structure class for the PIMPL idiom. */
         struct PhsData;
@@ -104,13 +109,13 @@ namespace ompl
         std::shared_ptr<PhsData> dataPtr_;
 
         // Functions
-        /** \brief Calculate the rotation from the PHS frame to the world frame via singular-value decomposition using
-         * the transverse symmetry of the PHS. */
-        void updateRotation();
+        /** \brief Calculate the rotation from the PHS frame to the world frame via singular-value decomposition using the transverse symmetry of the PHS. */
+        void updateRotation(void);
 
         /** \brief Calculate the hyperspheroid to PHS transformation matrix */
-        void updateTransformation();
+        void updateTransformation(void);
     };
 }
 
 #endif
+

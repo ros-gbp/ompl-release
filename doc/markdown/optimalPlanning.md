@@ -7,7 +7,28 @@ In order to perform optimal planning, you need two things:
 1. A path quality metric, or _optimization objective_.
 2. An optimizing motion planner
 
-You can specify a path quality metric using the `ompl::base::OptimizationObjective` class. As for the optimizing planner, OMPL currently provides several planners that guarantee _asymptotic optimality_ of returned solutions (see the [list of available planners](planners.html)). You can find out more about asymptotic optimality in motion planning by checking out [this paper](http://sertac.scripts.mit.edu/web/wp-content/papercite-data/pdf/karaman.frazzoli-ijrr11.pdf) by Karaman and Frazzoli.
+You can specify a path quality metric using the `ompl::base::OptimizationObjective` class. As for the optimizing planner, OMPL currently provides two optimizing planners that guarantee _asymptotic optimality_ of returned solutions:
+
+- `ompl::geometric::PRMstar`
+- `ompl::geometric::LazyPRMstar`
+- `ompl::geometric::RRTstar`
+- `ompl::geometric::InformedRRTstar`
+- `ompl::geometric::BITstar`
+- `ompl::geometric::FMT`
+- `ompl::geometric::BFMT`
+
+
+You can find out more about asymptotic optimality in motion planning by checking out [this paper](http://sertac.scripts.mit.edu/web/wp-content/papercite-data/pdf/karaman.frazzoli-ijrr11.pdf) by Karaman and Frazzoli. The following planners also support `ompl::base::OptimizationObjective`, but do not provide theoretical guarantees on solution optimality:
+
+- `ompl::geometric::PRM`
+- `ompl::geometric::TRRT`
+- `ompl::geometric::AnytimePathShortening`
+
+Lastly, the following planners provide a theoretical guarantee of _asymptotic near optimality_, but currently do not support user-specified objectives:
+
+- `ompl::geometric::SPARS`
+- `ompl::geometric::SPARStwo`
+- `ompl::geometric::LBTRRT`
 
 #### CForest parallelization framework
 
@@ -37,7 +58,9 @@ However, there are problems that cannot be exactly represented with this assumpt
 
 The reason why these two objectives cannot be combined is because we need more than one value to perform the accumulation of the path cost. We need one value to hold the accumulation of length along the path, and another value to hold the the minimum clearance value encountered so far in the path. Therefore, _the multi-objective problems that cannot be represented in OMPL are those where the individual objectives do not share a cost accumulation function_. We note that the above objective can be approximated by combining a path length objective with a state cost integral objective where state cost is a function of clearance.
 
-## Want to learn more?
+OMPL currently does not support control planning with general optimization objectives.
+
+## Wanna learn more?
 
 Check out these tutorials:
 

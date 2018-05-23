@@ -39,15 +39,15 @@
 #include "ompl/util/Exception.h"
 #include <fstream>
 #include <algorithm>
+#include <functional>
 
 #include <boost/serialization/binary_object.hpp>
 #include <boost/archive/archive_exception.hpp>
-#include <utility>
 
 /// @cond IGNORE
 static ompl::base::StateSamplerPtr allocPrecomputedStateSampler(const ompl::base::StateSpace *space,
                                                                 const std::vector<int> &expectedSignature,
-                                                                const std::vector<const ompl::base::State *> *states,
+                                                                const std::vector<const ompl::base::State*> *states,
                                                                 std::size_t minIndex, std::size_t maxIndex)
 {
     std::vector<int> sig;
@@ -55,23 +55,22 @@ static ompl::base::StateSamplerPtr allocPrecomputedStateSampler(const ompl::base
     if (sig != expectedSignature)
     {
         std::stringstream ss;
-        ss << "Cannot allocate state sampler for a state space whose signature does not match that of the stored "
-              "states. ";
+        ss << "Cannot allocate state sampler for a state space whose signature does not match that of the stored states. ";
         ss << "Expected signature ";
-        for (int i : expectedSignature)
-            ss << i << " ";
+        for (std::size_t i = 0 ; i < expectedSignature.size() ; ++i)
+            ss << expectedSignature[i] << " ";
         ss << "but space " << space->getName() << " has signature ";
-        for (int i : sig)
-            ss << i << " ";
+        for (std::size_t i = 0 ; i < sig.size() ; ++i)
+            ss << sig[i] << " ";
         throw ompl::Exception(ss.str());
     }
-    return std::make_shared<ompl::base::PrecomputedStateSampler>(space, *states, minIndex, maxIndex);
+    return ompl::base::StateSamplerPtr(new ompl::base::PrecomputedStateSampler(space, *states, minIndex, maxIndex));
 }
 
-static const boost::uint32_t OMPL_ARCHIVE_MARKER = 0x4C504D4F;  // this spells OMPL
+static const boost::uint32_t OMPL_ARCHIVE_MARKER = 0x4C504D4F; // this spells OMPL
 /// @endcond
 
-ompl::base::StateStorage::StateStorage(StateSpacePtr space) : space_(std::move(space)), hasMetadata_(false)
+ompl::base::StateStorage::StateStorage(const StateSpacePtr &space) : space_(space), hasMetadata_(false)
 {
 }
 
@@ -104,6 +103,7 @@ void ompl::base::StateStorage::load(std::istream &in)
     }
     try
     {
+
         boost::archive::binary_iarchive ia(in);
         Header h;
         ia >> h;
@@ -128,6 +128,7 @@ void ompl::base::StateStorage::load(std::istream &in)
     {
         OMPL_ERROR("Unable to load archive: %s", ae.what());
     }
+
 }
 
 void ompl::base::StateStorage::loadStates(const Header &h, boost::archive::binary_iarchive &ia)
@@ -135,9 +136,9 @@ void ompl::base::StateStorage::loadStates(const Header &h, boost::archive::binar
     OMPL_DEBUG("Deserializing %u states", h.state_count);
     // load the file
     unsigned int l = space_->getSerializationLength();
-    auto *buffer = new char[l];
+    char *buffer = new char[l];
     State *s = space_->allocState();
-    for (std::size_t i = 0; i < h.state_count; ++i)
+    for (std::size_t i = 0 ; i < h.state_count ; ++i)
     {
         ia >> boost::serialization::make_binary_object(buffer, l);
         space_->deserialize(s, buffer);
@@ -147,9 +148,10 @@ void ompl::base::StateStorage::loadStates(const Header &h, boost::archive::binar
     delete[] buffer;
 }
 
-void ompl::base::StateStorage::loadMetadata(const Header & /*h*/, boost::archive::binary_iarchive & /*ia*/)
+void ompl::base::StateStorage::loadMetadata(const Header& /*h*/, boost::archive::binary_iarchive& /*ia*/)
 {
 }
+
 
 void ompl::base::StateStorage::store(std::ostream &out)
 {
@@ -177,21 +179,21 @@ void ompl::base::StateStorage::store(std::ostream &out)
     }
 }
 
-void ompl::base::StateStorage::storeStates(const Header & /*h*/, boost::archive::binary_oarchive &oa)
+void ompl::base::StateStorage::storeStates(const Header& /*h*/, boost::archive::binary_oarchive &oa)
 {
     OMPL_DEBUG("Serializing %u states", (unsigned int)states_.size());
 
     unsigned int l = space_->getSerializationLength();
-    auto *buffer = new char[l];
-    for (auto &state : states_)
+    char *buffer = new char[l];
+    for (std::size_t i = 0 ; i < states_.size() ; ++i)
     {
-        space_->serialize(buffer, state);
+        space_->serialize(buffer, states_[i]);
         oa << boost::serialization::make_binary_object(buffer, l);
     }
     delete[] buffer;
 }
 
-void ompl::base::StateStorage::storeMetadata(const Header & /*h*/, boost::archive::binary_oarchive & /*oa*/)
+void ompl::base::StateStorage::storeMetadata(const Header& /*h*/, boost::archive::binary_oarchive& /*oa*/)
 {
 }
 
@@ -207,7 +209,7 @@ void ompl::base::StateStorage::generateSamples(unsigned int count)
     StateSamplerPtr ss = space_->allocStateSampler();
     states_.reserve(states_.size() + count);
     State *s = space_->allocState();
-    for (unsigned int i = 0; i < count; ++i)
+    for (unsigned int i = 0 ; i < count ; ++i)
     {
         ss->sampleUniform(s);
         addState(s);
@@ -217,8 +219,8 @@ void ompl::base::StateStorage::generateSamples(unsigned int count)
 
 void ompl::base::StateStorage::freeMemory()
 {
-    for (auto &state : states_)
-        space_->freeState(const_cast<State *>(state));
+    for (std::size_t i = 0 ; i < states_.size() ; ++i)
+        space_->freeState(const_cast<State*>(states_[i]));
 }
 
 void ompl::base::StateStorage::clear()
@@ -227,7 +229,7 @@ void ompl::base::StateStorage::clear()
     states_.clear();
 }
 
-void ompl::base::StateStorage::sort(const std::function<bool(const State *, const State *)> &op)
+void ompl::base::StateStorage::sort(const std::function<bool(const State*, const State*)> &op)
 {
     std::sort(states_.begin(), states_.end(), op);
 }
@@ -247,21 +249,17 @@ ompl::base::StateSamplerAllocator ompl::base::StateStorage::getStateSamplerAlloc
     return getStateSamplerAllocatorRange(after, states_.empty() ? 0 : states_.size() - 1);
 }
 
-ompl::base::StateSamplerAllocator ompl::base::StateStorage::getStateSamplerAllocatorRange(std::size_t from,
-                                                                                          std::size_t to) const
+ompl::base::StateSamplerAllocator ompl::base::StateStorage::getStateSamplerAllocatorRange(std::size_t from, std::size_t to) const
 {
     if (states_.empty())
         throw Exception("Cannot allocate state sampler from empty state storage");
     std::vector<int> sig;
     space_->computeSignature(sig);
-    return [this, sig, from, to](const ompl::base::StateSpace *space)
-    {
-        return allocPrecomputedStateSampler(space, sig, &states_, from, to);
-    };
+    return std::bind(&allocPrecomputedStateSampler, std::placeholders::_1, sig, &states_, from, to);
 }
 
 void ompl::base::StateStorage::print(std::ostream &out) const
 {
-    for (auto state : states_)
-        space_->printState(state, out);
+    for (std::size_t i = 0 ; i < states_.size() ; ++i)
+        space_->printState(states_[i], out);
 }

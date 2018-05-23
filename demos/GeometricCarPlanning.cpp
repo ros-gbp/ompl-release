@@ -51,7 +51,7 @@ namespace po = boost::program_options;
 
 bool isStateValidEasy(const ob::SpaceInformation *si, const ob::State *state)
 {
-    const auto *s = state->as<ob::SE2StateSpace::StateType>();
+    const ob::SE2StateSpace::StateType *s = state->as<ob::SE2StateSpace::StateType>();
     double x=s->getX(), y=s->getY();
     return si->satisfiesBounds(s) && (x<5 || x>13 || (y>8.5 && y<9.5));
 }
@@ -61,7 +61,7 @@ bool isStateValidHard(const ob::SpaceInformation *si, const ob::State *state)
     return si->satisfiesBounds(state);
 }
 
-void plan(const ob::StateSpacePtr& space, bool easy)
+void plan(ob::StateSpacePtr space, bool easy)
 {
     ob::ScopedState<> start(space), goal(space);
     ob::RealVectorBounds bounds(2);
@@ -79,12 +79,9 @@ void plan(const ob::StateSpacePtr& space, bool easy)
     og::SimpleSetup ss(space);
 
     // set state validity checking for this space
-    const ob::SpaceInformation *si = ss.getSpaceInformation().get();
-    auto isStateValid = easy ? isStateValidEasy : isStateValidHard;
-    ss.setStateValidityChecker([isStateValid, si](const ob::State *state)
-        {
-            return isStateValid(si, state);
-        });
+    ob::SpaceInformationPtr si(ss.getSpaceInformation());
+    ss.setStateValidityChecker(std::bind(
+        easy ? &isStateValidEasy : &isStateValidHard, si.get(), std::placeholders::_1));
 
     // set the start and goal states
     if (easy)
@@ -121,7 +118,7 @@ void plan(const ob::StateSpacePtr& space, bool easy)
         std::cout << "No solution found" << std::endl;
 }
 
-void printTrajectory(const ob::StateSpacePtr& space, const std::vector<double>& pt)
+void printTrajectory(ob::StateSpacePtr space, const std::vector<double>& pt)
 {
     if (pt.size()!=3) throw ompl::Exception("3 arguments required for trajectory option");
     const unsigned int num_pts = 50;
@@ -143,7 +140,7 @@ void printTrajectory(const ob::StateSpacePtr& space, const std::vector<double>& 
     }
 }
 
-void printDistanceGrid(const ob::StateSpacePtr& space)
+void printDistanceGrid(ob::StateSpacePtr space)
 {
     // print the distance for (x,y,theta) for all points in a 3D grid in SE(2)
     // over [-5,5) x [-5, 5) x [-pi,pi).
@@ -193,25 +190,25 @@ int main(int argc, char* argv[])
             po::command_line_style::unix_style ^ po::command_line_style::allow_short), vm);
         po::notify(vm);
 
-        if ((vm.count("help") != 0u) || argc==1)
+        if (vm.count("help") || argc==1)
         {
             std::cout << desc << "\n";
             return 1;
         }
 
-        ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>());
+        ob::StateSpacePtr space(new ob::ReedsSheppStateSpace);
 
-        if (vm.count("dubins") != 0u)
-            space = std::make_shared<ob::DubinsStateSpace>();
-        if (vm.count("dubinssym") != 0u)
-            space = std::make_shared<ob::DubinsStateSpace>(1., true);
-        if (vm.count("easyplan") != 0u)
+        if (vm.count("dubins"))
+            space = ob::StateSpacePtr(new ob::DubinsStateSpace);
+        if (vm.count("dubinssym"))
+            space = ob::StateSpacePtr(new ob::DubinsStateSpace(1., true));
+        if (vm.count("easyplan"))
             plan(space, true);
-        if (vm.count("hardplan") != 0u)
+        if (vm.count("hardplan"))
             plan(space, false);
-        if (vm.count("trajectory") != 0u)
+        if (vm.count("trajectory"))
             printTrajectory(space, vm["trajectory"].as<std::vector<double> >());
-        if (vm.count("distance") != 0u)
+        if (vm.count("distance"))
             printDistanceGrid(space);
     }
     catch(std::exception& e) {

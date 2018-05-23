@@ -1,36 +1,36 @@
 /*********************************************************************
- * Software License Agreement (BSD License)
- *
- *  Copyright (c) 2010, Rice University
- *  All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above
- *     copyright notice, this list of conditions and the following
- *     disclaimer in the documentation and/or other materials provided
- *     with the distribution.
- *   * Neither the name of the Rice University nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- *********************************************************************/
+* Software License Agreement (BSD License)
+*
+*  Copyright (c) 2010, Rice University
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*   * Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*   * Redistributions in binary form must reproduce the above
+*     copyright notice, this list of conditions and the following
+*     disclaimer in the documentation and/or other materials provided
+*     with the distribution.
+*   * Neither the name of the Rice University nor the names of its
+*     contributors may be used to endorse or promote products derived
+*     from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+*********************************************************************/
 
 /* Author: Mark Moll, Ioan Sucan */
 
@@ -66,8 +66,7 @@ namespace ompl
         }
 
         /* Standard quaternion multiplication: q = q0 * q1 */
-        static inline void quaternionProduct(SO3StateSpace::StateType &q, const SO3StateSpace::StateType &q0,
-                                             const SO3StateSpace::StateType &q1)
+        static inline void quaternionProduct(SO3StateSpace::StateType &q, const SO3StateSpace::StateType &q0, const SO3StateSpace::StateType &q1)
         {
             q.x = q0.w * q1.x + q0.x * q1.w + q0.y * q1.z - q0.z * q1.y;
             q.y = q0.w * q1.y + q0.y * q1.w + q0.z * q1.x - q0.x * q1.z;
@@ -79,8 +78,8 @@ namespace ompl
         {
             return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
         }
-    }  // namespace base
-}  // namespace ompl
+    }
+}
 /// @endcond
 
 void ompl::base::SO3StateSpace::StateType::setAxisAngle(double ax, double ay, double az, double angle)
@@ -107,14 +106,15 @@ void ompl::base::SO3StateSampler::sampleUniformNear(State *state, const State *n
         return;
     }
     double d = rng_.uniform01();
-    SO3StateSpace::StateType q, *qs = static_cast<SO3StateSpace::StateType *>(state);
-    const auto *qnear = static_cast<const SO3StateSpace::StateType *>(near);
+    SO3StateSpace::StateType q,
+        *qs = static_cast<SO3StateSpace::StateType*>(state);
+    const SO3StateSpace::StateType *qnear = static_cast<const SO3StateSpace::StateType*>(near);
     computeAxisAngle(q, rng_.gaussian01(), rng_.gaussian01(), rng_.gaussian01(),
-                     2. * pow(d, boost::math::constants::third<double>()) * distance);
+        2. * pow(d, boost::math::constants::third<double>()) * distance);
     quaternionProduct(*qs, *qnear, q);
 }
 
-void ompl::base::SO3StateSampler::sampleGaussian(State *state, const State *mean, const double stdDev)
+void ompl::base::SO3StateSampler::sampleGaussian(State *state, const State * mean, const double stdDev)
 {
     // The standard deviation of the individual components of the tangent
     // perturbation needs to be scaled so that the expected quaternion distance
@@ -138,14 +138,16 @@ void ompl::base::SO3StateSampler::sampleGaussian(State *state, const State *mean
         return;
     }
 
+
     double x = rng_.gaussian(0, rotDev), y = rng_.gaussian(0, rotDev), z = rng_.gaussian(0, rotDev),
-           theta = std::sqrt(x * x + y * y + z * z);
+        theta = std::sqrt(x*x + y*y + z*z);
     if (theta < std::numeric_limits<double>::epsilon())
         space_->copyState(state, mean);
     else
     {
-        SO3StateSpace::StateType q, *qs = static_cast<SO3StateSpace::StateType *>(state);
-        const auto *qmu = static_cast<const SO3StateSpace::StateType *>(mean);
+        SO3StateSpace::StateType q,
+            *qs = static_cast<SO3StateSpace::StateType*>(state);
+        const SO3StateSpace::StateType *qmu = static_cast<const SO3StateSpace::StateType*>(mean);
         double half_theta = theta / 2.0;
         double s = sin(half_theta) / theta;
         q.w = cos(half_theta);
@@ -181,7 +183,7 @@ double ompl::base::SO3StateSpace::norm(const StateType *state) const
 void ompl::base::SO3StateSpace::enforceBounds(State *state) const
 {
     // see http://stackoverflow.com/questions/11667783/quaternion-and-normalization/12934750#12934750
-    auto *qstate = static_cast<StateType *>(state);
+    StateType *qstate = static_cast<StateType*>(state);
     double nrmsq = quaternionNormSquared(*qstate);
     double error = std::abs(1.0 - nrmsq);
     const double epsilon = 2.107342e-08;
@@ -210,13 +212,13 @@ void ompl::base::SO3StateSpace::enforceBounds(State *state) const
 
 bool ompl::base::SO3StateSpace::satisfiesBounds(const State *state) const
 {
-    return fabs(norm(static_cast<const StateType *>(state)) - 1.0) < MAX_QUATERNION_NORM_ERROR;
+    return fabs(norm(static_cast<const StateType*>(state)) - 1.0) < MAX_QUATERNION_NORM_ERROR;
 }
 
 void ompl::base::SO3StateSpace::copyState(State *destination, const State *source) const
 {
-    const auto *qsource = static_cast<const StateType *>(source);
-    auto *qdestination = static_cast<StateType *>(destination);
+    const StateType *qsource = static_cast<const StateType*>(source);
+    StateType *qdestination = static_cast<StateType*>(destination);
     qdestination->x = qsource->x;
     qdestination->y = qsource->y;
     qdestination->z = qsource->z;
@@ -251,26 +253,24 @@ namespace ompl
     {
         static inline double arcLength(const State *state1, const State *state2)
         {
-            const auto *qs1 = static_cast<const SO3StateSpace::StateType *>(state1);
-            const auto *qs2 = static_cast<const SO3StateSpace::StateType *>(state2);
+            const SO3StateSpace::StateType *qs1 = static_cast<const SO3StateSpace::StateType*>(state1);
+            const SO3StateSpace::StateType *qs2 = static_cast<const SO3StateSpace::StateType*>(state2);
             double dq = fabs(qs1->x * qs2->x + qs1->y * qs2->y + qs1->z * qs2->z + qs1->w * qs2->w);
             if (dq > 1.0 - MAX_QUATERNION_NORM_ERROR)
                 return 0.0;
-            return acos(dq);
+            else
+                return acos(dq);
         }
-    }  // namespace base
-}  // namespace ompl
+    }
+}
 /// @endcond
 
 double ompl::base::SO3StateSpace::distance(const State *state1, const State *state2) const
 {
-    BOOST_ASSERT_MSG(satisfiesBounds(state1) && satisfiesBounds(state2), "The states passed to SO3StateSpace::distance "
-                                                                         "are not within bounds. Call "
-                                                                         "SO3StateSpace::enforceBounds() in, e.g., "
-                                                                         "ompl::control::ODESolver::"
-                                                                         "PostPropagationEvent, "
-                                                                         "ompl::control::StatePropagator, or "
-                                                                         "ompl::base::StateValidityChecker");
+    BOOST_ASSERT_MSG(satisfiesBounds(state1) && satisfiesBounds(state2),
+        "The states passed to SO3StateSpace::distance are not within bounds. Call "
+        "SO3StateSpace::enforceBounds() in, e.g., ompl::control::ODESolver::PostPropagationEvent, "
+        "ompl::control::StatePropagator, or ompl::base::StateValidityChecker");
     return arcLength(state1, state2);
 }
 
@@ -286,8 +286,8 @@ Copyright (c) 2003-2006 Gino van den Bergen / Erwin Coumans  http://continuousph
 */
 void ompl::base::SO3StateSpace::interpolate(const State *from, const State *to, const double t, State *state) const
 {
-    assert(fabs(norm(static_cast<const StateType *>(from)) - 1.0) < MAX_QUATERNION_NORM_ERROR);
-    assert(fabs(norm(static_cast<const StateType *>(to)) - 1.0) < MAX_QUATERNION_NORM_ERROR);
+    assert(fabs(norm(static_cast<const StateType*>(from)) - 1.0) < MAX_QUATERNION_NORM_ERROR);
+    assert(fabs(norm(static_cast<const StateType*>(to)) - 1.0) < MAX_QUATERNION_NORM_ERROR);
 
     double theta = arcLength(from, to);
     if (theta > std::numeric_limits<double>::epsilon())
@@ -296,9 +296,9 @@ void ompl::base::SO3StateSpace::interpolate(const State *from, const State *to, 
         double s0 = sin((1.0 - t) * theta);
         double s1 = sin(t * theta);
 
-        const auto *qs1 = static_cast<const StateType *>(from);
-        const auto *qs2 = static_cast<const StateType *>(to);
-        auto *qr = static_cast<StateType *>(state);
+        const StateType *qs1 = static_cast<const StateType*>(from);
+        const StateType *qs2 = static_cast<const StateType*>(to);
+        StateType       *qr  = static_cast<StateType*>(state);
         double dq = qs1->x * qs2->x + qs1->y * qs2->y + qs1->z * qs2->z + qs1->w * qs2->w;
         if (dq < 0)  // Take care of long angle case see http://en.wikipedia.org/wiki/Slerp
             s1 = -s1;
@@ -317,17 +317,17 @@ void ompl::base::SO3StateSpace::interpolate(const State *from, const State *to, 
 
 ompl::base::StateSamplerPtr ompl::base::SO3StateSpace::allocDefaultStateSampler() const
 {
-    return std::make_shared<SO3StateSampler>(this);
+    return StateSamplerPtr(new SO3StateSampler(this));
 }
 
-ompl::base::State *ompl::base::SO3StateSpace::allocState() const
+ompl::base::State* ompl::base::SO3StateSpace::allocState() const
 {
     return new StateType();
 }
 
 void ompl::base::SO3StateSpace::freeState(State *state) const
 {
-    delete static_cast<StateType *>(state);
+    delete static_cast<StateType*>(state);
 }
 
 void ompl::base::SO3StateSpace::registerProjections()
@@ -335,16 +335,17 @@ void ompl::base::SO3StateSpace::registerProjections()
     class SO3DefaultProjection : public ProjectionEvaluator
     {
     public:
+
         SO3DefaultProjection(const StateSpace *space) : ProjectionEvaluator(space)
         {
         }
 
-        unsigned int getDimension() const override
+        virtual unsigned int getDimension() const
         {
             return 3;
         }
 
-        void defaultCellSizes() override
+        virtual void defaultCellSizes()
         {
             cellSizes_.resize(3);
             cellSizes_[0] = boost::math::constants::pi<double>() / magic::PROJECTION_DIMENSION_SPLITS;
@@ -355,7 +356,7 @@ void ompl::base::SO3StateSpace::registerProjections()
             bounds_.setHigh(1.0);
         }
 
-        void project(const State *state, Eigen::Ref<Eigen::VectorXd> projection) const override
+        virtual void project(const State *state, EuclideanProjection &projection) const
         {
             projection(0) = state->as<SO3StateSpace::StateType>()->x;
             projection(1) = state->as<SO3StateSpace::StateType>()->y;
@@ -363,10 +364,10 @@ void ompl::base::SO3StateSpace::registerProjections()
         }
     };
 
-    registerDefaultProjection(std::make_shared<SO3DefaultProjection>(this));
+    registerDefaultProjection(ProjectionEvaluatorPtr(dynamic_cast<ProjectionEvaluator*>(new SO3DefaultProjection(this))));
 }
 
-double *ompl::base::SO3StateSpace::getValueAddressAtIndex(State *state, const unsigned int index) const
+double* ompl::base::SO3StateSpace::getValueAddressAtIndex(State *state, const unsigned int index) const
 {
     return index < 4 ? &(state->as<StateType>()->x) + index : nullptr;
 }
@@ -374,9 +375,9 @@ double *ompl::base::SO3StateSpace::getValueAddressAtIndex(State *state, const un
 void ompl::base::SO3StateSpace::printState(const State *state, std::ostream &out) const
 {
     out << "SO3State [";
-    if (state != nullptr)
+    if (state)
     {
-        const auto *qstate = static_cast<const StateType *>(state);
+        const StateType *qstate = static_cast<const StateType*>(state);
         out << qstate->x << " " << qstate->y << " " << qstate->z << " " << qstate->w;
     }
     else

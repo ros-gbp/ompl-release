@@ -61,35 +61,34 @@ namespace ompl
             /** \brief Create an LTLPlanner with a given space and product graph.
                 Accepts an optional third parameter to control how much time is spent
                 promoting low-level tree exploration along a given high-level lead. */
-            LTLPlanner(const LTLSpaceInformationPtr &si, ProductGraphPtr a, double exploreTime = 0.5);
+            LTLPlanner(const LTLSpaceInformationPtr& si, const ProductGraphPtr& a, double exploreTime = 0.5);
 
             /** \brief Clears all memory belonging to this LTLPlanner .*/
-            ~LTLPlanner() override;
+            virtual ~LTLPlanner(void);
 
             /// @name ompl::base::Planner Interface
             /// @{
 
             /** \brief Initializes LTLPlanner data structures. */
-            void setup() override;
+            virtual void setup(void);
 
             /** \brief Clears all datastructures belonging to this LTLPlanner. */
-            void clear() override;
+            virtual void clear(void);
 
             /** \brief Continues solving until a solution is found
                 or a given planner termination condition is met.
                 Returns true if a solution was found. */
-            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
+            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition& ptc);
             /// @}
 
             /** \brief Helper debug method to access this planner's
                 underlying tree of states. */
-            void getTree(std::vector<base::State *> &tree) const;
+            void getTree(std::vector<base::State*>& tree) const;
 
             /** \brief Helper debug method to return the sequence of high-level product
                 graph states corresponding to a sequence of low-level continous system states,
                 beginning from an optional initial high-level state. */
-            std::vector<ProductGraph::State *> getHighLevelPath(const std::vector<base::State *> &path,
-                                                                ProductGraph::State *start = nullptr) const;
+            std::vector<ProductGraph::State*> getHighLevelPath(const std::vector<base::State*>& path, ProductGraph::State* start = nullptr) const;
 
         protected:
             /** \brief Representation of a motion
@@ -100,30 +99,30 @@ namespace ompl
             {
             public:
                 /** \brief Default constructor for Motion. */
-                Motion() = default;
+                Motion(void);
 
                 /** \brief Constructor that allocates memory for the state and the control,
                     given a space. */
-                Motion(const SpaceInformation *si);
+                Motion(const SpaceInformation* si);
 
                 /** \brief Motion destructor does not clear memory.
                     Deletions should be performed by the LTLPlanner. */
-                virtual ~Motion();
+                virtual ~Motion(void);
 
                 /** \brief The state contained by the motion */
-                base::State *state{nullptr};
+                base::State* state;
 
                 /** \brief The control contained by the motion */
-                Control *control{nullptr};
+                Control* control;
 
                 /** \brief The parent motion in the tree */
-                Motion *parent{nullptr};
+                Motion* parent;
 
                 /** \brief The number of steps for which the control is applied */
-                unsigned int steps{0};
+                unsigned int steps;
 
                 /** \brief The high-level state to which this motion belongs */
-                ProductGraph::State *abstractState{nullptr};
+                ProductGraph::State* abstractState;
             };
 
             /** \brief A structure to hold measurement information for a high-level state,
@@ -132,43 +131,43 @@ namespace ompl
             struct ProductGraphStateInfo
             {
                 /** \brief Creates an info object with no measurements and no tree motions. */
-                ProductGraphStateInfo() = default;
+                ProductGraphStateInfo(void);
 
                 /** \brief Adds a tree motion to an info object.
                     This method is called whenever a new tree motion is created
                     in the high-level state corresponding to this info object. */
-                void addMotion(Motion *m);
+                void addMotion(Motion* m);
 
-                double weight{0.};
-                PDF<Motion *> motions;
-                std::unordered_map<Motion *, PDF<Motion *>::Element *> motionElems;
-                double volume{0.};
-                double autWeight{0.};
-                unsigned int numSel{0};
-                PDF<ProductGraph::State *>::Element *pdfElem{nullptr};
+                double weight;
+                PDF<Motion*> motions;
+                std::unordered_map< Motion*, PDF<Motion*>::Element* > motionElems;
+                double volume;
+                double autWeight;
+                unsigned int numSel;
+                PDF<ProductGraph::State*>::Element* pdfElem;
             };
 
             /** \brief Updates and returns the weight of an abstraction state. */
-            virtual double updateWeight(ProductGraph::State *as);
+            virtual double updateWeight(ProductGraph::State* as);
 
             /** \brief Initializes the info object for a new high-level state. */
-            virtual void initAbstractInfo(ProductGraph::State *as);
+            virtual void initAbstractInfo(ProductGraph::State* as);
 
             /** \brief Compute a set of high-level states along a lead
                 to be considered for expansion. */
-            virtual void buildAvail(const std::vector<ProductGraph::State *> &lead);
+            virtual void buildAvail(const std::vector<ProductGraph::State*>& lead);
 
             /** \brief Expand the tree of motions along a given lead
                 for a given duration of time.
                 Returns true if a solution was found, in which case the endpoint
                 of the solution trajectory will be stored in the given Motion pointer.
                 Otherwise, returns false. */
-            virtual bool explore(const std::vector<ProductGraph::State *> &lead, Motion *&soln, double duration);
+            virtual bool explore(const std::vector<ProductGraph::State*>& lead, Motion*& soln, double duration);
 
             /** \brief Returns the weight of an edge between two given high-level states,
                 which we compute as the product of the reciprocals of the weights
                 of the two states. */
-            virtual double abstractEdgeWeight(ProductGraph::State *a, ProductGraph::State *b) const;
+            virtual double abstractEdgeWeight(ProductGraph::State* a, ProductGraph::State* b) const;
 
             /** \brief State sampler */
             base::StateSamplerPtr sampler_;
@@ -177,32 +176,32 @@ namespace ompl
             ControlSamplerPtr controlSampler_;
 
             /** \brief Handle to the control::SpaceInformation object */
-            const LTLSpaceInformation *ltlsi_;
+            const LTLSpaceInformation* ltlsi_;
 
             /** \brief The high level abstaction used to grow the tree structure */
             ProductGraphPtr abstraction_;
 
             /** \brief Used to sample nonempty regions in which to promote expansion. */
-            PDF<ProductGraph::State *> availDist_;
+            PDF<ProductGraph::State*> availDist_;
 
             /** \brief A random number generator. */
             RNG rng_;
 
             /** \brief Set of all motions. */
-            std::vector<Motion *> motions_;
+            std::vector<Motion*> motions_;
 
             /** \brief Start state in product graph. */
-            ProductGraph::State *prodStart_{nullptr};
+            ProductGraph::State* prodStart_;
 
             /** \brief Time to spend exploring each lead. */
             double exploreTime_;
 
             /** \brief Map of abstraction states to their details. */
-            std::unordered_map<ProductGraph::State *, ProductGraphStateInfo> abstractInfo_;
+            std::unordered_map< ProductGraph::State*, ProductGraphStateInfo > abstractInfo_;
 
         private:
             /** \brief Clears this planner's underlying tree of system states. */
-            void clearMotions();
+            void clearMotions(void);
         };
     }
 }

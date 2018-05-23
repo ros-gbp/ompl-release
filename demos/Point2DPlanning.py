@@ -36,19 +36,19 @@
 
 # Author: Ioan Sucan, Mark Moll
 
-from os.path import abspath, dirname, join
-import sys
 try:
     from ompl import util as ou
     from ompl import base as ob
     from ompl import geometric as og
-except ImportError:
+except:
     # if the ompl module is not in the PYTHONPATH assume it is installed in a
     # subdirectory of the parent directory called "py-bindings."
-    sys.path.insert(0, join(dirname(dirname(abspath(__file__))), 'py-bindings'))
+    sys.path.insert(0, join(dirname(dirname(abspath(__file__))),'py-bindings'))
     from ompl import util as ou
     from ompl import base as ob
     from ompl import geometric as og
+from os.path import abspath, dirname, join
+import sys
 from functools import partial
 
 class Plane2DEnvironment:
@@ -66,13 +66,12 @@ class Plane2DEnvironment:
         self.ss_.setStateValidityChecker(ob.StateValidityCheckerFn(
             partial(Plane2DEnvironment.isStateValid, self)))
         space.setup()
-        self.ss_.getSpaceInformation().setStateValidityCheckingResolution( \
-            1.0 / space.getMaximumExtent())
+        self.ss_.getSpaceInformation().setStateValidityCheckingResolution(1.0 / space.getMaximumExtent())
         #      self.ss_.setPlanner(og.RRTConnect(self.ss_.getSpaceInformation()))
 
     def plan(self, start_row, start_col, goal_row, goal_col):
         if not self.ss_:
-            return False
+            return false
         start = ob.State(self.ss_.getStateSpace())
         start()[0] = start_row
         start()[1] = start_col
@@ -81,7 +80,7 @@ class Plane2DEnvironment:
         goal()[1] = goal_col
         self.ss_.setStartAndGoalStates(start, goal)
         # generate a few solutions; all will be added to the goal
-        for _ in range(10):
+        for i in range(10):
             if self.ss_.getPlanner():
                 self.ss_.getPlanner().clear()
             self.ss_.solve()
@@ -94,7 +93,8 @@ class Plane2DEnvironment:
             ps.simplifyMax(p)
             ps.smoothBSpline(p)
             return True
-        return False
+        else:
+            return False
 
     def recordSolution(self):
         if not self.ss_ or not self.ss_.haveSolutionPath():
@@ -123,7 +123,7 @@ class Plane2DEnvironment:
 
 
 if __name__ == "__main__":
-    fname = join(join(join(join(dirname(dirname(abspath(__file__))), \
+    fname = join(join(join(join(dirname(dirname(abspath(__file__))),
         'tests'), 'resources'), 'ppm'), 'floor.ppm')
     env = Plane2DEnvironment(fname)
 

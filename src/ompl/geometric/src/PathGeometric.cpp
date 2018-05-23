@@ -48,23 +48,20 @@ ompl::geometric::PathGeometric::PathGeometric(const PathGeometric &path) : base:
     copyFrom(path);
 }
 
-ompl::geometric::PathGeometric::PathGeometric(const base::SpaceInformationPtr &si, const base::State *state)
-  : base::Path(si)
+ompl::geometric::PathGeometric::PathGeometric(const base::SpaceInformationPtr &si, const base::State *state) : base::Path(si)
 {
     states_.resize(1);
     states_[0] = si_->cloneState(state);
 }
 
-ompl::geometric::PathGeometric::PathGeometric(const base::SpaceInformationPtr &si, const base::State *state1,
-                                              const base::State *state2)
-  : base::Path(si)
+ompl::geometric::PathGeometric::PathGeometric(const base::SpaceInformationPtr &si, const base::State *state1, const base::State *state2) : base::Path(si)
 {
     states_.resize(2);
     states_[0] = si_->cloneState(state1);
     states_[1] = si_->cloneState(state2);
 }
 
-ompl::geometric::PathGeometric &ompl::geometric::PathGeometric::operator=(const PathGeometric &other)
+ompl::geometric::PathGeometric& ompl::geometric::PathGeometric::operator=(const PathGeometric &other)
 {
     if (this != &other)
     {
@@ -78,20 +75,19 @@ ompl::geometric::PathGeometric &ompl::geometric::PathGeometric::operator=(const 
 void ompl::geometric::PathGeometric::copyFrom(const PathGeometric &other)
 {
     states_.resize(other.states_.size());
-    for (unsigned int i = 0; i < states_.size(); ++i)
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
         states_[i] = si_->cloneState(other.states_[i]);
 }
 
 void ompl::geometric::PathGeometric::freeMemory()
 {
-    for (auto &state : states_)
-        si_->freeState(state);
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
+        si_->freeState(states_[i]);
 }
 
 ompl::base::Cost ompl::geometric::PathGeometric::cost(const base::OptimizationObjectivePtr &opt) const
 {
-    if (states_.empty())
-        return opt->identityCost();
+    if (states_.empty()) return opt->identityCost();
     // Compute path cost by accumulating the cost along the path
     base::Cost cost(opt->initialCost(states_.front()));
     for (std::size_t i = 1; i < states_.size(); ++i)
@@ -103,16 +99,16 @@ ompl::base::Cost ompl::geometric::PathGeometric::cost(const base::OptimizationOb
 double ompl::geometric::PathGeometric::length() const
 {
     double L = 0.0;
-    for (unsigned int i = 1; i < states_.size(); ++i)
-        L += si_->distance(states_[i - 1], states_[i]);
+    for (unsigned int i = 1 ; i < states_.size() ; ++i)
+        L += si_->distance(states_[i-1], states_[i]);
     return L;
 }
 
 double ompl::geometric::PathGeometric::clearance() const
 {
     double c = 0.0;
-    for (auto state : states_)
-        c += si_->getStateValidityChecker()->clearance(state);
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
+        c += si_->getStateValidityChecker()->clearance(states_[i]);
     if (states_.empty())
         c = std::numeric_limits<double>::infinity();
     else
@@ -126,7 +122,7 @@ double ompl::geometric::PathGeometric::smoothness() const
     if (states_.size() > 2)
     {
         double a = si_->distance(states_[0], states_[1]);
-        for (unsigned int i = 2; i < states_.size(); ++i)
+        for (unsigned int i = 2 ; i < states_.size() ; ++i)
         {
             // view the path as a sequence of segments, and look at the triangles it forms:
             //          s1
@@ -137,9 +133,9 @@ double ompl::geometric::PathGeometric::smoothness() const
             //     s0    c   s2     s3
             //
             // use Pythagoras generalized theorem to find the cos of the angle between segments a and b
-            double b = si_->distance(states_[i - 1], states_[i]);
-            double c = si_->distance(states_[i - 2], states_[i]);
-            double acosValue = (a * a + b * b - c * c) / (2.0 * a * b);
+            double b = si_->distance(states_[i-1], states_[i]);
+            double c = si_->distance(states_[i-2], states_[i]);
+            double acosValue = (a*a + b*b - c*c) / (2.0*a*b);
 
             if (acosValue > -1.0 && acosValue < 1.0)
             {
@@ -168,7 +164,7 @@ bool ompl::geometric::PathGeometric::check() const
         if (si_->isValid(states_[0]))
         {
             int last = states_.size() - 1;
-            for (int j = 0; result && j < last; ++j)
+            for (int j = 0 ; result && j < last ; ++j)
                 if (!si_->checkMotion(states_[j], states_[j + 1]))
                     result = false;
         }
@@ -182,17 +178,17 @@ bool ompl::geometric::PathGeometric::check() const
 void ompl::geometric::PathGeometric::print(std::ostream &out) const
 {
     out << "Geometric path with " << states_.size() << " states" << std::endl;
-    for (auto state : states_)
-        si_->printState(state, out);
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
+        si_->printState(states_[i], out);
     out << std::endl;
 }
 void ompl::geometric::PathGeometric::printAsMatrix(std::ostream &out) const
 {
-    const base::StateSpace *space(si_->getStateSpace().get());
+    const base::StateSpace* space(si_->getStateSpace().get());
     std::vector<double> reals;
-    for (auto state : states_)
+    for (unsigned int i = 0 ; i < states_.size() ; ++i)
     {
-        space->copyToReals(reals, state);
+        space->copyToReals(reals, states_[i]);
         std::copy(reals.begin(), reals.end(), std::ostream_iterator<double>(out, " "));
         out << std::endl;
     }
@@ -218,7 +214,7 @@ std::pair<bool, bool> ompl::geometric::PathGeometric::checkAndRepair(unsigned in
     base::UniformValidStateSampler *uvss = nullptr;
     bool result = true;
 
-    for (int i = 1; i < n1; ++i)
+    for (int i = 1 ; i < n1 ; ++i)
         if (!si_->checkMotion(states_[i - 1], states_[i]) ||
             // the penultimate state in the path needs an additional check:
             // the motion between that state and the last state needs to be
@@ -240,12 +236,12 @@ std::pair<bool, bool> ompl::geometric::PathGeometric::checkAndRepair(unsigned in
             if (si_->isValid(states_[i]))
             {
                 si_->copyState(temp, states_[i]);
-                radius = si_->distance(states_[i - 1], states_[i]);
+                radius = si_->distance(states_[i-1], states_[i]);
             }
             else
             {
                 unsigned int nextValid = n1 - 1;
-                for (int j = i + 1; j < n1; ++j)
+                for (int j = i + 1 ; j < n1 ; ++j)
                     if (si_->isValid(states_[j]))
                     {
                         nextValid = j;
@@ -253,15 +249,15 @@ std::pair<bool, bool> ompl::geometric::PathGeometric::checkAndRepair(unsigned in
                     }
                 // we know nextValid will be initialised because n1 - 1 is certainly valid.
                 si_->getStateSpace()->interpolate(states_[i - 1], states_[nextValid], 0.5, temp);
-                radius = std::max(si_->distance(states_[i - 1], temp), si_->distance(states_[i - 1], states_[i]));
+                radius = std::max(si_->distance(states_[i-1], temp), si_->distance(states_[i-1], states_[i]));
             }
 
             bool success = false;
 
-            for (unsigned int a = 0; a < attempts; ++a)
+            for (unsigned int a = 0 ; a < attempts ; ++a)
                 if (uvss->sampleNear(states_[i], temp, radius))
                 {
-                    if (si_->checkMotion(states_[i - 1], states_[i]) &&
+                    if (si_->checkMotion(states_[i-1], states_[i]) &&
                         // the penultimate state needs an additional check
                         // (see comment at the top of outermost for-loop)
                         (i < n1 - 1 || si_->checkMotion(states_[i], states_[i + 1])))
@@ -293,8 +289,8 @@ void ompl::geometric::PathGeometric::subdivide()
 {
     if (states_.size() < 2)
         return;
-    std::vector<base::State *> newStates(1, states_[0]);
-    for (unsigned int i = 1; i < states_.size(); ++i)
+    std::vector<base::State*> newStates(1, states_[0]);
+    for (unsigned int i = 1 ; i < states_.size() ; ++i)
     {
         base::State *temp = si_->allocState();
         si_->getStateSpace()->interpolate(newStates.back(), states_[i], 0.5, temp);
@@ -336,10 +332,10 @@ void ompl::geometric::PathGeometric::interpolate(unsigned int requestCount)
     double remainingLength = length();
 
     // the new array of states this path will have
-    std::vector<base::State *> newStates;
+    std::vector<base::State*> newStates;
     const int n1 = states_.size() - 1;
 
-    for (int i = 0; i < n1; ++i)
+    for (int i = 0 ; i < n1 ; ++i)
     {
         base::State *s1 = states_[i];
         base::State *s2 = states_[i + 1];
@@ -354,20 +350,19 @@ void ompl::geometric::PathGeometric::interpolate(unsigned int requestCount)
         {
             // compute an approximate number of states the following segment needs to contain; this includes endpoints
             double segmentLength = si_->distance(s1, s2);
-            int ns =
-                i + 1 == n1 ? maxNStates + 2 : (int)floor(0.5 + (double)count * segmentLength / remainingLength) + 1;
+            int ns = i + 1 == n1 ? maxNStates + 2 : (int)floor(0.5 + (double)count * segmentLength / remainingLength) + 1;
 
             // if more than endpoints are needed
             if (ns > 2)
             {
-                ns -= 2;  // subtract endpoints
+                ns -= 2; // subtract endpoints
 
                 // make sure we don't add too many states
                 if (ns > maxNStates)
                     ns = maxNStates;
 
                 // compute intermediate states
-                std::vector<base::State *> block;
+                std::vector<base::State*> block;
                 si_->getMotionStates(s1, s2, block, ns, false, true);
                 newStates.insert(newStates.end(), block.begin(), block.end());
             }
@@ -412,7 +407,7 @@ bool ompl::geometric::PathGeometric::randomValid(unsigned int attempts)
     base::UniformValidStateSampler uvss(si_.get());
     uvss.setNrAttempts(attempts);
     bool ok = false;
-    for (unsigned int i = 0; i < attempts; ++i)
+    for (unsigned int i = 0 ; i < attempts ; ++i)
     {
         if (uvss.sample(states_[0]) && uvss.sample(states_[1]))
             if (si_->checkMotion(states_[0], states_[1]))
@@ -436,7 +431,7 @@ void ompl::geometric::PathGeometric::overlay(const PathGeometric &over, unsigned
     const base::StateSpacePtr &sm = over.si_->getStateSpace();
     const base::StateSpacePtr &dm = si_->getStateSpace();
     bool copy = !states_.empty();
-    for (unsigned int i = 0, j = startIndex; i < over.states_.size(); ++i, ++j)
+    for (unsigned int i = 0, j = startIndex ; i < over.states_.size() ; ++i, ++j)
     {
         if (j == states_.size())
         {
@@ -479,12 +474,12 @@ void ompl::geometric::PathGeometric::keepAfter(const base::State *state)
     {
         if ((std::size_t)(index + 1) < states_.size())
         {
-            double b = si_->distance(state, states_[index - 1]);
-            double a = si_->distance(state, states_[index + 1]);
+            double b = si_->distance(state, states_[index-1]);
+            double a = si_->distance(state, states_[index+1]);
             if (b > a)
                 ++index;
         }
-        for (int i = 0; i < index; ++i)
+        for (int i = 0 ; i < index ; ++i)
             si_->freeState(states_[i]);
         states_.erase(states_.begin(), states_.begin() + index);
     }
@@ -497,14 +492,14 @@ void ompl::geometric::PathGeometric::keepBefore(const base::State *state)
     {
         if (index > 0 && (std::size_t)(index + 1) < states_.size())
         {
-            double b = si_->distance(state, states_[index - 1]);
-            double a = si_->distance(state, states_[index + 1]);
+            double b = si_->distance(state, states_[index-1]);
+            double a = si_->distance(state, states_[index+1]);
             if (b < a)
                 --index;
         }
         if ((std::size_t)(index + 1) < states_.size())
         {
-            for (std::size_t i = index + 1; i < states_.size(); ++i)
+            for (std::size_t i = index + 1 ; i < states_.size() ; ++i)
                 si_->freeState(states_[i]);
             states_.resize(index + 1);
         }
@@ -518,7 +513,7 @@ int ompl::geometric::PathGeometric::getClosestIndex(const base::State *state) co
 
     int index = 0;
     double min_d = si_->distance(states_[0], state);
-    for (std::size_t i = 1; i < states_.size(); ++i)
+    for (std::size_t i = 1 ; i < states_.size() ; ++i)
     {
         double d = si_->distance(states_[i], state);
         if (d < min_d)
@@ -528,10 +523,4 @@ int ompl::geometric::PathGeometric::getClosestIndex(const base::State *state) co
         }
     }
     return index;
-}
-
-void ompl::geometric::PathGeometric::clear()
-{
-    freeMemory();
-    states_.clear();
 }

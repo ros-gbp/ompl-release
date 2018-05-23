@@ -1,36 +1,36 @@
 /*********************************************************************
- * Software License Agreement (BSD License)
- *
- *  Copyright (c) 2010, Rice University
- *  All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above
- *     copyright notice, this list of conditions and the following
- *     disclaimer in the documentation and/or other materials provided
- *     with the distribution.
- *   * Neither the name of the Rice University nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- *********************************************************************/
+* Software License Agreement (BSD License)
+*
+*  Copyright (c) 2010, Rice University
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*   * Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*   * Redistributions in binary form must reproduce the above
+*     copyright notice, this list of conditions and the following
+*     disclaimer in the documentation and/or other materials provided
+*     with the distribution.
+*   * Neither the name of the Rice University nor the names of its
+*     contributors may be used to endorse or promote products derived
+*     from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+*********************************************************************/
 
 /* Author: Ioan Sucan */
 
@@ -52,6 +52,7 @@
 #include "ompl/base/spaces/DubinsStateSpace.h"
 
 #include <boost/math/constants/constants.hpp>
+#include "../BoostTestTeamCityReporter.h"
 
 #include "StateSpaceTest.h"
 
@@ -62,16 +63,20 @@ using namespace ompl;
 
 const double PI = boost::math::constants::pi<double>();
 
+bool isValid(const base::State *)
+{
+    return true;
+}
+
 BOOST_AUTO_TEST_CASE(Dubins_Simple)
 {
-    auto d(std::make_shared<base::DubinsStateSpace>());
-    auto dsym(std::make_shared<base::DubinsStateSpace>(1., true));
+    base::StateSpacePtr d(new base::DubinsStateSpace()), dsym(new base::DubinsStateSpace(1., true));
 
     base::RealVectorBounds bounds2(2);
     bounds2.setLow(-3);
     bounds2.setHigh(3);
-    d->setBounds(bounds2);
-    dsym->setBounds(bounds2);
+    d->as<base::DubinsStateSpace>()->setBounds(bounds2);
+    dsym->as<base::DubinsStateSpace>()->setBounds(bounds2);
 
     d->setup();
     d->sanityChecks();
@@ -82,21 +87,22 @@ BOOST_AUTO_TEST_CASE(Dubins_Simple)
 
 BOOST_AUTO_TEST_CASE(ReedsShepp_Simple)
 {
-    auto d(std::make_shared<base::ReedsSheppStateSpace>());
+    base::StateSpacePtr d(new base::ReedsSheppStateSpace());
 
     base::RealVectorBounds bounds2(2);
     bounds2.setLow(-3);
     bounds2.setHigh(3);
-    d->setBounds(bounds2);
+    d->as<base::ReedsSheppStateSpace>()->setBounds(bounds2);
 
     d->setup();
     d->sanityChecks();
 }
 
+
 BOOST_AUTO_TEST_CASE(Discrete_Simple)
 {
-    auto d(std::make_shared<base::DiscreteStateSpace>(0, 2));
-    base::DiscreteStateSpace &dm = *d;
+    base::StateSpacePtr d(new base::DiscreteStateSpace(0, 2));
+    base::DiscreteStateSpace &dm = *d->as<base::DiscreteStateSpace>();
     d->setup();
     d->sanityChecks();
 
@@ -119,7 +125,7 @@ BOOST_AUTO_TEST_CASE(Discrete_Simple)
 
 BOOST_AUTO_TEST_CASE(SO2_Simple)
 {
-    auto m(std::make_shared<base::SO2StateSpace>());
+    base::StateSpacePtr m(new base::SO2StateSpace());
     m->setup();
     m->sanityChecks();
 
@@ -167,13 +173,13 @@ BOOST_AUTO_TEST_CASE(SO2_Simple)
 
 BOOST_AUTO_TEST_CASE(SO2_Projection)
 {
-    auto m(std::make_shared<base::SO2StateSpace>());
+    base::StateSpacePtr m(new base::SO2StateSpace());
     m->setup();
 
     base::ProjectionEvaluatorPtr proj = m->getDefaultProjection();
     BOOST_CHECK_EQUAL(proj->getDimension(), 1u);
 
-    Eigen::VectorXd p(proj->getDimension());
+    base::EuclideanProjection p(proj->getDimension());
     base::ScopedState<base::SO2StateSpace> s(m);
     proj->project(s.get(), p);
     BOOST_CHECK_EQUAL(p[0], s->value);
@@ -181,22 +187,23 @@ BOOST_AUTO_TEST_CASE(SO2_Projection)
 
 BOOST_AUTO_TEST_CASE(SO2_Sampler)
 {
-    auto m(std::make_shared<base::SO2StateSpace>());
+    base::StateSpacePtr m(new base::SO2StateSpace());
     m->setup();
     base::StateSamplerPtr s = m->allocStateSampler();
     base::ScopedState<base::SO2StateSpace> x(m);
     base::ScopedState<base::SO2StateSpace> y(m);
     x.random();
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0 ; i < 100 ; ++i)
     {
         s->sampleUniformNear(y.get(), x.get(), 10000);
         BOOST_CHECK(y.satisfiesBounds());
     }
 }
 
+
 BOOST_AUTO_TEST_CASE(SO3_Simple)
 {
-    auto m(std::make_shared<base::SO3StateSpace>());
+    base::StateSpacePtr m(new base::SO3StateSpace());
     m->setup();
     m->sanityChecks();
 
@@ -204,7 +211,7 @@ BOOST_AUTO_TEST_CASE(SO3_Simple)
     mt.test();
 
     BOOST_CHECK_EQUAL(m->getDimension(), 3u);
-    BOOST_CHECK_EQUAL(m->getMaximumExtent(), .5 * PI);
+    BOOST_CHECK_EQUAL(m->getMaximumExtent(), .5*PI);
 
     base::ScopedState<base::SO3StateSpace> s1(m);
     base::ScopedState<base::SO3StateSpace> s2(m);
@@ -218,21 +225,21 @@ BOOST_AUTO_TEST_CASE(SO3_Simple)
     s2.random();
 
     base::SpaceInformation si(m);
-    si.setStateValidityChecker([](const base::State *) { return true; });
+    si.setStateValidityChecker(std::bind(&isValid, std::placeholders::_1));
     si.setup();
 
-    std::vector<base::State *> states;
+    std::vector<base::State*> states;
     unsigned int ns = 100;
     unsigned int count = si.getMotionStates(s1.get(), s2.get(), states, ns, true, true);
     BOOST_CHECK(states.size() == count);
     BOOST_CHECK(ns + 2 == count);
 
-    for (auto &state : states)
+    for (unsigned int i = 0 ; i < states.size() ; ++i)
     {
-        double nrm = m->as<base::SO3StateSpace>()->norm(state->as<base::SO3StateSpace::StateType>());
+        double nrm = m->as<base::SO3StateSpace>()->norm(states[i]->as<base::SO3StateSpace::StateType>());
         BOOST_OMPL_EXPECT_NEAR(nrm, 1.0, 1e-15);
-        BOOST_CHECK(m->satisfiesBounds(state));
-        si.freeState(state);
+        BOOST_CHECK(m->satisfiesBounds(states[i]));
+        si.freeState(states[i]);
     }
 
     base::ProjectionEvaluatorPtr proj = m->getDefaultProjection();
@@ -268,7 +275,7 @@ BOOST_AUTO_TEST_CASE(RealVector_Simple)
     base::RealVectorBounds bounds3(3);
     bounds3.setLow(0);
     bounds3.setHigh(1);
-    auto m(std::make_shared<base::RealVectorStateSpace>(3));
+    base::StateSpacePtr m(new base::RealVectorStateSpace(3));
     base::RealVectorStateSpace &rm = *m->as<base::RealVectorStateSpace>();
     rm.setBounds(bounds3);
     rm.setDimensionName(2, "testDim");
@@ -297,8 +304,8 @@ BOOST_AUTO_TEST_CASE(RealVector_Simple)
 
     BOOST_OMPL_EXPECT_NEAR((*s0)[rm.getDimensionIndex("testDim")], 0.5, 1e-3);
 
-    auto m2(std::make_shared<base::RealVectorStateSpace>());
-    m2->addDimension(1, 2);
+    base::StateSpacePtr m2(new base::RealVectorStateSpace());
+    m2->as<base::RealVectorStateSpace>()->addDimension(1, 2);
     m2->setup();
     BOOST_OMPL_EXPECT_NEAR(m2->getMaximumExtent(), 1.0, 1e-3);
     BOOST_CHECK_EQUAL(m2->getDimension(), 1u);
@@ -320,7 +327,7 @@ BOOST_AUTO_TEST_CASE(Time_Bounds)
 
 BOOST_AUTO_TEST_CASE(Time_Simple)
 {
-    auto t(std::make_shared<base::TimeStateSpace>());
+    base::StateSpacePtr t(new base::TimeStateSpace());
     t->setup();
     t->sanityChecks();
     t->params()["valid_segment_count_factor"] = 1;
@@ -336,7 +343,7 @@ BOOST_AUTO_TEST_CASE(Time_Simple)
     t->as<base::TimeStateSpace>()->setBounds(-1, 1);
     t->setup();
 
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0 ; i < 100 ; ++i)
     {
         ss.random();
         if (fabs(ss->position) > 0.0)
@@ -361,18 +368,18 @@ BOOST_AUTO_TEST_CASE(Time_Simple)
 
 BOOST_AUTO_TEST_CASE(Compound_Simple)
 {
-    auto m1(std::make_shared<base::SE2StateSpace>());
-    auto m2(std::make_shared<base::SE3StateSpace>());
-    auto m3(std::make_shared<base::SO2StateSpace>());
-    auto m4(std::make_shared<base::SO3StateSpace>());
+    base::StateSpacePtr m1(new base::SE2StateSpace());
+    base::StateSpacePtr m2(new base::SE3StateSpace());
+    base::StateSpacePtr m3(new base::SO2StateSpace());
+    base::StateSpacePtr m4(new base::SO3StateSpace());
 
     BOOST_CHECK(m1 + m1 == m1);
 
     base::StateSpacePtr s = m1 + m2 + m3;
     BOOST_CHECK(s + s == s);
     BOOST_CHECK(s - s + s == s);
-    BOOST_CHECK(s + s - s + s == s);
-    BOOST_CHECK(s * s == s);
+    BOOST_CHECK(s + s - s + s  == s);
+    BOOST_CHECK(s * s  == s);
     BOOST_CHECK(s * m2 == m2);
     BOOST_CHECK(m1 * s == m1);
     BOOST_CHECK(m1 + s == s);
@@ -406,7 +413,7 @@ BOOST_AUTO_TEST_CASE(Compound_Simple)
     BOOST_CHECK_EQUAL((m1 - m1)->getDimension(), 0u);
     t->setName(t->getName());
     base::ScopedState<> st(t);
-    BOOST_CHECK(t->getValueAddressAtIndex(st.get(), 10000) == nullptr);
+    BOOST_CHECK(t->getValueAddressAtIndex(st.get(), 10000) == NULL);
     BOOST_CHECK(t->includes(m1));
     BOOST_CHECK_EQUAL(t->includes(m2), false);
     BOOST_CHECK_EQUAL(m1->includes(t), false);

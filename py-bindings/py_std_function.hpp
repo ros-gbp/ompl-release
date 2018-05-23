@@ -258,4 +258,5 @@ namespace detail                                                                
         detail::pyobject_invoker<FT, boost::function_traits<FT>::result_type,                  \
             boost::function_traits< FT >::arity> >();
 
-#endif // PY_BINDINGS_PY_STD_FUNCTION_
+#endif // PY_BINDINGS_PY_BOOST_FUNCTION_
+

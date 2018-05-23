@@ -39,13 +39,17 @@
 #include "ompl/tools/config/SelfConfig.h"
 #include <limits>
 
-ompl::geometric::pRRT::pRRT(const base::SpaceInformationPtr &si) : base::Planner(si, "pRRT"), samplerArray_(si)
+ompl::geometric::pRRT::pRRT(const base::SpaceInformationPtr &si) : base::Planner(si, "pRRT"),
+                                                                  samplerArray_(si)
 {
     specs_.approximateSolutions = true;
     specs_.multithreaded = true;
     specs_.directed = true;
 
     setThreadCount(2);
+    goalBias_ = 0.05;
+    maxDistance_ = 0.0;
+    lastGoalMotion_ = nullptr;
 
     Planner::declareParam<double>("range", this, &pRRT::setRange, &pRRT::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &pRRT::setGoalBias, &pRRT::getGoalBias, "0.:.05:1.");
@@ -64,11 +68,8 @@ void ompl::geometric::pRRT::setup()
     sc.configurePlannerRange(maxDistance_);
 
     if (!nn_)
-        nn_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Motion *>(this));
-    nn_->setDistanceFunction([this](const Motion *a, const Motion *b)
-                             {
-                                 return distanceFunction(a, b);
-                             });
+        nn_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Motion*>(this));
+    nn_->setDistanceFunction(std::bind(&pRRT::distanceFunction, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void ompl::geometric::pRRT::clear()
@@ -85,25 +86,24 @@ void ompl::geometric::pRRT::freeMemory()
 {
     if (nn_)
     {
-        std::vector<Motion *> motions;
+        std::vector<Motion*> motions;
         nn_->list(motions);
-        for (auto &motion : motions)
+        for (unsigned int i = 0 ; i < motions.size() ; ++i)
         {
-            if (motion->state)
-                si_->freeState(motion->state);
-            delete motion;
+            if (motions[i]->state)
+                si_->freeState(motions[i]->state);
+            delete motions[i];
         }
     }
 }
 
-void ompl::geometric::pRRT::threadSolve(unsigned int tid, const base::PlannerTerminationCondition &ptc,
-                                        SolutionInfo *sol)
+void ompl::geometric::pRRT::threadSolve(unsigned int tid, const base::PlannerTerminationCondition &ptc, SolutionInfo *sol)
 {
-    base::Goal *goal = pdef_->getGoal().get();
-    auto *goal_s = dynamic_cast<base::GoalSampleableRegion *>(goal);
-    RNG rng;
+    base::Goal                 *goal   = pdef_->getGoal().get();
+    base::GoalSampleableRegion *goal_s = dynamic_cast<base::GoalSampleableRegion*>(goal);
+    RNG                         rng;
 
-    auto *rmotion = new Motion(si_);
+    Motion *rmotion   = new Motion(si_);
     base::State *rstate = rmotion->state;
     base::State *xstate = si_->allocState();
 
@@ -132,7 +132,7 @@ void ompl::geometric::pRRT::threadSolve(unsigned int tid, const base::PlannerTer
         if (si_->checkMotion(nmotion->state, dstate))
         {
             /* create a motion */
-            auto *motion = new Motion(si_);
+            Motion *motion = new Motion(si_);
             si_->copyState(motion->state, dstate);
             motion->parent = nmotion;
 
@@ -173,7 +173,7 @@ ompl::base::PlannerStatus ompl::geometric::pRRT::solve(const base::PlannerTermin
 {
     checkValidity();
 
-    auto *goal = dynamic_cast<base::GoalRegion *>(pdef_->getGoal().get());
+    base::GoalRegion *goal = dynamic_cast<base::GoalRegion*>(pdef_->getGoal().get());
 
     if (!goal)
     {
@@ -185,7 +185,7 @@ ompl::base::PlannerStatus ompl::geometric::pRRT::solve(const base::PlannerTermin
 
     while (const base::State *st = pis_.nextStart())
     {
-        auto *motion = new Motion(si_);
+        Motion *motion = new Motion(si_);
         si_->copyState(motion->state, st);
         nn_->add(motion);
     }
@@ -203,13 +203,10 @@ ompl::base::PlannerStatus ompl::geometric::pRRT::solve(const base::PlannerTermin
     sol.approxsol = nullptr;
     sol.approxdif = std::numeric_limits<double>::infinity();
 
-    std::vector<std::thread *> th(threadCount_);
-    for (unsigned int i = 0; i < threadCount_; ++i)
-        th[i] = new std::thread([this, i, &ptc, &sol]
-                                {
-                                    return threadSolve(i, ptc, &sol);
-                                });
-    for (unsigned int i = 0; i < threadCount_; ++i)
+    std::vector<std::thread*> th(threadCount_);
+    for (unsigned int i = 0 ; i < threadCount_ ; ++i)
+        th[i] = new std::thread(std::bind(&pRRT::threadSolve, this, i, ptc, &sol));
+    for (unsigned int i = 0 ; i < threadCount_ ; ++i)
     {
         th[i]->join();
         delete th[i];
@@ -228,7 +225,7 @@ ompl::base::PlannerStatus ompl::geometric::pRRT::solve(const base::PlannerTermin
         lastGoalMotion_ = sol.solution;
 
         /* construct the solution path */
-        std::vector<Motion *> mpath;
+        std::vector<Motion*> mpath;
         while (sol.solution != nullptr)
         {
             mpath.push_back(sol.solution);
@@ -236,11 +233,11 @@ ompl::base::PlannerStatus ompl::geometric::pRRT::solve(const base::PlannerTermin
         }
 
         /* set the solution path */
-        auto path(std::make_shared<PathGeometric>(si_));
-        for (int i = mpath.size() - 1; i >= 0; --i)
+        PathGeometric *path = new PathGeometric(si_);
+           for (int i = mpath.size() - 1 ; i >= 0 ; --i)
             path->append(mpath[i]->state);
 
-        pdef_->addSolutionPath(path, approximate, sol.approxdif, getName());
+        pdef_->addSolutionPath(base::PathPtr(path), approximate, sol.approxdif, getName());
         solved = true;
     }
 
@@ -253,19 +250,20 @@ void ompl::geometric::pRRT::getPlannerData(base::PlannerData &data) const
 {
     Planner::getPlannerData(data);
 
-    std::vector<Motion *> motions;
+    std::vector<Motion*> motions;
     if (nn_)
         nn_->list(motions);
 
     if (lastGoalMotion_)
         data.addGoalVertex(base::PlannerDataVertex(lastGoalMotion_->state));
 
-    for (auto &motion : motions)
+    for (unsigned int i = 0 ; i < motions.size() ; ++i)
     {
-        if (motion->parent == nullptr)
-            data.addStartVertex(base::PlannerDataVertex(motion->state));
+        if (motions[i]->parent == nullptr)
+            data.addStartVertex(base::PlannerDataVertex(motions[i]->state));
         else
-            data.addEdge(base::PlannerDataVertex(motion->parent->state), base::PlannerDataVertex(motion->state));
+            data.addEdge(base::PlannerDataVertex(motions[i]->parent->state),
+                         base::PlannerDataVertex(motions[i]->state));
     }
 }
 
