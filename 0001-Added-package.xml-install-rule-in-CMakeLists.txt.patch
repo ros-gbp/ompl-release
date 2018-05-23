@@ -1,0 +1,23 @@
+From 7d44a2aeffa828b588fc79254ce7c62018b2c5f1 Mon Sep 17 00:00:00 2001
+From: Richard Bain <richard.j.bain2@boeing.com>
+Date: Thu, 18 Jan 2018 15:47:51 +1100
+Subject: [PATCH 1/2] Added package.xml install rule in CMakeLists.txt
+
+---
+ CMakeLists.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 223e123..71589c4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -195,3 +195,6 @@ if (OMPL_REGISTRATION)
+         endif()
+     endif()
+ endif()
++
++# install catkin package.xml
++install(FILES package.xml DESTINATION "share/ompl${OMPL_INSTALL_SUFFIX}")
+-- 
+2.7.4
+
