@@ -57,7 +57,7 @@ struct Segment
 };
 
 // the robot and environment are modeled both as a vector of segments.
-typedef std::vector<Segment> Environment;
+using Environment = std::vector<Segment>;
 
 // simply use a random projection
 class KinematicChainProjector : public ompl::base::ProjectionEvaluator
@@ -69,11 +69,11 @@ public:
         int dimension = std::max(2, (int)ceil(log((double) space->getDimension())));
         projectionMatrix_.computeRandom(space->getDimension(), dimension);
     }
-    virtual unsigned int getDimension(void) const
+    unsigned int getDimension() const override
     {
         return projectionMatrix_.mat.size1();
     }
-    void project(const ompl::base::State *state, ompl::base::EuclideanProjection &projection) const
+    void project(const ompl::base::State *state, ompl::base::EuclideanProjection &projection) const override
     {
         std::vector<double> v(space_->getDimension());
         space_->copyToReals(v, state);
@@ -87,24 +87,23 @@ protected:
 class KinematicChainSpace : public ompl::base::CompoundStateSpace
 {
 public:
-    KinematicChainSpace(unsigned int numLinks, double linkLength, Environment *env = NULL)
-        : ompl::base::CompoundStateSpace(), linkLength_(linkLength), environment_(env)
+    KinematicChainSpace(unsigned int numLinks, double linkLength, Environment *env = nullptr)
+        : linkLength_(linkLength), environment_(env)
     {
         for (unsigned int i = 0; i < numLinks; ++i)
-            addSubspace(ompl::base::StateSpacePtr(new ompl::base::SO2StateSpace()), 1.);
+            addSubspace(std::make_shared<ompl::base::SO2StateSpace>(), 1.);
         lock();
     }
 
-    void registerProjections()
+    void registerProjections() override
     {
-        registerDefaultProjection(ompl::base::ProjectionEvaluatorPtr(
-            new KinematicChainProjector(this)));
+        registerDefaultProjection(std::make_shared<KinematicChainProjector>(this));
     }
 
-    double distance(const ompl::base::State *state1, const ompl::base::State *state2) const
+    double distance(const ompl::base::State *state1, const ompl::base::State *state2) const override
     {
-        const StateType *cstate1 = state1->as<StateType>();
-        const StateType *cstate2 = state2->as<StateType>();
+        const auto *cstate1 = state1->as<StateType>();
+        const auto *cstate2 = state2->as<StateType>();
         double theta1 = 0., theta2 = 0., dx = 0., dy = 0., dist = 0.;
 
         for (unsigned int i = 0; i < getSubspaceCount(); ++i)
@@ -140,10 +139,10 @@ public:
     {
     }
 
-    bool isValid(const ompl::base::State *state) const
+    bool isValid(const ompl::base::State *state) const override
     {
         const KinematicChainSpace* space = si_->getStateSpace()->as<KinematicChainSpace>();
-        const KinematicChainSpace::StateType *s = state->as<KinematicChainSpace::StateType>();
+        const auto *s = state->as<KinematicChainSpace::StateType>();
         unsigned int n = si_->getStateDimension();
         Environment segments;
         double linkLength = space->linkLength();
@@ -155,13 +154,13 @@ public:
             theta += s->as<ompl::base::SO2StateSpace::StateType>(i)->value;
             xN = x + cos(theta) * linkLength;
             yN = y + sin(theta) * linkLength;
-            segments.push_back(Segment(x, y, xN, yN));
+            segments.emplace_back(x, y, xN, yN);
             x = xN;
             y = yN;
         }
         xN = x + cos(theta) * 0.001;
         yN = y + sin(theta) * 0.001;
-        segments.push_back(Segment(x, y, xN, yN));
+        segments.emplace_back(x, y, xN, yN);
         return selfIntersectionTest(segments)
             && environmentIntersectionTest(segments, *space->environment());
     }
@@ -179,9 +178,9 @@ protected:
     // return true iff no segment in env0 intersects any segment in env1
     bool environmentIntersectionTest(const Environment& env0, const Environment& env1) const
     {
-        for (unsigned int i = 0; i < env0.size(); ++i)
-            for (unsigned int j = 0; j < env1.size(); ++j)
-                if (intersectionTest(env0[i], env1[j]))
+        for (const auto & i : env0)
+            for (const auto & j : env1)
+                if (intersectionTest(i, j))
                     return false;
         return true;
     }
@@ -217,7 +216,7 @@ protected:
 
 Environment createHornEnvironment(unsigned int d, double eps)
 {
-    std::ofstream envFile("environment.dat");
+    std::ofstream envFile(boost::str(boost::format("environment_%i.dat") % d));
     std::vector<Segment> env;
     double w = 1. / (double)d, x = w, y = -eps, xN, yN, theta = 0.,
         scale = w * (1. + boost::math::constants::pi<double>() * eps);
@@ -228,7 +227,7 @@ Environment createHornEnvironment(unsigned int d, double eps)
         theta += boost::math::constants::pi<double>() / (double) d;
         xN = x + cos(theta) * scale;
         yN = y + sin(theta) * scale;
-        env.push_back(Segment(x, y, xN, yN));
+        env.emplace_back(x, y, xN, yN);
         x = xN;
         y = yN;
         envFile << x << " " << y << std::endl;
@@ -244,7 +243,7 @@ Environment createHornEnvironment(unsigned int d, double eps)
         theta += boost::math::constants::pi<double>() / d;
         xN = x + cos(theta) * scale;
         yN = y + sin(theta) * scale;
-        env.push_back(Segment(x, y, xN, yN));
+        env.emplace_back(x, y, xN, yN);
         x = xN;
         y = yN;
         envFile << x << " " << y << std::endl;
@@ -262,13 +261,12 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    unsigned int numLinks = boost::lexical_cast<unsigned int>(std::string(argv[1]));
+    auto numLinks = boost::lexical_cast<unsigned int>(std::string(argv[1]));
     Environment env = createHornEnvironment(numLinks, log((double)numLinks) / (double)numLinks);
-    ompl::base::StateSpacePtr chain(new KinematicChainSpace(numLinks, 1. / (double)numLinks, &env));
+    auto chain(std::make_shared<KinematicChainSpace>(numLinks, 1. / (double)numLinks, &env));
     ompl::geometric::SimpleSetup ss(chain);
 
-    ss.setStateValidityChecker(ompl::base::StateValidityCheckerPtr(
-        new KinematicChainValidityChecker(ss.getSpaceInformation())));
+    ss.setStateValidityChecker(std::make_shared<KinematicChainValidityChecker>(ss.getSpaceInformation()));
 
     ompl::base::ScopedState<> start(chain), goal(chain);
     std::vector<double> startVec(numLinks, boost::math::constants::pi<double>() / (double)numLinks);
@@ -286,20 +284,15 @@ int main(int argc, char **argv)
     // problem just once with STRIDE and print out the solution path.
     if (argc > 2)
     {
-        ss.setPlanner(ompl::base::PlannerPtr(new ompl::geometric::STRIDE(ss.getSpaceInformation())));
+        ss.setPlanner(std::make_shared<ompl::geometric::STRIDE>(ss.getSpaceInformation()));
         ss.setup();
         ss.print();
         ss.solve(3600);
         ss.simplifySolution();
 
-        ompl::geometric::PathGeometric path = ss.getSolutionPath();
-        std::vector<double> v;
-        for(unsigned int i = 0; i < path.getStateCount(); ++i)
-        {
-            chain->copyToReals(v, path.getState(i));
-            std::copy(v.begin(), v.end(), std::ostream_iterator<double>(std::cout, " "));
-            std::cout << std::endl;
-        }
+        std::ofstream pathfile(
+                    boost::str(boost::format("kinematic_path_%i.dat") % numLinks).c_str());
+        ss.getSolutionPath().printAsMatrix(pathfile);
         exit(0);
     }
 
@@ -310,11 +303,11 @@ int main(int argc, char **argv)
     ompl::tools::Benchmark b(ss, "KinematicChain");
     b.addExperimentParameter("num_links", "INTEGER", std::to_string(numLinks));
 
-    b.addPlanner(ompl::base::PlannerPtr(new ompl::geometric::STRIDE(ss.getSpaceInformation())));
-    b.addPlanner(ompl::base::PlannerPtr(new ompl::geometric::EST(ss.getSpaceInformation())));
-    b.addPlanner(ompl::base::PlannerPtr(new ompl::geometric::KPIECE1(ss.getSpaceInformation())));
-    b.addPlanner(ompl::base::PlannerPtr(new ompl::geometric::RRT(ss.getSpaceInformation())));
-    b.addPlanner(ompl::base::PlannerPtr(new ompl::geometric::PRM(ss.getSpaceInformation())));
+    b.addPlanner(std::make_shared<ompl::geometric::STRIDE>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::EST>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::KPIECE1>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::RRT>(ss.getSpaceInformation()));
+    b.addPlanner(std::make_shared<ompl::geometric::PRM>(ss.getSpaceInformation()));
     b.benchmark(request);
     b.saveResultsToFile(boost::str(boost::format("kinematic_%i.log") % numLinks).c_str());
 

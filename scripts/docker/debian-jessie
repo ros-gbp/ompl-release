@@ -1,0 +1,22 @@
+FROM debian:jessie
+
+COPY . /root/ompl
+
+RUN /root/ompl/scripts/docker/apt-retry.sh \
+       build-essential  \
+       cmake \
+       pkg-config \
+       libboost-all-dev \
+       libflann-dev \
+       python-dev \
+       libode-dev \
+       libeigen3-dev \
+       python-pip && \
+    pip -v install pygccxml https://bitbucket.org/ompl/pyplusplus/get/1.8.0.tar.gz
+
+
+
+
+# Local Variables:
+# mode: dockerfile
+# End:

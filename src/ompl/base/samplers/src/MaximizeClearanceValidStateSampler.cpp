@@ -37,13 +37,19 @@
 #include "ompl/base/samplers/MaximizeClearanceValidStateSampler.h"
 #include "ompl/base/SpaceInformation.h"
 
-ompl::base::MaximizeClearanceValidStateSampler::MaximizeClearanceValidStateSampler(const SpaceInformation *si) :
-    ValidStateSampler(si), sampler_(si->allocStateSampler()), improveAttempts_(3), work_(si->allocState())
+ompl::base::MaximizeClearanceValidStateSampler::MaximizeClearanceValidStateSampler(const SpaceInformation *si)
+  : ValidStateSampler(si), sampler_(si->allocStateSampler()), improveAttempts_(3), work_(si->allocState())
 {
     name_ = "max_clearance";
     params_.declareParam<unsigned int>("nr_improve_attempts",
-                                       std::bind(&MaximizeClearanceValidStateSampler::setNrImproveAttempts, this, std::placeholders::_1),
-                                       std::bind(&MaximizeClearanceValidStateSampler::getNrImproveAttempts, this));
+                                       [this](unsigned int n)
+                                       {
+                                           setNrImproveAttempts(n);
+                                       },
+                                       [this]
+                                       {
+                                           return getNrImproveAttempts();
+                                       });
 }
 
 ompl::base::MaximizeClearanceValidStateSampler::~MaximizeClearanceValidStateSampler()
@@ -81,8 +87,7 @@ bool ompl::base::MaximizeClearanceValidStateSampler::sample(State *state)
         }
         return true;
     }
-    else
-        return false;
+    return false;
 }
 
 bool ompl::base::MaximizeClearanceValidStateSampler::sampleNear(State *state, const State *near, const double distance)
@@ -115,6 +120,5 @@ bool ompl::base::MaximizeClearanceValidStateSampler::sampleNear(State *state, co
         }
         return true;
     }
-    else
-        return false;
+    return false;
 }

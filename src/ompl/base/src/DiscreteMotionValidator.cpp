@@ -41,11 +41,12 @@
 void ompl::base::DiscreteMotionValidator::defaultSettings()
 {
     stateSpace_ = si_->getStateSpace().get();
-    if (!stateSpace_)
+    if (stateSpace_ == nullptr)
         throw Exception("No state space for motion validator");
 }
 
-bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const State *s2, std::pair<State*, double> &lastValid) const
+bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const State *s2,
+                                                      std::pair<State *, double> &lastValid) const
 {
     /* assume motion starts in a valid configuration so s1 is valid */
 
@@ -57,13 +58,13 @@ bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const Sta
         /* temporary storage for the checked state */
         State *test = si_->allocState();
 
-        for (int j = 1 ; j < nd ; ++j)
+        for (int j = 1; j < nd; ++j)
         {
             stateSpace_->interpolate(s1, s2, (double)j / (double)nd, test);
             if (!si_->isValid(test))
             {
                 lastValid.second = (double)(j - 1) / (double)nd;
-                if (lastValid.first)
+                if (lastValid.first != nullptr)
                     stateSpace_->interpolate(s1, s2, lastValid.second, lastValid.first);
                 result = false;
                 break;
@@ -76,7 +77,7 @@ bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const Sta
         if (!si_->isValid(s2))
         {
             lastValid.second = (double)(nd - 1) / (double)nd;
-            if (lastValid.first)
+            if (lastValid.first != nullptr)
                 stateSpace_->interpolate(s1, s2, lastValid.second, lastValid.first);
             result = false;
         }
@@ -102,7 +103,7 @@ bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const Sta
     int nd = stateSpace_->validSegmentCount(s1, s2);
 
     /* initialize the queue of test positions */
-    std::queue< std::pair<int, int> > pos;
+    std::queue<std::pair<int, int>> pos;
     if (nd >= 2)
     {
         pos.push(std::make_pair(1, nd - 1));

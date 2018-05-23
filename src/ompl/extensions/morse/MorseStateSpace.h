@@ -44,13 +44,12 @@ namespace ompl
 {
     namespace base
     {
-
         /** \brief State space representing MORSE states */
         class MorseStateSpace : public CompoundStateSpace
         {
         public:
-
-            /** \brief MORSE State. This is a compound state that allows accessing the properties of the bodies the state space is constructed for. */
+            /** \brief MORSE State. This is a compound state that allows accessing the properties of the bodies the
+             * state space is constructed for. */
             class StateType : public CompoundStateSpace::StateType
             {
             public:
@@ -70,20 +69,22 @@ namespace ompl
 
                 \param env the environment to construct the state space for
                 \param positionWeight the weight to pass to CompoundStateSpace::addSubspace() for position subspaces
-                \param linVelWeight the weight to pass to CompoundStateSpace::addSubspace() for linear velocity subspaces
-                \param angVelWeight the weight to pass to CompoundStateSpace::addSubspace() for angular velocity subspaces
-                \param orientationWeight the weight to pass to CompoundStateSpace::addSubspace() for orientation subspaces
+                \param linVelWeight the weight to pass to CompoundStateSpace::addSubspace() for linear velocity
+               subspaces
+                \param angVelWeight the weight to pass to CompoundStateSpace::addSubspace() for angular velocity
+               subspaces
+                \param orientationWeight the weight to pass to CompoundStateSpace::addSubspace() for orientation
+               subspaces
             */
-            MorseStateSpace(const MorseEnvironmentPtr &env,
-                             double positionWeight = 1.0, double linVelWeight = 0.5,
-                             double angVelWeight = 0.5, double orientationWeight = 1.0);
+            MorseStateSpace(const MorseEnvironmentPtr &env, double positionWeight = 1.0, double linVelWeight = 0.5,
+                            double angVelWeight = 0.5, double orientationWeight = 1.0);
 
             virtual ~MorseStateSpace()
             {
             }
 
             /** \brief Get the MORSE environment this state space corresponds to */
-            const MorseEnvironmentPtr& getEnvironment() const
+            const MorseEnvironmentPtr &getEnvironment() const
             {
                 return env_;
             }
@@ -115,23 +116,21 @@ namespace ompl
             void writeState(const State *state) const;
 
             /** \brief This function checks whether a state satisfies its bounds */
-            bool satisfiesBounds(const State *state) const;
+            bool satisfiesBounds(const State *state) const override;
 
-            State* allocState() const;
-            void freeState(State *state) const;
-            void copyState(State *destination, const State *source) const;
-            void interpolate(const State *from, const State *to, const double t, State *state) const;
+            State *allocState() const override;
+            void freeState(State *state) const override;
+            void copyState(State *destination, const State *source) const override;
+            void interpolate(const State *from, const State *to, double t, State *state) const override;
 
-            StateSamplerPtr allocDefaultStateSampler() const;
-            StateSamplerPtr allocStateSampler() const;
+            StateSamplerPtr allocDefaultStateSampler() const override;
+            StateSamplerPtr allocStateSampler() const override;
 
         protected:
-
             /** \brief Representation of the MORSE parameters OMPL needs to plan */
             MorseEnvironmentPtr env_;
         };
     }
 }
-
 
 #endif

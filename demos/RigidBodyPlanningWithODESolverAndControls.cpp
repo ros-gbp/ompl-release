@@ -58,7 +58,7 @@ class KinematicCarModel : public oc::StatePropagator
             timeStep_  = 0.01;
         }
 
-        virtual void propagate(const ob::State *state, const oc::Control* control, const double duration, ob::State *result) const
+        void propagate(const ob::State *state, const oc::Control* control, const double duration, ob::State *result) const override
         {
             EulerIntegration(state, control, duration, result);
         }
@@ -131,20 +131,20 @@ void KinematicCarPostIntegration (const ob::State* /*state*/, const oc::Control*
 {
     // Normalize orientation between 0 and 2*pi
     ob::SO2StateSpace SO2;
-    SO2.enforceBounds (result->as<ob::SE2StateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1));
+    SO2.enforceBounds(result->as<ob::SE2StateSpace::StateType>()->as<ob::SO2StateSpace::StateType>(1));
 }
 
 bool isStateValid(const oc::SpaceInformation *si, const ob::State *state)
 {
     //    ob::ScopedState<ob::SE2StateSpace>
     /// cast the abstract state type to the type we expect
-    const ob::SE2StateSpace::StateType *se2state = state->as<ob::SE2StateSpace::StateType>();
+    const auto *se2state = state->as<ob::SE2StateSpace::StateType>();
 
     /// extract the first component of the state and cast it to what we expect
-    const ob::RealVectorStateSpace::StateType *pos = se2state->as<ob::RealVectorStateSpace::StateType>(0);
+    const auto *pos = se2state->as<ob::RealVectorStateSpace::StateType>(0);
 
     /// extract the second component of the state and cast it to what we expect
-    const ob::SO2StateSpace::StateType *rot = se2state->as<ob::SO2StateSpace::StateType>(1);
+    const auto *rot = se2state->as<ob::SO2StateSpace::StateType>(1);
 
     /// check validity of state defined by pos & rot
 
@@ -164,41 +164,43 @@ public:
 };
 /// @endcond
 
-void planWithSimpleSetup(void)
+void planWithSimpleSetup()
 {
     /// construct the state space we are planning in
-    ob::StateSpacePtr space(new ob::SE2StateSpace());
+    auto space(std::make_shared<ob::SE2StateSpace>());
 
     /// set the bounds for the R^2 part of SE(2)
     ob::RealVectorBounds bounds(2);
     bounds.setLow(-1);
     bounds.setHigh(1);
 
-    space->as<ob::SE2StateSpace>()->setBounds(bounds);
+    space->setBounds(bounds);
 
     // create a control space
-    oc::ControlSpacePtr cspace(new DemoControlSpace(space));
+    auto cspace(std::make_shared<DemoControlSpace>(space));
 
     // set the bounds for the control space
     ob::RealVectorBounds cbounds(2);
     cbounds.setLow(-0.3);
     cbounds.setHigh(0.3);
 
-    cspace->as<DemoControlSpace>()->setBounds(cbounds);
+    cspace->setBounds(cbounds);
 
     // define a simple setup class
     oc::SimpleSetup ss(cspace);
 
     // set state validity checking for this space
-    ss.setStateValidityChecker(std::bind(&isStateValid, ss.getSpaceInformation().get(), std::placeholders::_1));
+    oc::SpaceInformation *si = ss.getSpaceInformation().get();
+    ss.setStateValidityChecker(
+        [si](const ob::State *state) { return isStateValid(si, state); });
 
     // Setting the propagation routine for this space:
     // KinematicCarModel does NOT use ODESolver
-    //ss.setStatePropagator(oc::StatePropagatorPtr(new KinematicCarModel(ss.getSpaceInformation())));
+    //ss.setStatePropagator(std::make_shared<KinematicCarModel>(ss.getSpaceInformation()));
 
     // Use the ODESolver to propagate the system.  Call KinematicCarPostIntegration
     // when integration has finished to normalize the orientation values.
-    oc::ODESolverPtr odeSolver(new oc::ODEBasicSolver<> (ss.getSpaceInformation(), &KinematicCarODE));
+    auto odeSolver(std::make_shared<oc::ODEBasicSolver<>>(ss.getSpaceInformation(), &KinematicCarODE));
     ss.setStatePropagator(oc::ODESolver::getStatePropagator(odeSolver, &KinematicCarPostIntegration));
 
     /// create a start state
@@ -233,7 +235,7 @@ void planWithSimpleSetup(void)
         std::cout << "No solution found" << std::endl;
 }
 
-int main(int, char **)
+int main(int /*argc*/, char ** /*argv*/)
 {
     std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
 
