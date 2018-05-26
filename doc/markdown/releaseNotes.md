@@ -1,5 +1,10 @@
 # Release Notes
 
+# OMPL 1.3.3 (May 26, 2018)
+
+- Bug fixes.
+- Installation fixes for ROS Lunar.
+
 # OMPL 1.3.2 (November 11, 2017)
 
 - Bug fixes for gcc6, clang5, and new versions of Boost.
