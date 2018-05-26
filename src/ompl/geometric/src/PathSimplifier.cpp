@@ -416,44 +416,69 @@ void ompl::geometric::PathSimplifier::simplify(PathGeometric &path, const base::
     if (path.getStateCount() < 3)
         return;
 
-    // try a randomized step of connecting vertices
-    bool tryMore = false;
-    if (ptc == false)
-        tryMore = reduceVertices(path);
-
-    // try to collapse close-by vertices
-    if (ptc == false)
-        collapseCloseVertices(path);
-
-    // try to reduce verices some more, if there is any point in doing so
-    int times = 0;
-    while (tryMore && ptc == false && ++times <= 5)
-        tryMore = reduceVertices(path);
-
-    // if the space is metric, we can do some additional smoothing
-    if (si_->getStateSpace()->isMetricSpace())
+    bool tryMore = true;
+    while ((ptc == false) && tryMore)
     {
-        bool tryMore = true;
-        unsigned int times = 0;
-        do
+        // if the space is metric, we can do some additional smoothing
+        if ((ptc == false) && si_->getStateSpace()->isMetricSpace())
         {
-            bool shortcut = shortcutPath(path);                           // split path segments, not just vertices
-            bool better_goal = gsr_ ? findBetterGoal(path, ptc) : false;  // Try to connect the path to a closer goal
+            bool metricTryMore = true;
+            unsigned int times = 0;
+            do
+            {
+                bool shortcut = shortcutPath(path);  // split path segments, not just vertices
+                bool better_goal =
+                    gsr_ ? findBetterGoal(path, ptc) : false;  // Try to connect the path to a closer goal
 
-            tryMore = shortcut || better_goal;
-        } while (ptc == false && tryMore && ++times <= 5);
+                metricTryMore = shortcut || better_goal;
+            } while ((ptc == false) && ++times <= 5 && metricTryMore);
 
-        // smooth the path with BSpline interpolation
+            // smooth the path with BSpline interpolation
+            if (ptc == false)
+                smoothBSpline(path, 3, path.length() / 100.0);
+
+            if (ptc == false)
+            {
+                // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
+                const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
+                if (!p.second)
+                {
+                    OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
+                }
+                else if (!p.first)
+                    OMPL_DEBUG(
+                        "The solution path was slightly touching on an invalid region of the state space, but it was "
+                        "successfully fixed.");
+            }
+        }
+
+        // try a randomized step of connecting vertices
         if (ptc == false)
-            smoothBSpline(path, 3, path.length() / 100.0);
+            tryMore = reduceVertices(path);
 
-        // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
-        const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
-        if (!p.second)
-            OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
-        else if (!p.first)
-            OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but it was "
-                       "successfully fixed.");
+        // try to collapse close-by vertices
+        if (ptc == false)
+            collapseCloseVertices(path);
+
+        // try to reduce verices some more, if there is any point in doing so
+        unsigned int times = 0;
+        while ((ptc == false) && tryMore && ++times <= 5)
+            tryMore = reduceVertices(path);
+
+        if ((ptc == false) && si_->getStateSpace()->isMetricSpace())
+        {
+            // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
+            const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
+            if (!p.second)
+            {
+                OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
+            }
+            else if (!p.first)
+                OMPL_DEBUG(
+                    "The solution path was slightly touching on an invalid region of the state space, but it was "
+                    "successfully fixed.");
+        }
+
     }
 }
 
