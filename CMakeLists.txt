@@ -178,7 +178,7 @@ if (NOT ${CMAKE_VERSION} VERSION_LESS 2.8.8)
         COMPATIBILITY SameMajorVersion)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OMPLConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/OMPLConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ompl/cmake
+        DESTINATION lib/cmake/ompl
         COMPONENT ompl)
 endif()
 
