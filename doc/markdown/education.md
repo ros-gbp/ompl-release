@@ -1,4 +1,4 @@
-# Teaching Module on Motion Planning
+# Teaching Module on Motion Planning {#education}
 
 We aim to transform how college students learn robotics by offering a motion planning curriculum that enhances deep learning and is supported by OMPL.app, an integrated software environment. Students will be challenged to work on real-world robotics problems, and develop deeper knowledge by reflecting on and formally evaluating their results. Our intention is to scaffold learning by freeing students of tedious details and heavy programming and help them through a hands-on problem-based learning approach to develop critical thinking within robotics and outside robotics.
 
@@ -16,7 +16,6 @@ As part of this effort, we have developed a collection of assignments that can b
   - Protein folding
 
 We are looking for educational partners to use and further develop the material. If you are interested in the educational material, please contact [Mark Moll](http://mmoll.rice.edu) and [Lydia Kavraki](http://www.cs.rice.edu/~kavraki).
-
 
 \htmlonly
 <img src="images/comp450-Fall2010.jpg" width="100%">

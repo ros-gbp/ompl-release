@@ -119,10 +119,9 @@ namespace ompl
                     samplers_.resize(count);
                 else if (samplers_.size() < count)
                 {
-                    std::size_t c = samplers_.size();
                     samplers_.resize(count);
-                    for (std::size_t i = c; i < count; ++i)
-                        samplers_[i] = ss_.allocStateSampler(si_);
+                    for (auto &sampler : samplers_)
+                        sampler = ss_.allocStateSampler(si_);
                 }
             }
 

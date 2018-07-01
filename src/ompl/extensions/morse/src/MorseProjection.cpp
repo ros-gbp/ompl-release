@@ -58,14 +58,10 @@ unsigned int ompl::base::MorseProjection::getDimension() const
 
 void ompl::base::MorseProjection::defaultCellSizes()
 {
-    cellSizes_.resize(getDimension());
-    for (unsigned int i = 0; i < getDimension(); i++)
-    {
-        cellSizes_[i] = 1.0;
-    }
+    cellSizes_ = std::vector<double>(getDimension(), 1.0);
 }
 
-void ompl::base::MorseProjection::project(const State *state, EuclideanProjection &projection) const
+void ompl::base::MorseProjection::project(const State *state, Eigen::Ref<Eigen::VectorXd> projection) const
 {
     // this projection uses the x and y coordinates of every rigid body
     const MorseStateSpace::StateType *mstate = state->as<MorseStateSpace::StateType>();

@@ -1,10 +1,15 @@
-option(OMPL_BUILD_PYBINDINGS "Build OMPL Python bindings" ON)
-option(OMPL_BUILD_PYTESTS "Build OMPL Python tests" ON)
+include(PythonBindingsUtils)
+if(PY_PYPLUSPLUS AND PY_PYGCCXML AND CASTXML_FOUND)
+    option(OMPL_BUILD_PYBINDINGS "Build OMPL Python bindings" ON)
+    option(OMPL_BUILD_PYTESTS "Build/run OMPL Python tests" ON)
+else()
+    option(OMPL_BUILD_PYBINDINGS "Build OMPL Python bindings" OFF)
+    option(OMPL_BUILD_PYTESTS "Build/run OMPL Python tests" OFF)
+endif()
+add_feature_info(OMPL_BUILD_PYBINDINGS "${OMPL_BUILD_PYBINDINGS}" "Whether to build the Python bindings.")
+add_feature_info(OMPL_BUILD_PYTESTS "${OMPL_BUILD_PYTESTS}" "Whether to build/run the python binding unit tests.")
 
 if (OMPL_BUILD_PYBINDINGS)
-
-    include(PythonBindingsUtils)
-
     if(WIN32)
         # omit StateStorage class bindings on Windows;
         # Boost.Serialization does nasty things that break the bindings.
@@ -24,13 +29,12 @@ if (OMPL_BUILD_PYBINDINGS)
             "${CMAKE_CURRENT_SOURCE_DIR}/ompl/bindings_generator.py" @ONLY)
 
         create_module_generation_targets(util)
-        if(OMPL_HAVE_EIGEN3)
+        if(OMPL_HAVE_NUMPY)
             create_module_generation_targets(base)
-            create_module_generation_targets(geometric)
         else()
-            create_module_generation_targets(base PathLengthDirectInfSampler)
-            create_module_generation_targets(geometric bitstar)
+            create_module_generation_targets(base "[Cc]onstrain")
         endif()
+        create_module_generation_targets(geometric)
         create_module_generation_targets(control)
         create_module_generation_targets(tools)
         if(OMPL_EXTENSION_MORSE)
@@ -52,6 +56,9 @@ if (OMPL_BUILD_PYBINDINGS)
         foreach(module ${OMPL_MODULES})
             create_module_target(${module})
         endforeach(module)
+        if(OMPL_HAVE_NUMPY AND TARGET py_ompl_base)
+            target_link_libraries(py_ompl_base ${Boost_NUMPY_LIBRARY})
+        endif()
 
         install(DIRECTORY ompl DESTINATION "${OMPL_PYTHON_INSTALL_DIR}"
             COMPONENT python

@@ -12,14 +12,6 @@ configure_file("${VERSION_DIR}/config.h.in" "${VERSION_DIR}/config.h")
 #############################################
 file(GLOB_RECURSE OMPL_SOURCE_CODE datastructures/*.cpp util/*.cpp base/*.cpp geometric/*.cpp control/*.cpp tools/*.cpp)
 
-if(NOT OMPL_HAVE_EIGEN3)
-    list(REMOVE_ITEM OMPL_SOURCE_CODE
-        "${CMAKE_CURRENT_SOURCE_DIR}/util/src/ProlateHyperspheroid.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/base/samplers/informed/src/PathLengthDirectInfSampler.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/geometric/planners/rrt/src/VFRRT.cpp"
-    )
-endif()
-
 #############################################
 # Add enabled extensions to the source code #
 #############################################
@@ -68,6 +60,10 @@ target_link_libraries(ompl
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_CHRONO_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT})
+
+if (OMPL_HAVE_SPOT)
+  target_link_libraries(ompl ${SPOT_LIBRARIES})
+endif()
 
 if(MSVC)
   set_target_properties(ompl PROPERTIES VERSION "${OMPL_VERSION}" STATIC_LIBRARY_FLAGS "psapi.lib ws2_32.lib")

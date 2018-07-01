@@ -1,4 +1,4 @@
-# Available Planners
+# Available Planners {#planners}
 
 All implementations listed below are considered fully functional. Within OMPL planners are divided into two categories:
 - \ref geometric_planners
@@ -9,7 +9,7 @@ To see how to benchmark planners, click [here](benchmark.html).
 
 # Geometric planners {#geometric_planners}
 
-Planners in this category only accounts for the geometric and kinematic constraints of the system. It is assumed that any feasible path can be turned into a dynamically feasible trajectory. Planners in this category can be divided into several overlapping subcategories:
+Planners in this category only accounts for the geometric and kinematic constraints of the system. It is assumed that any feasible path can be turned into a dynamically feasible trajectory. Any of these planners can be used to [plan with geometric constraints](constrainedPlanning.html). Planners in this category can be divided into several overlapping subcategories:
 
 <div class="plannerlist">
 - **Multi-query planners**<br>
@@ -40,7 +40,7 @@ Planners in this category only accounts for the geometric and kinematic constrai
       SST is an asymptotically near-optimal incremental version of RRT.
     - [Transition-based RRT (T-RRT)](\ref gTRRT)<br>
       T-RRT does not give any hard optimality guarantees, but tries to find short, low-cost paths.
-    - [Vector Field RRT](\gVFRRT)<br>
+    - [Vector Field RRT](\ref gVFRRT)<br>
       VF-RRT is a tree-based motion planner that tries to minimize the so-called upstream cost of a path. The upstream cost is defined by an integral over a user-defined vector field.
     - [Parallel RRT (pRRT)](\ref gpRRT)<br>
       Many different parallelization schemes have been proposed for sampling-based planners, including RRT. In this implementation, several threads simultaneously add states to the same tree. Once a solution is found, all threads terminate.

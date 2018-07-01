@@ -1,4 +1,4 @@
-# Installation
+# Installation {#installation}
 
 \htmlonly
 <div class="panel panel-default">
@@ -9,7 +9,7 @@
       <li role="presentation" class="active"><a href="#ubuntu" aria-controls="ubuntu" role="tab" data-toggle="pill">Ubuntu</a></li>
       <li role="presentation"><a href="#fedora" aria-controls="fedora" role="tab" data-toggle="pill">Fedora</a></li>
       <li role="presentation"><a href="#linux" aria-controls="linux" role="tab" data-toggle="pill">Linux (generic)</a></li>
-      <li role="presentation"><a href="#osx" aria-controls="osx" role="tab" data-toggle="pill">OS X</a></li>
+      <li role="presentation"><a href="#osx" aria-controls="osx" role="tab" data-toggle="pill">macOS</a></li>
       <li role="presentation"><a href="#windows" aria-controls="windows" role="tab" data-toggle="pill">MS Windows</a></li>
     </ul>
   </div>
@@ -64,7 +64,7 @@ sudo apt-get install ros-`rosversion -d`-ompl</pre>
   <!-- Linux (generic) -->
   <div role="tabpanel" class="tab-pane" id="linux">
     <h2>Linux (generic)</h2>
-    <p>OMPL requires <a href="http://www.boost.org">Boost</a> (version 1.54 or higher) and <a href="http://www.cmake.org">CMake</a> (version 2.8.7 or higher). Some additional features are available if <a href="http://eigen.tuxfamily.org/index.php?title=Main_Page">Eigen 3</a> or <a href="http://www.ode.org">ODE</a> are installed.
+    <p>OMPL requires <a href="http://www.boost.org">Boost</a> (version 1.54 or higher) <a href="http://www.cmake.org">CMake</a> (version 2.8.7 or higher), and <a href="http://eigen.tuxfamily.org">Eigen</a> (version 3.3 or higher). Some additional features are available if <a href="http://www.ode.org">ODE</a> is installed.
     To be able to generate python bindings you need to install the <a href="http://www.python.org">Python</a> library and header files and <a href="installPyPlusPlus.html">Py++</a>.
     Finally, you need a C++11 compiler (g++-5 or newer).</p>
     <p>Once the dependencies are installed, OMPL can then be compiled like so:</p>
@@ -80,9 +80,9 @@ cmake ../..</pre></li>
     <p>The build system includes a <a href="buildOptions.html">number of options</a> that you can enable or disable.</p>
   </div>
 
-  <!-- OS X -->
+  <!-- macOS -->
   <div role="tabpanel" class="tab-pane" id="osx">
-    <h2>OS X</h2>
+    <h2>macOS</h2>
     <ul class="nav nav-tabs" role="tablist">
       <li role="presentation" class="active"><a href="#osxmacports" aria-controls="osxmacports" role="tab" data-toggle="tab">MacPorts</a></li>
       <li role="presentation"><a href="#osxhomebrew" aria-controls="osxhomebrew" role="tab" data-toggle="tab">Homebrew</a></li>
@@ -102,8 +102,7 @@ cmake ../..</pre></li>
   <!-- Windows -->
   <div role="tabpanel" class="tab-pane" id="windows">
     <h2>MS Windows</h2>
-    Installation on Windows is possible, but not supported at this time. Our configuration files for compiling <a href="https://bitbucket.org/ompl/ompl/src/tip/.appveyor.yml">OMPL</a> using AppVeyor's Windows Continuous Integration servers might serve as a useful starting point.
+    It is recommended to use <a href="https://vcpkg.readthedocs.io/en/latest/">vcpkg</a>, a Microsoft-supported package manager for open source software. Use <a href="https://bitbucket.org/ompl/ompl/src/tip/.appveyor.yml">our Appveyor configuration file</a> for a list of packages to install and build instructions.
   </div>
 </div>
 \endhtmlonly
-

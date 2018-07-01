@@ -342,14 +342,14 @@ namespace ompl
                 \param lastValid first: storage for the last valid state (may be nullptr); this need not be different
                from \e s1 or \e s2. second: the time (between 0 and 1) of  the last valid state, on the motion from \e
                s1 to \e s2 */
-            bool checkMotion(const State *s1, const State *s2, std::pair<State *, double> &lastValid) const
+            virtual bool checkMotion(const State *s1, const State *s2, std::pair<State *, double> &lastValid) const
             {
                 return motionValidator_->checkMotion(s1, s2, lastValid);
             }
 
             /** \brief Check if the path between two states (from \e s1 to \e s2) is valid, using the MotionValidator.
              * This function assumes \e s1 is valid. */
-            bool checkMotion(const State *s1, const State *s2) const
+            virtual bool checkMotion(const State *s1, const State *s2) const
             {
                 return motionValidator_->checkMotion(s1, s2);
             }
@@ -367,7 +367,7 @@ namespace ompl
             bool checkMotion(const std::vector<State *> &states, unsigned int count) const;
 
             /** \brief Get \e count states that make up a motion between \e s1 and \e s2. Returns the number of states
-               that were added to \e states.
+               that were added to \e states. These states are not checked for validity.
                 If \e states.size() >= count or \e alloc is true, the returned value is equal to \e count (or \e count +
                2, if \e endpoints is true).
                 Otherwise, fewer states can be returned.
@@ -378,8 +378,8 @@ namespace ompl
                 \param endpoints flag indicating whether \e s1 and \e s2 are to be included in states
                 \param alloc flag indicating whether memory is to be allocated automatically
             */
-            unsigned int getMotionStates(const State *s1, const State *s2, std::vector<State *> &states,
-                                         unsigned int count, bool endpoints, bool alloc) const;
+            virtual unsigned int getMotionStates(const State *s1, const State *s2, std::vector<State *> &states,
+                                                 unsigned int count, bool endpoints, bool alloc) const;
 
             /** \brief Get the total number of motion segments checked by the MotionValidator so far */
             unsigned int getCheckedMotionCount() const

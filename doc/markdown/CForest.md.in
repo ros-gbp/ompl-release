@@ -1,4 +1,4 @@
-# CForest Parallelization Framework
+# CForest Parallelization Framework {#CForest}
 
 __Contents:__
 
@@ -60,6 +60,7 @@ The call `addPlannerInstances<T>()` will check the `PlannerSpecs` of the planner
 ~~~{.cpp}
 planner->as<ompl::geometric::CForest>()->addPlannerInstances<ompl::geometric::PRMstar>(2);
 ~~~
+
     Warning: PRMstar cannot report intermediate solutions, not added as CForest planner.
              at line 100 in ompl/geometric/planners/cforest/CForest.h
 
@@ -86,7 +87,6 @@ When implementing CForest, the focus was to modify the underlying planner as lit
 - Before pruning a tree, it is checked how many states would be removed. If the ratio of the size of the new tree size to the size of the old tree is not small enough, pruning will not be carried out. This reduces the amortized cost of having to rebuild NearestNeighbors datastructures when states are pruned.
 
 \note Despite all these differences, the CForest implementation greatly improves the performance of the underlying planner. However, an implementation closer to the one described in the paper could improve the performance. Please, take that into account if you plan to compare your algorithm against CForest.
-
 
 # Example {#cf_example}
 
@@ -126,7 +126,6 @@ In case you only have one core available, CForest still improves the RRTstar per
 <b>Best cost evolution through time</b> Sequential version of the CForest: many threads working in the same core.
 </div>
 \endhtmlonly
-
 
 # Advanced information {#cf_advanced}
 

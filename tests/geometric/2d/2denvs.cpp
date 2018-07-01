@@ -66,7 +66,6 @@
 #include "ompl/geometric/planners/prm/SPARStwo.h"
 #include "ompl/base/objectives/PathLengthOptimizationObjective.h"
 
-#include "../../BoostTestTeamCityReporter.h"
 #include "../../base/PlannerTest.h"
 
 using namespace ompl;
@@ -744,7 +743,7 @@ OMPL_PLANNER_TEST(TRRT, 95.0, 0.01)
 
 OMPL_PLANNER_TEST(PDST, 95.0, 0.03)
 
-OMPL_PLANNER_TEST(pSBL, 95.0, 0.04)
+//OMPL_PLANNER_TEST(pSBL, 95.0, 0.04)
 OMPL_PLANNER_TEST(SBL, 95.0, 0.02)
 
 OMPL_PLANNER_TEST(KPIECE1, 95.0, 0.01)

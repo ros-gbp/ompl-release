@@ -1,42 +1,43 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2010, Rice University
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Rice University nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2010, Rice University
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Rice University nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Ioan Sucan */
 
 #ifndef OMPL_DATASTRUCTURES_GRID_
 #define OMPL_DATASTRUCTURES_GRID_
 
+#include <Eigen/Core>
 #include <vector>
 #include <iostream>
 #include <cstdlib>
@@ -51,7 +52,7 @@ namespace ompl
     {
     public:
         /// Definition of a coordinate within this grid
-        using Coord = std::vector<int>;
+        using Coord = Eigen::VectorXi;
 
         /// Definition of a cell in this grid
         struct Cell
@@ -166,9 +167,9 @@ namespace ompl
             ComponentHash ch;
             std::vector<std::vector<Cell *>> res;
 
-            for (auto i = hash_.begin(); i != hash_.end(); ++i)
+            for (auto & i: hash_)
             {
-                Cell *c0 = i->second;
+                Cell *c0 = i.second;
                 auto pos = ch.find(&c0->coord);
                 int comp = (pos != ch.end()) ? pos->second : -1;
 
@@ -189,12 +190,12 @@ namespace ompl
                             ch.insert(std::make_pair(&c->coord, components));
                             std::vector<Cell *> nbh;
                             neighbors(c, nbh);
-                            for (unsigned int j = 0; j < nbh.size(); ++j)
+                            for (const auto &n : nbh)
                             {
-                                pos = ch.find(&nbh[j]->coord);
+                                pos = ch.find(&n->coord);
                                 comp = (pos != ch.end()) ? pos->second : -1;
                                 if (comp < 0)
-                                    q.push_back(nbh[j]);
+                                    q.push_back(n);
                             }
                         }
                         else
@@ -254,22 +255,22 @@ namespace ompl
         /// Get the data stored in the cells we are aware of
         void getContent(std::vector<_T> &content) const
         {
-            for (auto i = hash_.begin(); i != hash_.end(); ++i)
-                content.push_back(i->second->data);
+            for (const auto &h : hash_)
+                content.push_back(h.second->data);
         }
 
         /// Get the set of coordinates where there are cells
         void getCoordinates(std::vector<Coord *> &coords) const
         {
-            for (iterator i = hash_.begin(); i != hash_.end(); ++i)
-                coords.push_back(i->first);
+            for (const auto &h : hash_)
+                coords.push_back(h.first);
         }
 
         /// Get the set of instantiated cells in the grid
         void getCells(CellArray &cells) const
         {
-            for (auto i = hash_.begin(); i != hash_.end(); ++i)
-                cells.push_back(i->second);
+            for (const auto &h : hash_)
+                cells.push_back(h.second);
         }
 
         /// Print the value of a coordinate to a stream
@@ -299,8 +300,8 @@ namespace ompl
             out << size() << " total cells " << std::endl;
             const std::vector<std::vector<Cell *>> &comp = components();
             out << comp.size() << " connected components: ";
-            for (std::size_t i = 0; i < comp.size(); ++i)
-                out << comp[i].size() << " ";
+            for (const auto &c : comp)
+                out << c.size() << " ";
             out << std::endl;
         }
 
@@ -312,8 +313,8 @@ namespace ompl
             getCells(content);
             hash_.clear();
 
-            for (unsigned int i = 0; i < content.size(); ++i)
-                delete content[i];
+            for (auto &c : content)
+                delete c;
         }
 
         /// Hash function for coordinates; see
@@ -329,7 +330,7 @@ namespace ompl
                     int high = h & 0xf8000000;
                     h = h << 5;
                     h = h ^ (high >> 27);
-                    h = h ^ s->at(i);
+                    h = h ^ (*s)[i];
                 }
                 return (std::size_t)h;
             }
@@ -384,6 +385,6 @@ namespace ompl
         /// The hash holding the cells
         CoordHash hash_;
     };
-}
+}  // namespace ompl
 
 #endif

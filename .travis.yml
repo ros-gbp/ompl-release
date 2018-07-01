@@ -2,45 +2,40 @@ language: cpp
 
 matrix:
   include:
-    # On Linux, exclude test_machine_specs; started to fail when we switched to g++-5
     - os: linux
       dist: trusty
       sudo: required
       compiler: gcc
-      env: PYTHONPATH=/usr/local/lib/python2.7/dist-packages PATH=${PATH}:${HOME}/castxml/bin JOBS=4 TEST_EXCLUDE='test_machine_spec'
       addons:
         apt:
           packages:
-            - libboost1.55-all-dev
-            - python-dev
+            - libboost-serialization1.55-dev
+            - libboost-filesystem1.55-dev
+            - libboost-system1.55-dev
+            - libboost-program-options1.55-dev
+            - libboost-test1.55-dev
             - libode-dev
             - libeigen3-dev
-            - python-pip
       cache:
         apt: true
-        directories:
-          - ${HOME}/castxml
-          - /usr/local
-    # On OS X, exclude test_machine_specs; fails due to "lazy" memory freeing in Release mode
-    # (test passes in Debug builds).
-    # On OS X, exclude test_random; fails due to bug in Boost.Random in 1.56.
     - os: osx
       osx_image: xcode9.1
       compiler: clang
-      env: JOBS=2 TEST_EXCLUDE='test_(machine_specs|random)'
-      cache:
-        directories:
-          - /usr/local
     - os: linux
       sudo: required
       services:
         - docker
-      env: DOCKERFILE="debian-jessie" JOBS=4
+      env: DOCKERFILE="debian-stretch" PYTHON=/usr/bin/python
     - os: linux
       sudo: required
       services:
         - docker
-      env: DOCKERFILE="ubuntu-xenial" JOBS=4 TEST_EXCLUDE='test_(machine_specs|random)'
+      env: DOCKERFILE="ubuntu-xenial" PYTHON=/usr/bin/python
+    - os: linux
+      sudo: required
+      services:
+        - docker
+      env: DOCKERFILE="ubuntu-bionic" PYTHON=/usr/bin/python3
 
 install:
   - if [ -n "$DOCKERFILE" ]; then
@@ -48,30 +43,22 @@ install:
     fi
   - if [ -z "$DOCKERFILE" -a "$TRAVIS_OS_NAME" = "osx" ]; then
       brew update;
-      brew install boost-python ode eigen castxml;
+      brew install eigen;
     fi
   - if [ -z "$DOCKERFILE" -a "$TRAVIS_OS_NAME" = "linux" ]; then
       sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test;
       sudo apt-get -y update;
       sudo apt-get -y install g++-5;
       export CXX=g++-5;
-      wget -O - https://midas3.kitware.com/midas/download/item/318227/castxml-linux.tar.gz | tar zxf - -C ${HOME};
     fi
-  - if [ -z "$DOCKERFILE" ]; then
-      sudo -H pip -v install pygccxml pyplusplus;
-    fi
-
 
 script:
   - if [ -n "$DOCKERFILE" ]; then
-      docker run "$DOCKERFILE"  /bin/sh -c "mkdir /root/ompl/build && cd /root/ompl/build && cmake -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp .. && make -j $JOBS && ctest -E '$TEST_EXCLUDE'";
+      docker run "$DOCKERFILE"  /bin/sh -c "mkdir /root/ompl/build && cd /root/ompl/build && cmake -DPYTHON_EXEC=$PYTHON -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp .. && make -j `nproc` && ctest";
     else
       mkdir -p build &&
       cd build &&
-      cmake -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp -DCASTXML=${HOME}/castxml/bin/castxml .. &&
-      make -j $JOBS &&
-      ctest -E "$TEST_EXCLUDE";
+      cmake -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp .. &&
+      make -j `nproc 2>/dev/null || sysctl -n hw.ncpu` &&
+      ctest;
     fi
-
-# disabled because this takes several hours to complete:
-#make -j $JOBS update_bindings &&

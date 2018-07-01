@@ -1,4 +1,10 @@
-option(OMPL_BUILD_TESTS "Build OMPL tests" ON)
+find_package(Boost 1.54 QUIET COMPONENTS unit_test_framework)
+if(Boost_UNIT_TEST_FRAMEWORK_LIBRARY)
+    option(OMPL_BUILD_TESTS "Build OMPL tests" ON)
+else()
+    option(OMPL_BUILD_TESTS "Build OMPL tests" OFF)
+endif()
+add_feature_info(OMPL_BUILD_TESTS "${OMPL_BUILD_TESTS}" "Whether to build the unit tests.")
 
 # configure location of resources (which are used by some demos, so this needs
 # to be outside of if-statement below)
@@ -10,14 +16,6 @@ endif(WIN32)
 configure_file("${TEST_RESOURCES_DIR}/config.h.in" "${TEST_RESOURCES_DIR}/config.h")
 
 if (OMPL_BUILD_TESTS)
-    find_package(Boost 1.54 COMPONENTS unit_test_framework REQUIRED)
-
-
-    # Disable teamcity reporting for tests by default
-    option(OMPL_TESTS_TEAMCITY "Enable unit test reporting to TeamCity" OFF)
-    file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" CURRENT_DIR)
-    configure_file("${CURRENT_DIR}/BoostTestTeamCityReporter.h.in" "${CURRENT_DIR}/BoostTestTeamCityReporter.h")
-
     # Test datastructures implementation
     add_ompl_test(test_heap datastructures/heap.cpp)
     add_ompl_test(test_grid datastructures/grid.cpp)
@@ -30,7 +28,10 @@ if (OMPL_BUILD_TESTS)
 
     # Test utilities
     add_ompl_test(test_random util/random/random.cpp)
-    add_ompl_test(test_machine_specs benchmark/machine_specs.cpp)
+    # optimization flags make this test fail
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_ompl_test(test_machine_specs benchmark/machine_specs.cpp)
+    endif()
 
     # Test base code
     add_ompl_test(test_state_operations base/state_operations.cpp)
@@ -44,6 +45,10 @@ if (OMPL_BUILD_TESTS)
     add_ompl_test(test_2dmap_geometric_simple geometric/2d/2dmap_simple.cpp)
     add_ompl_test(test_2dmap_ik geometric/2d/2dmap_ik.cpp)
     add_ompl_test(test_2dcircles_opt_geometric geometric/2d/2dcircles_optimize.cpp)
+    add_ompl_test(test_2dpath_simplifying geometric/2d/2dpath_simplifying.cpp)
+
+    # Test constrained planning
+    add_ompl_test(test_constraint_sphere geometric/constraint/test_sphere.cpp)
 
     # Test planning with controls on a 2D map
     add_ompl_test(test_2dmap_control control/2dmap/2dmap.cpp)

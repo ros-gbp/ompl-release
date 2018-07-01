@@ -1,7 +1,6 @@
-# Tutorials
+# Tutorials {#tutorials}
 
 Below we include a number of tutorials we believe are useful for understanding how OMPL works, grouped by level of difficulty. Users are encouraged to look at the [demos](group__demos.html) as well.
-
 
 ### Beginner
 
@@ -12,7 +11,7 @@ Below we include a number of tutorials we believe are useful for understanding h
 - [Visualizing solution paths](pathVisualization.html)
 - [Benchmarking planners](benchmark.html)
 - [Optimal planning](optimalPlanningTutorial.html)
-
+- [Constrained planning](constrainedPlanningTutorial.html)
 
 ### Intermediate
 

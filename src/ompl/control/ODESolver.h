@@ -44,7 +44,12 @@
 #include "ompl/util/ClassForward.h"
 
 #include <boost/version.hpp>
-#include <boost/numeric/odeint.hpp>
+#include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
+#include <boost/numeric/odeint/stepper/runge_kutta_cash_karp54.hpp>
+#include <boost/numeric/odeint/stepper/controlled_runge_kutta.hpp>
+#include <boost/numeric/odeint/stepper/generation/make_controlled.hpp>
+#include <boost/numeric/odeint/integrate/integrate_const.hpp>
+#include <boost/numeric/odeint/integrate/integrate_adaptive.hpp>
 namespace odeint = boost::numeric::odeint;
 #include <functional>
 #include <cassert>

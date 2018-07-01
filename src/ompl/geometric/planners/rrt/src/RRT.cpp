@@ -35,17 +35,22 @@
 /* Author: Ioan Sucan */
 
 #include "ompl/geometric/planners/rrt/RRT.h"
+#include <limits>
 #include "ompl/base/goals/GoalSampleableRegion.h"
 #include "ompl/tools/config/SelfConfig.h"
-#include <limits>
 
-ompl::geometric::RRT::RRT(const base::SpaceInformationPtr &si) : base::Planner(si, "RRT")
+ompl::geometric::RRT::RRT(const base::SpaceInformationPtr &si, bool addIntermediateStates)
+  : base::Planner(si, addIntermediateStates ? "RRTintermediate" : "RRT")
 {
     specs_.approximateSolutions = true;
     specs_.directed = true;
 
     Planner::declareParam<double>("range", this, &RRT::setRange, &RRT::getRange, "0.:1.:10000.");
     Planner::declareParam<double>("goal_bias", this, &RRT::setGoalBias, &RRT::getGoalBias, "0.:.05:1.");
+    Planner::declareParam<bool>("intermediate_states", this, &RRT::setIntermediateStates, &RRT::getIntermediateStates,
+                                "0,1");
+
+    addIntermediateStates_ = addIntermediateStates;
 }
 
 ompl::geometric::RRT::~RRT()
@@ -71,10 +76,7 @@ void ompl::geometric::RRT::setup()
 
     if (!nn_)
         nn_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Motion *>(this));
-    nn_->setDistanceFunction([this](const Motion *a, const Motion *b)
-                             {
-                                 return distanceFunction(a, b);
-                             });
+    nn_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
 }
 
 void ompl::geometric::RRT::freeMemory()
@@ -145,24 +147,46 @@ ompl::base::PlannerStatus ompl::geometric::RRT::solve(const base::PlannerTermina
 
         if (si_->checkMotion(nmotion->state, dstate))
         {
-            /* create a motion */
-            auto *motion = new Motion(si_);
-            si_->copyState(motion->state, dstate);
-            motion->parent = nmotion;
+            if (addIntermediateStates_)
+            {
+                std::vector<base::State *> states;
+                const unsigned int count = si_->getStateSpace()->validSegmentCount(nmotion->state, dstate);
 
-            nn_->add(motion);
+                if (si_->getMotionStates(nmotion->state, dstate, states, count, true, true))
+                    si_->freeState(states[0]);
+
+                for (std::size_t i = 1; i < states.size(); ++i)
+                {
+                    Motion *motion = new Motion;
+                    motion->state = states[i];
+                    motion->parent = nmotion;
+                    nn_->add(motion);
+
+                    nmotion = motion;
+                }
+            }
+            else
+            {
+                Motion *motion = new Motion(si_);
+                si_->copyState(motion->state, dstate);
+                motion->parent = nmotion;
+                nn_->add(motion);
+
+                nmotion = motion;
+            }
+
             double dist = 0.0;
-            bool sat = goal->isSatisfied(motion->state, &dist);
+            bool sat = goal->isSatisfied(nmotion->state, &dist);
             if (sat)
             {
                 approxdif = dist;
-                solution = motion;
+                solution = nmotion;
                 break;
             }
             if (dist < approxdif)
             {
                 approxdif = dist;
-                approxsol = motion;
+                approxsol = nmotion;
             }
         }
     }

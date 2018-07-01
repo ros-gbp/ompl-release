@@ -38,13 +38,19 @@
 #include "ompl/base/goals/GoalSampleableRegion.h"
 #include "ompl/tools/config/SelfConfig.h"
 
-ompl::geometric::RRTConnect::RRTConnect(const base::SpaceInformationPtr &si) : base::Planner(si, "RRTConnect")
+ompl::geometric::RRTConnect::RRTConnect(const base::SpaceInformationPtr &si, bool addIntermediateStates)
+  : base::Planner(si, addIntermediateStates ? "RRTConnectIntermediate" : "RRTConnect")
 {
     specs_.recognizedGoal = base::GOAL_SAMPLEABLE_REGION;
     specs_.directed = true;
 
     Planner::declareParam<double>("range", this, &RRTConnect::setRange, &RRTConnect::getRange, "0.:1.:10000.");
+    Planner::declareParam<bool>("intermediate_states", this, &RRTConnect::setIntermediateStates,
+                                &RRTConnect::getIntermediateStates, "0,1");
+
     connectionPoint_ = std::make_pair<base::State *, base::State *>(nullptr, nullptr);
+    distanceBetweenTrees_ = std::numeric_limits<double>::infinity();
+    addIntermediateStates_ = addIntermediateStates;
 }
 
 ompl::geometric::RRTConnect::~RRTConnect()
@@ -62,14 +68,8 @@ void ompl::geometric::RRTConnect::setup()
         tStart_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Motion *>(this));
     if (!tGoal_)
         tGoal_.reset(tools::SelfConfig::getDefaultNearestNeighbors<Motion *>(this));
-    tStart_->setDistanceFunction([this](const Motion *a, const Motion *b)
-                                 {
-                                     return distanceFunction(a, b);
-                                 });
-    tGoal_->setDistanceFunction([this](const Motion *a, const Motion *b)
-                                {
-                                    return distanceFunction(a, b);
-                                });
+    tStart_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
+    tGoal_->setDistanceFunction([this](const Motion *a, const Motion *b) { return distanceFunction(a, b); });
 }
 
 void ompl::geometric::RRTConnect::freeMemory()
@@ -109,6 +109,7 @@ void ompl::geometric::RRTConnect::clear()
     if (tGoal_)
         tGoal_->clear();
     connectionPoint_ = std::make_pair<base::State *, base::State *>(nullptr, nullptr);
+    distanceBetweenTrees_ = std::numeric_limits<double>::infinity();
 }
 
 ompl::geometric::RRTConnect::GrowState ompl::geometric::RRTConnect::growTree(TreeData &tree, TreeGrowingInfo &tgi,
@@ -126,31 +127,59 @@ ompl::geometric::RRTConnect::GrowState ompl::geometric::RRTConnect::growTree(Tre
     if (d > maxDistance_)
     {
         si_->getStateSpace()->interpolate(nmotion->state, rmotion->state, maxDistance_ / d, tgi.xstate);
+
+        /* Check if we have moved at all. Due to some stranger state spaces (e.g., the constrained state spaces),
+         * interpolate can fail and no progress is made. Without this check, the algorithm gets stuck in a loop as it
+         * thinks it is making progress, when none is actually occurring. */
+        if (si_->equalStates(nmotion->state, tgi.xstate))
+            return TRAPPED;
+
         dstate = tgi.xstate;
         reach = false;
     }
-    // if we are in the start tree, we just check the motion like we normally do;
-    // if we are in the goal tree, we need to check the motion in reverse, but checkMotion() assumes the first state it
-    // receives as argument is valid,
-    // so we check that one first
-    bool validMotion = tgi.start ?
-                           si_->checkMotion(nmotion->state, dstate) :
-                           si_->getStateValidityChecker()->isValid(dstate) && si_->checkMotion(dstate, nmotion->state);
 
-    if (validMotion)
+    bool validMotion = tgi.start ? si_->checkMotion(nmotion->state, dstate) :
+                                   si_->isValid(dstate) && si_->checkMotion(dstate, nmotion->state);
+
+    if (!validMotion)
+        return TRAPPED;
+
+    if (addIntermediateStates_)
     {
-        /* create a motion */
-        auto *motion = new Motion(si_);
+        const base::State *astate = tgi.start ? nmotion->state : dstate;
+        const base::State *bstate = tgi.start ? dstate : nmotion->state;
+
+        std::vector<base::State *> states;
+        const unsigned int count = si_->getStateSpace()->validSegmentCount(astate, bstate);
+
+        if (si_->getMotionStates(astate, bstate, states, count, true, true))
+            si_->freeState(states[0]);
+
+        for (std::size_t i = 1; i < states.size(); ++i)
+        {
+            Motion *motion = new Motion;
+            motion->state = states[i];
+            motion->parent = nmotion;
+            motion->root = nmotion->root;
+            tree->add(motion);
+
+            nmotion = motion;
+        }
+
+        tgi.xmotion = nmotion;
+    }
+    else
+    {
+        Motion *motion = new Motion(si_);
         si_->copyState(motion->state, dstate);
         motion->parent = nmotion;
         motion->root = nmotion->root;
-        tgi.xmotion = motion;
-
         tree->add(motion);
-        return reach ? REACHED : ADVANCED;
+
+        tgi.xmotion = motion;
     }
-    else
-        return TRAPPED;
+
+    return reach ? REACHED : ADVANCED;
 }
 
 ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::PlannerTerminationCondition &ptc)
@@ -193,6 +222,8 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
     TreeGrowingInfo tgi;
     tgi.xstate = si_->allocState();
 
+    Motion *approxsol = nullptr;
+    double approxdif = std::numeric_limits<double>::infinity();
     auto *rmotion = new Motion(si_);
     base::State *rstate = rmotion->state;
     bool startTree = true;
@@ -244,6 +275,14 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
             while (gsc == ADVANCED)
                 gsc = growTree(otherTree, tgi, rmotion);
 
+            /* update distance between trees */
+            const double newDist = tree->getDistanceFunction()(addedMotion, otherTree->nearest(addedMotion));
+            if (newDist < distanceBetweenTrees_)
+            {
+                distanceBetweenTrees_ = newDist;
+                // OMPL_INFORM("Estimated distance to go: %f", distanceBetweenTrees_);
+            }
+
             Motion *startMotion = startTree ? tgi.xmotion : addedMotion;
             Motion *goalMotion = startTree ? addedMotion : tgi.xmotion;
 
@@ -288,6 +327,22 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
                 solved = true;
                 break;
             }
+            else
+            {
+                // We didn't reach the goal, but if we were extending the start
+                // tree, then we can mark/improve the approximate path so far.
+                if (!startTree)
+                {
+                    // We were working from the startTree.
+                    double dist = 0.0;
+                    goal->isSatisfied(tgi.xmotion->state, &dist);
+                    if (dist < approxdif)
+                    {
+                        approxdif = dist;
+                        approxsol = tgi.xmotion;
+                    }
+                }
+            }
         }
     }
 
@@ -297,6 +352,23 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
 
     OMPL_INFORM("%s: Created %u states (%u start + %u goal)", getName().c_str(), tStart_->size() + tGoal_->size(),
                 tStart_->size(), tGoal_->size());
+
+    if (approxsol && !solved)
+    {
+        /* construct the solution path */
+        std::vector<Motion *> mpath;
+        while (approxsol != nullptr)
+        {
+            mpath.push_back(approxsol);
+            approxsol = approxsol->parent;
+        }
+
+        auto path(std::make_shared<PathGeometric>(si_));
+        for (int i = mpath.size() - 1; i >= 0; --i)
+            path->append(mpath[i]->state);
+        pdef_->addSolutionPath(path, true, approxdif, getName());
+        return base::PlannerStatus::APPROXIMATE_SOLUTION;
+    }
 
     return solved ? base::PlannerStatus::EXACT_SOLUTION : base::PlannerStatus::TIMEOUT;
 }
@@ -336,4 +408,7 @@ void ompl::geometric::RRTConnect::getPlannerData(base::PlannerData &data) const
 
     // Add the edge connecting the two trees
     data.addEdge(data.vertexIndex(connectionPoint_.first), data.vertexIndex(connectionPoint_.second));
+
+    // Add some info.
+    data.properties["approx goal distance REAL"] = boost::lexical_cast<std::string>(distanceBetweenTrees_);
 }

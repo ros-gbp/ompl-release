@@ -283,10 +283,8 @@ bool ompl::tools::Benchmark::saveResultsToStream(std::ostream &out) const
 
     out << "Running on " << (exp_.host.empty() ? "UNKNOWN" : exp_.host) << std::endl;
     out << "Starting at " << time::as_string(exp_.startTime) << std::endl;
-    out << "<<<|" << std::endl
-        << exp_.setupInfo << "|>>>" << std::endl;
-    out << "<<<|" << std::endl
-        << exp_.cpuInfo << "|>>>" << std::endl;
+    out << "<<<|" << std::endl << exp_.setupInfo << "|>>>" << std::endl;
+    out << "<<<|" << std::endl << exp_.cpuInfo << "|>>>" << std::endl;
 
     out << exp_.seed << " is the random seed" << std::endl;
     out << exp_.maxTime << " seconds per run" << std::endl;
@@ -335,8 +333,8 @@ bool ompl::tools::Benchmark::saveResultsToStream(std::ostream &out) const
 
         // print the property names
         out << properties.size() << " properties for each run" << std::endl;
-        for (auto &propertie : properties)
-            out << propertie << std::endl;
+        for (auto &property : properties)
+            out << property << std::endl;
 
         // print the data for each run
         out << planner.runs.size() << " runs" << std::endl;
@@ -453,8 +451,7 @@ void ompl::tools::Benchmark::benchmark(const Request &req)
         gsetup_->print(setupInfo);
     else
         csetup_->print(setupInfo);
-    setupInfo << std::endl
-              << "Properties of benchmarked planners:" << std::endl;
+    setupInfo << std::endl << "Properties of benchmarked planners:" << std::endl;
     for (auto &planner : planners_)
         planner->printProperties(setupInfo);
 
@@ -671,9 +668,8 @@ void ompl::tools::Benchmark::benchmark(const Request &req)
                 run["graph states INTEGER"] = std::to_string(pd.numVertices());
                 run["graph motions INTEGER"] = std::to_string(pd.numEdges());
 
-                for (std::map<std::string, std::string>::const_iterator it = pd.properties.begin();
-                     it != pd.properties.end(); ++it)
-                    run[it->first] = it->second;
+                for (const auto &prop : pd.properties)
+                    run[prop.first] = prop.second;
 
                 // execute post-run event, if set
                 try

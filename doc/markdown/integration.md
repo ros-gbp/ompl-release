@@ -1,4 +1,4 @@
-# Integration of OMPL in Other Systems
+# Integration of OMPL in Other Systems {#integration}
 
 OMPL provides a high level of abstraction to make it easier to integrate it into larger robot software systems. By design, the core OMPL library does not include any code for representing geometry and kinematics. However, to solve motion planning problems, we _do_ need to pick a particular representation for robots and the environment. Below we have listed a number of projects that have done this in very different ways.
 
@@ -11,6 +11,7 @@ OMPL provides a high level of abstraction to make it easier to integrate it into
   <a class="btn btn-default" href="#integration_kautham">Kautham</a>
   <a class="btn btn-default" href="#integration_verosim">VEROSIM</a>
   <a class="btn btn-default" href="#integration_aikido">AIKIDO</a>
+  <a class="btn btn-default" href="#integration_exotica">EXOTica</a>
   <a class="btn btn-default" href="#integration_rl">Robotics Library</a>
   <a class="btn btn-default" href="#integration_sims">SIMS</a>
   <a class="btn btn-default" href="#integration_omplapp">OMPL.app</a>
@@ -21,11 +22,11 @@ OMPL provides a high level of abstraction to make it easier to integrate it into
 
 <div class="row">
   <div class="col-lg-7 col-md-6 col-sm-5">
-    [MoveIt!](http://moveit.ros.org) provides motion planning functionality in [ROS](http://www.ros.org). Robots are described by [URDF files](http://wiki.ros.org/urdf), which describe the robot's geometry, kinematics, and additional robot information. MoveIt! can load such files, create appropriate state spaces for user-defined joint groups (e.g., “left arm,” “right leg,” “upper body,” “whole body,” etc.), and call OMPL planners to find feasible paths. There is support for inverse kinematics, which makes is possible to, e.g, include end-effector constraints. The paths produced by OMPL are translated by MoveIt! into dynamically feasible trajectories. The MoveIt! setup wizard will automatically discover self-collisions in a pre-processing phase. The environment can either be provided in the form of collection of geometric objects (triangles, spheres, cylinders, etc.), a point cloud (obtained from a RGBD sensor), or a combination of both. The adjacent video is a montage of MoveIt!'s capabilities in 2013.
+    [MoveIt!](http://moveit.ros.org) provides motion planning functionality in [ROS](http://www.ros.org). Robots are described by [URDF files](http://wiki.ros.org/urdf), which describe the robot's geometry, kinematics, and additional robot information. MoveIt! can load such files, create appropriate state spaces for user-defined joint groups (e.g., “left arm,” “right leg,” “upper body,” “whole body,” etc.), and call OMPL planners to find feasible paths. There is support for inverse kinematics, which makes is possible to, e.g, include end-effector constraints. The paths produced by OMPL are translated by MoveIt! into dynamically feasible trajectories. The MoveIt! setup wizard will automatically discover self-collisions in a pre-processing phase. The environment can either be provided in the form of collection of geometric objects (triangles, spheres, cylinders, etc.), a point cloud (obtained from a RGBD sensor), or a combination of both. The adjacent video is a montage of MoveIt!'s capabilities in 2017.
   </div>
   <div class="col-lg-5 col-md-6 col-sm-7">
     <div class="embed-responsive embed-responsive-16by9">
-      \htmlonly<iframe src="http://www.youtube.com/embed/dblCGZzeUqs"></iframe>\endhtmlonly
+      \htmlonly<iframe src="https://www.youtube.com/embed/0og1SaZYtRc"></iframe>\endhtmlonly
     </div>
   </div>
 </div>
@@ -102,7 +103,20 @@ OMPL provides a high level of abstraction to make it easier to integrate it into
 
 <div class="row">
   <div class="col-lg-7 col-md-6 col-sm-5">
-    AIKIDO is a C++ library, complete with Python bindings, for solving robotic motion planning and decision making problems. This library is tightly integrated with [DART](http://dartsim.github.io/) for kinematic/dynamics calculations and [OMPL](http://ompl.kavrakilab.org/) for motion planning. AIKIDO optionally integrates with [ROS](http://ros.org/), through the suite of `aikido_ros` packages, for execution on real robots.
+    [AIKIDO](https://github.com/personalrobotics/aikido) is a C++ library, complete with Python bindings, for solving robotic motion planning and decision making problems. This library is tightly integrated with [DART](http://dartsim.github.io/) for kinematic/dynamics calculations and [OMPL](http://ompl.kavrakilab.org/) for motion planning. AIKIDO optionally integrates with [ROS](http://ros.org/), through the suite of `aikido_ros` packages, for execution on real robots.
+  </div>
+</div>
+
+# EXOTica {#integration_exotica}
+
+<div class="row">
+  <div class="col-lg-7 col-md-6 col-sm-5">
+    [The EXOTica library](https://github.com/ipab-slmc/exotica) is a generic Optimization Toolset for Robotics platforms, written in C++. Its motivation is to provide a more streamlined process for developing algorithms for such tasks as Inverse-Kinematics and Trajectory Optimisation.  Its design advocates modularity, extensibility, and integration with ROS. The library itself consists of two major specifications, both of which are abstract classes. The first is the Problem Solver which defines the way optimization should proceed: current implementation include iLQG, AICO, Jacobian pseudo-inverse IK, and a range of sampling based solvers from the OMPL library. The other is the Task Definition which describes the task itself by providing two necessary functions to compute the forward map from Configuration space (say joint angles in IK) to Task space (say end-effector positions in IK). The tasks themselves can describe a complete trajectory. Using the library then involves passing in an initial state and requesting a solution to the problem, which may consist of a single configuration or complete trajectory.
+  </div>
+  <div class="col-lg-5 col-md-6 col-sm-7">
+    <div class="embed-responsive embed-responsive-16by9">
+      \htmlonly<iframe src="https://www.youtube.com/embed/AZQY_QOX0Pw"></iframe>\endhtmlonly
+    </div>
   </div>
 </div>
 
@@ -144,4 +158,3 @@ OMPL provides a high level of abstraction to make it easier to integrate it into
     </div>
   </div>
 </div>
-
