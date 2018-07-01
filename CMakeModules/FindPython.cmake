@@ -52,7 +52,7 @@ if (NOT PYTHON_EXEC)
         DOC "Location of python executable to use")
 endif(NOT PYTHON_EXEC)
 
-# On OS X the python executable might be symlinked to the "real" location
+# On macOS the python executable might be symlinked to the "real" location
 # of the python executable. The header files and libraries are found relative
 # to that path.
 # For CMake 2.6 and below, the REALPATH option is included in the ABSOLUTE option
@@ -159,6 +159,11 @@ function(find_python_module module)
         endif (_minversion STREQUAL "")
     endif(PYTHON_EXEC AND NOT PY_${module_upper})
     find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper})
+    if(PY_${module_upper})
+        set_property(GLOBAL APPEND PROPERTY PY_MODULES_FOUND "${module}")
+    else()
+        set_property(GLOBAL APPEND PROPERTY PY_MODULES_NOTFOUND "${module}")
+    endif()
 endfunction(find_python_module)
 
 # macro to attempt to find the *correct* Boost.Python library (i.e., the
