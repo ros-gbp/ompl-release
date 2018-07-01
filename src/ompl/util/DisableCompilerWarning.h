@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2010, Rice University.
+*  Copyright (c) 2018, Rice University
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,35 +32,36 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-/* Author: Ioan Sucan */
+/* Author: Mark Moll */
 
-#ifndef OMPL_CONFIG_
-#define OMPL_CONFIG_
+#ifndef OMPL_UTIL_DISABLE_COMPILER_WARNING_
+#define OMPL_UTIL_DISABLE_COMPILER_WARNING_
 
-/** \brief The ompl version */
-#define OMPL_VERSION "@OMPL_VERSION@"
+#define OMPL_PRAGMA_HELPER0(x) #x
+#define OMPL_PRAGMA_HELPER1(x, y) OMPL_PRAGMA_HELPER0(x diagnostic ignored y)
 
-#define OMPL_MAJOR_VERSION @OMPL_MAJOR_VERSION@
-#define OMPL_MINOR_VERSION @OMPL_MINOR_VERSION@
-#define OMPL_PATCH_VERSION @OMPL_PATCH_VERSION@
+// do nothing 
+#define OMPL_PUSH_DISABLE_GCC_WARNING(warning)
+#define OMPL_POP_GCC
+#define OMPL_PUSH_DISABLE_CLANG_WARNING(warning)
+#define OMPL_POP_CLANG
 
-#define OMPL_VERSION_VALUE ( OMPL_MAJOR_VERSION * 1000000       \
-                             + OMPL_MINOR_VERSION * 1000        \
-                             + OMPL_PATCH_VERSION)
-
-/** \brief Specify whether the MORSE extension is built */
-#cmakedefine01 OMPL_EXTENSION_MORSE
-
-/** \brief Specify whether the OpenDE extension is built */
-#cmakedefine01 OMPL_EXTENSION_OPENDE
-
-/** \brief Whether FLANN is installed */
-#cmakedefine01 OMPL_HAVE_FLANN
-
-/** \brief Whether SPOT is installed */
-#cmakedefine01 OMPL_HAVE_SPOT
-
-/** \brief Whether Numpy and Boost.Numpy are installed */
-#cmakedefine01 OMPL_HAVE_NUMPY
+#if defined(__clang__)
+    #undef OMPL_PUSH_DISABLE_CLANG_WARNING
+    #undef OMPL_POP_CLANG
+    #define OMPL_PUSH_DISABLE_CLANG_WARNING(warning)
+        _Pragma("clang diagnostic push") \
+        _Pragma(OMPL_PRAGMA_HELPER1(clang, OMPL_PRAGMA_HELPER0(warning)))
+    #define OMPL_POP_CLANG
+        _Pragma("GCC diagnostic pop")
+#elif defined __GNUC__
+    #undef OMPL_PUSH_DISABLE_GCC_WARNING
+    #undef OMPL_POP_GCC
+    #define OMPL_PUSH_DISABLE_GCC_WARNING(warning) \
+        _Pragma("GCC diagnostic push") \
+        _Pragma(OMPL_PRAGMA_HELPER1(GCC, OMPL_PRAGMA_HELPER0(warning)))
+    #define OMPL_POP_GCC                            \
+        _Pragma("GCC diagnostic pop")
+#endif
 
 #endif

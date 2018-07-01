@@ -37,6 +37,7 @@
 #include "ompl/control/planners/syclop/Syclop.h"
 #include "ompl/base/goals/GoalSampleableRegion.h"
 #include "ompl/base/ProblemDefinition.h"
+#include "ompl/util/DisableCompilerWarning.h"
 #include <limits>
 #include <stack>
 #include <algorithm>
@@ -291,7 +292,9 @@ void ompl::control::Syclop::initEdge(Adjacency &adj, const Region *source, const
 
 void ompl::control::Syclop::setupEdgeEstimates()
 {
+OMPL_PUSH_DISABLE_GCC_WARNING(-Wmaybe-uninitialized)
     EdgeIter ei, eend;
+OMPL_POP_GCC
     for (boost::tie(ei, eend) = boost::edges(graph_); ei != eend; ++ei)
     {
         Adjacency &adj = graph_[*ei];
@@ -365,7 +368,9 @@ void ompl::control::Syclop::clearGraphDetails()
     VertexIter vi, vend;
     for (boost::tie(vi, vend) = boost::vertices(graph_); vi != vend; ++vi)
         graph_[*vi].clear();
+OMPL_PUSH_DISABLE_GCC_WARNING(-Wmaybe-uninitialized)
     EdgeIter ei, eend;
+OMPL_POP_GCC
     for (boost::tie(ei, eend) = boost::edges(graph_); ei != eend; ++ei)
         graph_[*ei].clear();
     graphReady_ = false;
