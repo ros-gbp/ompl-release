@@ -468,7 +468,7 @@ class ompl_control_generator_t(code_generator_t):
             cls = self.ompl_ns.class_(lambda cls, slv=odesolver: cls.name.startswith(slv))
             cls.rename(odesolver)
             if odesolver=='ODEAdaptiveSolver':
-                cls.include_files.append('boost/numeric/odeint/stepper/generation/generation_runge_kutta_cash_karp54.hpp')
+                cls.include_files.append('boost/numeric/odeint.hpp')
         self.add_function_wrapper(
             'void(const ompl::control::ODESolver::StateType &, const ompl::control::Control*, ' \
             'ompl::control::ODESolver::StateType &)',
@@ -623,6 +623,11 @@ class ompl_geometric_generator_t(code_generator_t):
         self.std_ns.class_('vector<const ompl::base::State *>').exclude()
         # exclude deprecated API function
         self.ompl_ns.free_function('getDefaultPlanner').exclude()
+
+        # Using nullptr as a default value in method arguments causes
+        # problems with Boost.Python.
+        # See https://github.com/boostorg/python/issues/60
+        self.ompl_ns.class_('PathSimplifier').add_declaration_code('#define nullptr NULL\n')
 
         # Py++ seems to get confused by some methods declared in one module
         # that are *not* overridden in a derived class in another module. The

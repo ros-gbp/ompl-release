@@ -6,34 +6,36 @@ matrix:
       dist: trusty
       sudo: required
       compiler: gcc
-      env: JOBS=4
       addons:
         apt:
           packages:
-            - libboost1.55-all-dev
+            - libboost-serialization1.55-dev
+            - libboost-filesystem1.55-dev
+            - libboost-system1.55-dev
+            - libboost-program-options1.55-dev
+            - libboost-test1.55-dev
             - libode-dev
             - libeigen3-dev
       cache:
         apt: true
-        directories:
-          - /usr/local
     - os: osx
       osx_image: xcode9.1
       compiler: clang
-      env: JOBS=2
-      cache:
-        directories:
-          - /usr/local
     - os: linux
       sudo: required
       services:
         - docker
-      env: DOCKERFILE="debian-jessie" JOBS=4
+      env: DOCKERFILE="debian-stretch" PYTHON=/usr/bin/python
     - os: linux
       sudo: required
       services:
         - docker
-      env: DOCKERFILE="ubuntu-xenial" JOBS=4
+      env: DOCKERFILE="ubuntu-xenial" PYTHON=/usr/bin/python
+    - os: linux
+      sudo: required
+      services:
+        - docker
+      env: DOCKERFILE="ubuntu-bionic" PYTHON=/usr/bin/python3
 
 install:
   - if [ -n "$DOCKERFILE" ]; then
@@ -52,11 +54,11 @@ install:
 
 script:
   - if [ -n "$DOCKERFILE" ]; then
-      docker run "$DOCKERFILE"  /bin/sh -c "mkdir /root/ompl/build && cd /root/ompl/build && cmake -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp .. && make -j $JOBS && ctest";
+      docker run "$DOCKERFILE"  /bin/sh -c "mkdir /root/ompl/build && cd /root/ompl/build && cmake -DPYTHON_EXEC=$PYTHON -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp .. && make -j `nproc` && ctest";
     else
       mkdir -p build &&
       cd build &&
       cmake -DOMPL_REGISTRATION=OFF -DCMAKE_INSTALL_PREFIX=tmp .. &&
-      make -j $JOBS &&
+      make -j `nproc 2>/dev/null || sysctl -n hw.ncpu` &&
       ctest;
     fi

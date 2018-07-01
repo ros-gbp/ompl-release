@@ -129,15 +129,20 @@ namespace ompl
                 \param states the computed set of states along the specified motion
                 \param count is currently ignored
                 \param endpoints flag indicating whether \e s1 and \e s2 are to be included in states
-                \param alloc is currently ignored
-            */
+                \param alloc is currently ignored */
             unsigned int getMotionStates(const State *s1, const State *s2, std::vector<State *> &states,
                                          unsigned int count, bool endpoints, bool alloc) const override
             {
-                bool success = stateSpace_->as<ConstrainedStateSpace>()->discreteGeodesic(s1, s2, false, &states);
+                bool success = stateSpace_->as<ConstrainedStateSpace>()->discreteGeodesic(s1, s2, true, &states);
 
-                if (!success && states.size() == 0)
-                    states.push_back(cloneState(s1));
+                if (endpoints)
+                {
+                    if (!success && states.size() == 0)
+                        states.push_back(cloneState(s1));
+
+                    if (success)
+                        states.push_back(cloneState(s2));
+                }
 
                 return states.size();
             }
@@ -175,7 +180,7 @@ namespace ompl
                 auto &&atlas = stateSpace_->as<TangentBundleStateSpace>();
 
                 std::vector<State *> temp;
-                bool success = atlas->discreteGeodesic(s1, s2, false, &temp);
+                bool success = atlas->discreteGeodesic(s1, s2, true, &temp);
 
                 if (!success && temp.size() == 0)
                     temp.push_back(cloneState(s1));
