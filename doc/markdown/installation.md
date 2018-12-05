@@ -34,7 +34,7 @@
            <li><code>./install-ompl-ubuntu.sh --python</code> will install OMPL with Python bindings</li>
            <li><code>./install-ompl-ubuntu.sh --app</code> will install OMPL.app with Python bindings</li>
          </ul>
-         The script downloads and installs OMPL and all dependencies via <code>apt-get</code> &amp; <code>pip</code> and from source. It will ask for your password to install things. The script has been tested on vanilla installs of Ubuntu 14.04 (Trusty), 15.10 (Wily), 16.04 (Xenial), and 17.10 (Artful).
+         The script downloads and installs OMPL and all dependencies via <code>apt-get</code> &amp; <code>pip</code> and from source. It will ask for your password to install things. The script has been tested on vanilla installs of Ubuntu 14.04 (Trusty), 15.10 (Wily), 16.04 (Xenial), 17.10 (Artful), and 18.04 (Bionic).
       </div>
       <div role="tabpanel" class="tab-pane" id="ubuntubinary">
         Simply type:
@@ -90,11 +90,16 @@ cmake ../..</pre></li>
     <div class="tab-content">
       <div role="tabpanel" class="tab-pane active" id="osxmacports">
         Install <a href="http://www.macports.org">MacPorts</a> and type:<pre class="fragment">sudo port sync \; install ompl</pre>
+        If you want to build OMPL from source, you can install just the OMPL dependencies like so:
+        <pre class="fragment">sudo port install `port -q info --depends ompl | sed 's/,//g'`</pre>
       </div>
       <div role="tabpanel" class="tab-pane" id="osxhomebrew">
         Install <a href="http://brew.sh">Homebrew</a> and type:
         <pre class="fragment">brew install ompl</pre>
-        Note that the <a href="http://braumeister.org/formula/ompl">Homebrew formula</a> does not include Python bindings.
+        Note that the <a href="http://braumeister.org/formula/ompl">Homebrew formula</a> does not include Python bindings. You could install all the dependencies for OMPL and the python bindings and build OMPL from source:
+        <pre class="fragment">brew install eigen castxml numpy boost-python3 pypy3 flann</pre>
+        Make sure to use Homebrew's python3 in that case by calling <code>cmake</code> like so:
+        <pre class="fragment">cmake -DPYTHON_EXEC=/usr/local/bin/python3 ...</pre>
       </div>
     </div>
   </div>
