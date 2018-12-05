@@ -70,7 +70,7 @@ class ompl_base_generator_t(code_generator_t):
         """)
         # A C++ call like "foo.printProperties(std::cout)" will be replaced with
         # something more pythonesque: "print(foo.properties())"
-        default_replacement['printProperties'] = ('def("properties", &__printProperties)', """
+        replacement['printProperties'] = ('def("properties", &__printProperties)', """
         std::string __printProperties(%s* obj)
         {
             std::ostringstream s;
@@ -183,7 +183,6 @@ class ompl_base_generator_t(code_generator_t):
         pairStateDouble.include()
         # this operator seems to cause problems with g++-6
         pairStateDouble.operators('=').exclude()
-        self.ompl_ns.member_functions('maybeWrapBool').exclude()
         # rename some templated types
         self.ompl_ns.class_('SpecificParam< bool >').rename('SpecificParamBool')
         self.ompl_ns.class_('SpecificParam< char >').rename('SpecificParamChar')
@@ -257,6 +256,9 @@ class ompl_base_generator_t(code_generator_t):
         self.ompl_ns.member_functions('getValueLocations').exclude()
         # don't export map<std::string, ValueLocation>
         self.ompl_ns.member_functions('getValueLocationsByName').exclude()
+        # exclude member function for which there are multiple signatures
+        self.ompl_ns.class_('Goal').member_function('isSatisfied', arg_types=['::ompl::base::State const *', 'double *']).exclude()
+
         # don't expose double*
         self.ompl_ns.class_('RealVectorStateSpace').class_(
             'StateType').variable('values').exclude()

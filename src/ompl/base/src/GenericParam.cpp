@@ -1,51 +1,124 @@
 /*********************************************************************
-* Software License Agreement (BSD License)
-*
-*  Copyright (c) 2011, Willow Garage
-*  All rights reserved.
-*
-*  Redistribution and use in source and binary forms, with or without
-*  modification, are permitted provided that the following conditions
-*  are met:
-*
-*   * Redistributions of source code must retain the above copyright
-*     notice, this list of conditions and the following disclaimer.
-*   * Redistributions in binary form must reproduce the above
-*     copyright notice, this list of conditions and the following
-*     disclaimer in the documentation and/or other materials provided
-*     with the distribution.
-*   * Neither the name of the Willow Garage nor the names of its
-*     contributors may be used to endorse or promote products derived
-*     from this software without specific prior written permission.
-*
-*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-*  POSSIBILITY OF SUCH DAMAGE.
-*********************************************************************/
+ * Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2011, Willow Garage
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of the Willow Garage nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *********************************************************************/
 
 /* Author: Ioan Sucan */
 
 #include "ompl/base/GenericParam.h"
 #include "ompl/util/Exception.h"
+#include <limits>
 
-const std::string &ompl::base::GenericParam::truthValueTo01Str(const std::string &value)
+namespace ompl
 {
-    static const std::string falseValue = "0";
-    static const std::string trueValue = "1";
-    return (value.empty() || value == falseValue || value == "false" || value == "FALSE" || value == "False" ||
-            value == "f" || value == "F") ?
-               falseValue :
-               trueValue;
-}
+    namespace base
+    {
+        template <>
+        bool SpecificParam<bool>::lexical_cast(const std::string &value) const
+        {
+            return !(value.empty() || value == "0" || value == "false" || value == "FALSE" || value == "False" ||
+                     value == "f" || value == "F");
+        }
+        template <>
+        int SpecificParam<int>::lexical_cast(const std::string &value) const
+        {
+            return std::stoi(value);
+        }
+        template <>
+        long SpecificParam<long>::lexical_cast(const std::string &value) const
+        {
+            return std::stol(value);
+        }
+        template <>
+        long long SpecificParam<long long>::lexical_cast(const std::string &value) const
+        {
+            return std::stoll(value);
+        }
+        template <>
+        unsigned int SpecificParam<unsigned int>::lexical_cast(const std::string &value) const
+        {
+            return std::stoul(value);
+        }
+        template <>
+        unsigned long SpecificParam<unsigned long>::lexical_cast(const std::string &value) const
+        {
+            return std::stoul(value);
+        }
+        template <>
+        unsigned long long SpecificParam<unsigned long long>::lexical_cast(const std::string &value) const
+        {
+            return std::stoull(value);
+        }
+        template <>
+        float SpecificParam<float>::lexical_cast(const std::string &value) const
+        {
+            return std::stof(value);
+        }
+        template <>
+        double SpecificParam<double>::lexical_cast(const std::string &value) const
+        {
+            return std::stod(value);
+        }
+        template <>
+        long double SpecificParam<long double>::lexical_cast(const std::string &value) const
+        {
+            return std::stold(value);
+        }
+        template <>
+        char SpecificParam<char>::lexical_cast(const std::string &value) const
+        {
+            static const int minChar = std::numeric_limits<char>::min(), maxChar = std::numeric_limits<char>::max();
+            int val = std::stoi(value);
+            if (val < minChar || val > maxChar)
+                throw std::invalid_argument("character value out of range");
+            return val;
+        }
+        template <>
+        std::string SpecificParam<std::string>::lexical_cast(const std::string &value) const
+        {
+            return value;
+        }
+
+        template <>
+        std::string ompl::base::SpecificParam<std::string>::getValue() const
+        {
+            if (getter_)
+                return getter_();
+            else
+                return "";
+        }
+
+    }  // namespace base
+}  // namespace ompl
 
 bool ompl::base::ParamSet::setParam(const std::string &key, const std::string &value)
 {
