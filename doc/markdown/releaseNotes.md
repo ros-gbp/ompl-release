@@ -1,12 +1,17 @@
 # Release Notes {#releaseNotes}
 
+# OMPL 1.4.1 (December 5, 2018)
+
+- Made PlannerArena work with latest versions of R packages.
+- Misc. bug and documentation fixes.
+
 # OMPL 1.4.0 (June 25, 2018)
 
 - There is a new framework for planning with constraints that unifies and generalizes prior proposed algorithms such as CBiRRT2, AtlasRRT and TangentBundle-RRT. The framework decouples the methodology used for computing configurations that satisfy constraints from the high-level planning strategy. This allows the user to use any sampling-based planning algorithm in OMPL with arbitrary geometric constraints. See the [overview](constrainedPlanning.html), [tutorial](constrainedPlanningTutorial.html) and various [demos](group__demos.html) in `ompl/demos/constraint`.
 - Eigen3 is now a required dependency.
 - Various BIT* improvements.
 - PRM and RRTConnect can now return approximate solutions if an exact solution cannot be found. (This feature was already supported by several other planning algorithms in previous versions of OMPL.)
-- Add support for [Spot](https://spot.lrde.epita.fr), a library that can be used to create finite automata from LTL specifications. This can be used by ompl::control::LTLPlanner. See the [LTL with triangulation demo](LTLWithTriangulation_8cpp_source.html).
+- Added support for [Spot](https://spot.lrde.epita.fr), a library that can be used to create finite automata from LTL specifications. This can be used by ompl::control::LTLPlanner. See the [LTL with triangulation demo](LTLWithTriangulation_8cpp_source.html).
 - A new method has been added, ompl::geometric::PathSimplifier::perturbPath, which can locally optimize a path with respect to a user-specified optimization objective. Existing methods of ompl::geometric::PathSimplifier are now also cost-aware.
 - ompl::geometric::PathHybridization can now also optimize paths with respect to a user-specified optimization objective.
 - Fix for bugs in path simplification and interpolation that could cause path simplification to produce a path that was invalid or longer than the original path when using GoalRegions (as opposed to just one GoalState).
