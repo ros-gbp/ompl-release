@@ -1,3 +1,26 @@
+## ompl (melodic) - 1.4.1-0
+
+The packages in the `ompl` repository were released into the `melodic` distro by running `/usr/bin/bloom-release ompl -r melodic -t melodic` on `Wed, 05 Dec 2018 21:40:48 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.4.0-1`
+- old version: `1.4.0-1`
+- new version: `1.4.1-0`
+
+Versions of tools used:
+
+- bloom version: `0.6.9`
+- catkin_pkg version: `0.4.9`
+- rosdep version: `0.13.0`
+- rosdistro version: `0.7.0`
+- vcstools version: `0.1.40`
+
+
 ## ompl (melodic) - 1.4.0-1
 
 The packages in the `ompl` repository were released into the `melodic` distro by running `/usr/bin/bloom-release ompl -r melodic -t melodic` on `Sun, 01 Jul 2018 21:21:34 -0000`

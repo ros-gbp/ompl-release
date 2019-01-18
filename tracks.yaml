@@ -151,7 +151,7 @@ tracks:
     last_version: 1.4.1
     name: upstream
     patches: melodic
-    release_inc: '1'
+    release_inc: '0'
     release_repo_url: null
     release_tag: :{ask}
     ros_distro: melodic
