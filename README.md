@@ -1,3 +1,26 @@
+## ompl (dashing) - 1.4.2-1
+
+The packages in the `ompl` repository were released into the `dashing` distro by running `/usr/bin/bloom-release ompl -r dashing -t dashing` on `Thu, 30 May 2019 22:12:13 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://bitbucket.org/ompl/ompl
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `1.4.2-0`
+- new version: `1.4.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.8.0`
+- catkin_pkg version: `0.4.12`
+- rosdep version: `0.15.2`
+- rosdistro version: `0.7.4`
+- vcstools version: `0.1.40`
+
+
 ## ompl (melodic) - 1.4.2-0
 
 The packages in the `ompl` repository were released into the `melodic` distro by running `/usr/bin/bloom-release ompl -r melodic -t melodic` on `Fri, 18 Jan 2019 20:57:06 -0000`
