@@ -15,11 +15,11 @@ tracks:
     devel_branch: null
     last_version: 1.4.2
     name: upstream
-    patches: melodic
+    patches: dashing
     release_inc: '0'
     release_repo_url: null
     release_tag: :{ask}
-    ros_distro: melodic
+    ros_distro: dashing
     vcs_type: hg
     vcs_uri: https://bitbucket.org/ompl/ompl
     version: :{ask}
