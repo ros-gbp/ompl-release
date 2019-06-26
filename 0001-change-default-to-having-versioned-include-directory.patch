@@ -1,0 +1,25 @@
+From f58c3d24e1b7b10218de0447d6458a646d1437f3 Mon Sep 17 00:00:00 2001
+From: Mark Moll <mmoll@rice.edu>
+Date: Wed, 26 Jun 2019 08:29:10 -0500
+Subject: [PATCH] change default to having versioned include directory prefix
+
+---
+ CMakeModules/OMPLUtils.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeModules/OMPLUtils.cmake b/CMakeModules/OMPLUtils.cmake
+index 6f1eb84..53aa3d7 100644
+--- a/CMakeModules/OMPLUtils.cmake
++++ b/CMakeModules/OMPLUtils.cmake
+@@ -76,7 +76,7 @@ function(target_link_flags)
+     set(${ARGV0}_PKG_DEPS "${_pkg_dep_str}" PARENT_SCOPE)
+ endfunction()
+ 
+-option(OMPL_VERSIONED_INSTALL "Install header files in include/ompl-X.Y/ompl, where X and Y are the major and minor version numbers" OFF)
++option(OMPL_VERSIONED_INSTALL "Install header files in include/ompl-X.Y/ompl, where X and Y are the major and minor version numbers" ON)
+ add_feature_info(OMPL_VERSIONED_INSTALL "${OMPL_VERSIONED_INSTALL}" "Whether to install header files in\n   <prefix>/include/ompl-X.Y/ompl, where X and Y are the major and minor\n   version numbers")
+ if (OMPL_VERSIONED_INSTALL)
+     set(CMAKE_INSTALL_INCLUDEDIR "include/ompl-${OMPL_MAJOR_VERSION}.${OMPL_MINOR_VERSION}")
+-- 
+2.7.4
+
