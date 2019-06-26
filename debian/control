@@ -1,0 +1,12 @@
+Source: ros-dashing-ompl
+Section: misc
+Priority: extra
+Maintainer: Mark Moll <mmoll@rice.edu>
+Build-Depends: debhelper (>= 9.0.0), cmake, libboost-all-dev, libeigen3-dev, pkg-config, ros-dashing-ros-workspace
+Homepage: http://ompl.kavrakilab.org
+Standards-Version: 3.9.2
+
+Package: ros-dashing-ompl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libboost-all-dev, libeigen3-dev, ros-dashing-ros-workspace
+Description: OMPL is a free sampling-based motion planning library.
