@@ -1,4 +1,4 @@
-From dd2891774cb982215d0d0cf1d52475860f30aef7 Mon Sep 17 00:00:00 2001
+From 200ba7e24711ce2e4d4b7f6974d3640109c2a74e Mon Sep 17 00:00:00 2001
 From: Mark Moll <mark@picknik.ai>
 Date: Wed, 27 Nov 2019 10:31:39 -0600
 Subject: [PATCH] fix check for package.xml
