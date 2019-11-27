@@ -1,0 +1,25 @@
+From 9f2183d521647f4a9f8d2fa1a44c54c4a0158d35 Mon Sep 17 00:00:00 2001
+From: Mark Moll <mark@picknik.ai>
+Date: Wed, 27 Nov 2019 10:47:26 -0600
+Subject: [PATCH 2/2] fix check for package.xml
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fbde81b..3b5fca6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -243,7 +243,7 @@ if (OMPL_REGISTRATION)
+ endif()
+ 
+ # needed for ROS installation
+-if (EXISTS "package.xml")
++if (EXISTS "${CURRENT_SOURCE_DIR}/package.xml")
+     # install catkin package.xml
+     install(FILES package.xml DESTINATION "share/ompl")
+ endif()
+-- 
+2.17.1
+

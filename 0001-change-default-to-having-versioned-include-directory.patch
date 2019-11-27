@@ -1,7 +1,8 @@
-From 0d30b5953de9c08642d7837d31e758efc3c44b49 Mon Sep 17 00:00:00 2001
+From 7d285df7e20fd67623f1903a232c08425e897573 Mon Sep 17 00:00:00 2001
 From: Mark Moll <mmoll@rice.edu>
 Date: Wed, 26 Jun 2019 08:29:10 -0500
-Subject: [PATCH] change default to having versioned include directory prefix
+Subject: [PATCH 1/2] change default to having versioned include directory
+ prefix
 
 ---
  CMakeModules/OMPLUtils.cmake | 2 +-
