@@ -1,4 +1,4 @@
-From 14ed9484c7aa3a2c560f47b11c9708a17f74b611 Mon Sep 17 00:00:00 2001
+From a78d79f295e9c1da1b9aef6fdd911c92d08f1fba Mon Sep 17 00:00:00 2001
 From: Mark Moll <mark@picknik.ai>
 Date: Wed, 11 Dec 2019 21:50:41 -0600
 Subject: [PATCH 3/3] fix cmake error
