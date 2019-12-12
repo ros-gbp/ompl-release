@@ -76,7 +76,7 @@ function(target_link_flags)
     set(${ARGV0}_PKG_DEPS "${_pkg_dep_str}" PARENT_SCOPE)
 endfunction()
 
-option(OMPL_VERSIONED_INSTALL "Install header files in include/ompl-X.Y/ompl, where X and Y are the major and minor version numbers" ON)
+option(OMPL_VERSIONED_INSTALL "Install header files in include/ompl-X.Y/ompl, where X and Y are the major and minor version numbers" OFF)
 add_feature_info(OMPL_VERSIONED_INSTALL "${OMPL_VERSIONED_INSTALL}" "Whether to install header files in\n   <prefix>/include/ompl-X.Y/ompl, where X and Y are the major and minor\n   version numbers")
 if (OMPL_VERSIONED_INSTALL)
     set(CMAKE_INSTALL_INCLUDEDIR "include/ompl-${OMPL_MAJOR_VERSION}.${OMPL_MINOR_VERSION}")

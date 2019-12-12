@@ -243,7 +243,7 @@ if (OMPL_REGISTRATION)
 endif()
 
 # needed for ROS installation
-if (EXISTS "${CMAKE_SOURCE_DIR}/package.xml")
+if (EXISTS "package.xml")
     # install catkin package.xml
     install(FILES package.xml DESTINATION "share/ompl")
 endif()
