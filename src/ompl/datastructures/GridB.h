@@ -39,6 +39,9 @@
 
 #include "ompl/datastructures/GridN.h"
 #include "ompl/datastructures/BinaryHeap.h"
+#include "ompl/util/DisableCompilerWarning.h"
+
+OMPL_PUSH_DISABLE_CLANG_WARNING(-Woverloaded-virtual)
 
 namespace ompl
 {
@@ -70,6 +73,8 @@ namespace ompl
             ~CellX() override = default;
 
             void *heapElement;
+
+            EIGEN_MAKE_ALIGNED_OPERATOR_NEW
         };
 
         /// \endcond
@@ -354,5 +359,7 @@ namespace ompl
         externalBHeap external_;
     };
 }
+
+OMPL_POP_CLANG
 
 #endif

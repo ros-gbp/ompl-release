@@ -76,15 +76,15 @@ namespace ompl
 
             /** \brief The data collected from a run of a planner is
                 stored as key-value pairs. */
-            typedef std::map<std::string, std::string> RunProperties;
+            using RunProperties = std::map<std::string, std::string>;
 
-            typedef std::vector<std::map<std::string, std::string>> RunProgressData;
+            using RunProgressData = std::vector<std::map<std::string, std::string>>;
 
             /** \brief Signature of function that can be called before a planner execution is started */
-            typedef std::function<void(const base::PlannerPtr &)> PreSetupEvent;
+            using PreSetupEvent = std::function<void(const base::PlannerPtr &)>;
 
             /** \brief Signature of function that can be called after a planner execution is completed */
-            typedef std::function<void(const base::PlannerPtr &, RunProperties &)> PostSetupEvent;
+            using PostSetupEvent = std::function<void(const base::PlannerPtr &, RunProperties &)>;
 
             /** \brief The data collected after running a planner multiple times */
             struct PlannerExperiment
@@ -158,14 +158,13 @@ namespace ompl
                 /** \brief Constructor that provides default values for all members */
                 Request(double maxTime = 5.0, double maxMem = 4096.0, unsigned int runCount = 100,
                         double timeBetweenUpdates = 0.05, bool displayProgress = true, bool saveConsoleOutput = true,
-                        bool useThreads = true, bool simplify = true)
+                        bool simplify = true)
                   : maxTime(maxTime)
                   , maxMem(maxMem)
                   , runCount(runCount)
                   , timeBetweenUpdates(timeBetweenUpdates)
                   , displayProgress(displayProgress)
                   , saveConsoleOutput(saveConsoleOutput)
-                  , useThreads(useThreads)
                   , simplify(simplify)
                 {
                 }
@@ -177,6 +176,7 @@ namespace ompl
                 double maxMem;
 
                 /// \brief the number of times to run each planner; 100 by default
+                /// If set to 0, then run each planner as many times as possible with maxTime *total* time limit
                 unsigned int runCount;
 
                 /// \brief When collecting time-varying data from a planner during its execution, the planner's progress
@@ -189,11 +189,6 @@ namespace ompl
                 /// \brief flag indicating whether console output is saved (in an automatically generated filename);
                 /// true by default
                 bool saveConsoleOutput;
-
-                /// \brief flag indicating whether planner runs should be run in a separate thread. It is advisable to
-                /// set this to \c true, so that a crashing planner doesn't result in a crash of the benchmark program.
-                /// However, in the Python bindings this is set to \c false to avoid multi-threading problems in Python.
-                bool useThreads;
 
                 /// \brief flag indicating whether simplification should be applied to path; true by default
                 bool simplify;

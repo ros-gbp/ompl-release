@@ -38,7 +38,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "2DmapSetup.h"
+#include "ompl/util/DisableCompilerWarning.h"
+OMPL_PUSH_DISABLE_CLANG_WARNING(-Wunused-function)
+OMPL_PUSH_DISABLE_GCC_WARNING(-Wunused-function)
 #include "2DcirclesSetup.h"
+OMPL_POP_CLANG
 #include <iostream>
 
 #include "ompl/base/spaces/RealVectorStateProjections.h"
@@ -727,7 +731,7 @@ BOOST_FIXTURE_TEST_SUITE(MyPlanTestFixture, PlanTest)
     {                                                                        \
         if (VERBOSE)                                                        \
             printf("\n\n\n*****************************\nTesting %s ...\n", #Name); \
-        runAllTests<Name##Test>(MinSuccess, MaxAvgTime * MACHINE_SPEED_FACTOR); \
+        runAllTests<Name##Test>(MinSuccess, (MaxAvgTime) * MACHINE_SPEED_FACTOR); \
         if (VERBOSE)                                                        \
             printf("Done with %s.\n", #Name);                                \
     }

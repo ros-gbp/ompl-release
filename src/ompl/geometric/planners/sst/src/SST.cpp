@@ -53,6 +53,8 @@ ompl::geometric::SST::SST(const base::SpaceInformationPtr &si) : base::Planner(s
     Planner::declareParam<double>("selection_radius", this, &SST::setSelectionRadius, &SST::getSelectionRadius, "0.:.1:"
                                                                                                                 "100");
     Planner::declareParam<double>("pruning_radius", this, &SST::setPruningRadius, &SST::getPruningRadius, "0.:.1:100");
+
+    addPlannerProgressProperty("best cost REAL", [this] { return std::to_string(this->prevSolutionCost_.value()); });
 }
 
 ompl::geometric::SST::~SST()
@@ -396,7 +398,7 @@ ompl::base::PlannerStatus ompl::geometric::SST::solve(const base::PlannerTermina
 
     OMPL_INFORM("%s: Created %u states in %u iterations", getName().c_str(), nn_->size(), iterations);
 
-    return base::PlannerStatus(solved, approximate);
+    return {solved, approximate};
 }
 
 void ompl::geometric::SST::getPlannerData(base::PlannerData &data) const

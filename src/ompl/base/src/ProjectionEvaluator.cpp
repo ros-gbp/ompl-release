@@ -142,7 +142,7 @@ void ompl::base::ProjectionEvaluator::setBounds(const RealVectorBounds &bounds)
 
 void ompl::base::ProjectionEvaluator::setCellSizes(unsigned int dim, double cellSize)
 {
-    if (cellSizes_.size() >= dim)
+    if (cellSizes_.size() <= dim)
         OMPL_ERROR("Dimension %u is not defined for projection evaluator", dim);
     else
     {
@@ -200,8 +200,8 @@ namespace ompl
                                                     Eigen::Ref<Eigen::VectorXi> coord)
         {
             // compute floor(projection ./ cellSizes)
-            coord = projection.cwiseQuotient(Eigen::Map<const Eigen::VectorXd>(cellSizes.data(), cellSizes.size()))
-                        .unaryExpr((double (*)(double))std::floor)
+            coord = (projection.array() / Eigen::Map<const Eigen::VectorXd>(cellSizes.data(), cellSizes.size()).array())
+                        .floor()
                         .cast<int>();
         }
     }  // namespace base

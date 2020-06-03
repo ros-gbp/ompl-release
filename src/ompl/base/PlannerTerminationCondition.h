@@ -53,7 +53,7 @@ namespace ompl
             signaled to terminate its computation. Otherwise,
             computation continues while this function returns false,
             until a solution is found. */
-        typedef std::function<bool()> PlannerTerminationConditionFn;
+        using PlannerTerminationConditionFn = std::function<bool()>;
         /** \brief Encapsulate a termination condition for a motion
             planner. Planners will call operator() to decide whether
             they should terminate before a solution is found or
@@ -130,37 +130,6 @@ namespace ompl
         /** \brief Return a termination condition that will become true as soon as the problem definition has an exact
          * solution */
         PlannerTerminationCondition exactSolnPlannerTerminationCondition(const ompl::base::ProblemDefinitionPtr &pdef);
-
-        /** \brief A class to run a planner for a specific number of iterations. Casts to a PTC for use with
-         * Planner::solve */
-        class IterationTerminationCondition
-        {
-        public:
-            /** \brief Construct a termination condition that can be evaluated numIterations times before returning
-             * true. */
-            IterationTerminationCondition(unsigned int numIterations);
-
-            /** \brief Increment the number of times eval has been called and check if the planner should now terminate.
-             */
-            bool eval();
-
-            /** \brief Reset the number of times the IterationTeriminationCondition has been called. */
-            void reset();
-
-            /** \brief Cast to a PlannerTerminationCondition */
-            operator PlannerTerminationCondition();
-
-            unsigned int getTimesCalled() const
-            {
-                return timesCalled_;
-            }
-
-        private:
-            /** \brief The max number of iterations the condition can be called before returning true. */
-            unsigned int maxCalls_;
-            /** \brief The number of times called so far.*/
-            unsigned int timesCalled_;
-        };
     }
 }
 

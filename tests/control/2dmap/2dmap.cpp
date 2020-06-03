@@ -50,7 +50,6 @@
 #include "ompl/control/planners/syclop/SyclopRRT.h"
 #include "ompl/control/planners/syclop/GridDecomposition.h"
 
-#include "../../resources/config.h"
 #include "../../resources/environment2D.h"
 
 using namespace ompl;
@@ -526,7 +525,7 @@ BOOST_FIXTURE_TEST_SUITE(MyPlanTestFixture, PlanTest)
     {                                                                                                                  \
         if (VERBOSE)                                                                                                   \
             printf("\n\n\n*****************************\nTesting %s ...\n", #Name);                                    \
-        runAllTests<Name##Test>(MinSuccess, MaxAvgTime * MACHINE_SPEED_FACTOR);                                        \
+        runAllTests<Name##Test>(MinSuccess, (MaxAvgTime) * MACHINE_SPEED_FACTOR);                                        \
         if (VERBOSE)                                                                                                   \
             printf("Done with %s.\n", #Name);                                                                          \
     }

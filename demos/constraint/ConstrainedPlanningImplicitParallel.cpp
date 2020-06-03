@@ -34,6 +34,8 @@
 
 /* Author: Zachary Kingston */
 
+#include <utility>
+
 #include "ConstrainedPlanningCommon.h"
 
 class ParallelBase
@@ -47,13 +49,8 @@ class ParallelChain : public ob::Constraint, public ParallelBase
 {
 public:
     ParallelChain(const unsigned int n, Eigen::Vector3d offset, unsigned int links, unsigned int chainNum,
-                  double length = 1, double jointRadius = 0.2)
-      : ob::Constraint(n, links)
-      , offset_(offset)
-      , links_(links)
-      , chainNum_(chainNum)
-      , length_(length)
-      , jointRadius_(jointRadius)
+                  double length = 1)
+      : ob::Constraint(n, links), offset_(std::move(offset)), links_(links), chainNum_(chainNum), length_(length)
     {
         if (links % 2 == 0)
             throw ompl::Exception("Number of links must be odd!");
@@ -165,7 +162,6 @@ private:
     const unsigned int links_;
     const unsigned int chainNum_;
     const double length_;
-    const double jointRadius_;
 };
 
 class ParallelPlatform : public ob::Constraint, public ParallelBase
@@ -214,11 +210,11 @@ public:
         }
     }
 
-    void getStart(Eigen::VectorXd &x) override
+    void getStart(Eigen::VectorXd &) override
     {
     }
 
-    void getGoal(Eigen::VectorXd &x) override
+    void getGoal(Eigen::VectorXd &) override
     {
     }
 
@@ -243,27 +239,27 @@ public:
         Eigen::Vector3d offset = Eigen::Vector3d::UnitX();
         for (unsigned int i = 0; i < chains_; ++i)
         {
-            addConstraint(new ParallelChain(chains * links * 3, offset, links, i, length, jointRadius));
+            addConstraint(std::make_shared<ParallelChain>(chains * links * 3, offset, links, i, length));
             offset =
                 Eigen::AngleAxisd(2 * boost::math::constants::pi<double>() / (double)chains, Eigen::Vector3d::UnitZ()) *
                 offset;
         }
 
-        addConstraint(new ParallelPlatform(links, chains, radius));
+        addConstraint(std::make_shared<ParallelPlatform>(links, chains, radius));
     }
 
     void getStart(Eigen::VectorXd &x) override
     {
         x = Eigen::VectorXd(3 * links_ * chains_);
-        for (unsigned int i = 0; i < constraints_.size(); ++i)
-            dynamic_cast<ParallelBase *>(constraints_[i])->getStart(x);
+        for (auto &constraint : constraints_)
+            std::dynamic_pointer_cast<ParallelBase>(constraint)->getStart(x);
     }
 
     void getGoal(Eigen::VectorXd &x) override
     {
         x = Eigen::VectorXd(3 * links_ * chains_);
-        for (unsigned int i = 0; i < constraints_.size(); ++i)
-            dynamic_cast<ParallelBase *>(constraints_[i])->getGoal(x);
+        for (auto &constraint : constraints_)
+            std::dynamic_pointer_cast<ParallelBase>(constraint)->getGoal(x);
     }
 
     ob::StateSpacePtr createSpace() const
@@ -321,23 +317,23 @@ public:
         class ParallelProjection : public ob::ProjectionEvaluator
         {
         public:
-            ParallelProjection(ob::StateSpacePtr space, unsigned int links, unsigned int chains)
+            ParallelProjection(const ob::StateSpacePtr &space, unsigned int links, unsigned int chains)
               : ob::ProjectionEvaluator(space), chains_(chains), links_(links)
             {
             }
 
-            unsigned int getDimension(void) const
+            unsigned int getDimension() const override
             {
                 return 1;
             }
 
-            void defaultCellSizes(void)
+            void defaultCellSizes() override
             {
                 cellSizes_.resize(1);
                 cellSizes_[0] = 0.1;
             }
 
-            void project(const ob::State *state, Eigen::Ref<Eigen::VectorXd> projection) const
+            void project(const ob::State *state, Eigen::Ref<Eigen::VectorXd> projection) const override
             {
                 auto &&x = *state->as<ob::ConstrainedStateSpace::StateType>();
 
@@ -408,7 +404,7 @@ bool parallelPlanningBench(ConstrainedProblem &cp, std::vector<enum PLANNER_TYPE
 
     cp.runBenchmark();
 
-    return 0;
+    return false;
 }
 
 bool parallelPlanning(bool output, enum SPACE_TYPE space, std::vector<enum PLANNER_TYPE> &planners, unsigned int links,
@@ -471,7 +467,7 @@ int main(int argc, char **argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("help"))
+    if (vm.count("help") != 0u)
     {
         std::cout << desc << std::endl;
         return 1;

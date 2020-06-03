@@ -5,12 +5,12 @@ if(NOT CASTXML)
 endif()
 
 if (CASTXML)
-    set(CASTXMLCFLAGS "-std=c++11 $ENV{CASTXMLCFLAGS}")
+    set(CASTXMLCFLAGS "-std=c++14 $ENV{CASTXMLCFLAGS}")
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(CASTXMLCOMPILER "g++")
     else()
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")
             set(CASTXMLCOMPILER "clang++")
         else()
             if (MSVC)
@@ -21,7 +21,6 @@ if (CASTXML)
 
     # workaround for problem between Xcode and castxml on Mojave
     if (APPLE AND CMAKE_CXX_COMPILER MATCHES "/Applications/Xcode.app/Contents/Developer/Toolchains/.*")
-
         set(CASTXMLCOMPILER_PATH "/usr/bin/clang++")
     else()
         set(CASTXMLCOMPILER_PATH "${CMAKE_CXX_COMPILER}")
@@ -35,14 +34,14 @@ compiler_path=${CASTXMLCOMPILER_PATH}
 ")
 
     set(_candidate_include_path
-        "${OMPL_INCLUDE_DIR}"
-        "${OMPLAPP_INCLUDE_DIR}"
+        "${OMPL_INCLUDE_DIRS}"
+        "${OMPLAPP_INCLUDE_DIRS}"
         "${PYTHON_INCLUDE_DIRS}"
         "${Boost_INCLUDE_DIR}"
         "${ASSIMP_INCLUDE_DIRS}"
-        "${ODEINT_INCLUDE_DIR}"
         "${EIGEN3_INCLUDE_DIR}"
-        "${OMPL_INCLUDE_DIR}/../py-bindings")
+        "${CMAKE_SOURCE_DIR}/py-bindings"
+        "${CMAKE_SOURCE_DIR}/ompl/py-bindings")
     if(MINGW)
         execute_process(COMMAND "${CMAKE_CXX_COMPILER}" "-dumpversion"
             OUTPUT_VARIABLE _version OUTPUT_STRIP_TRAILING_WHITESPACE)

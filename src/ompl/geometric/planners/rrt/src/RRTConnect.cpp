@@ -158,7 +158,7 @@ ompl::geometric::RRTConnect::GrowState ompl::geometric::RRTConnect::growTree(Tre
 
         for (std::size_t i = 1; i < states.size(); ++i)
         {
-            Motion *motion = new Motion;
+            auto *motion = new Motion;
             motion->state = states[i];
             motion->parent = nmotion;
             motion->root = nmotion->root;
@@ -171,7 +171,7 @@ ompl::geometric::RRTConnect::GrowState ompl::geometric::RRTConnect::growTree(Tre
     }
     else
     {
-        Motion *motion = new Motion(si_);
+        auto *motion = new Motion(si_);
         si_->copyState(motion->state, dstate);
         motion->parent = nmotion;
         motion->root = nmotion->root;
@@ -267,7 +267,7 @@ ompl::base::PlannerStatus ompl::geometric::RRTConnect::solve(const base::Planner
 
             /* attempt to connect trees */
 
-            /* if reached, it means we used rstate directly, no need top copy again */
+            /* if reached, it means we used rstate directly, no need to copy again */
             if (gs != REACHED)
                 si_->copyState(rstate, tgi.xstate);
 

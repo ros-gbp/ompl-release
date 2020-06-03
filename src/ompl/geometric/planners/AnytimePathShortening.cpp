@@ -34,18 +34,46 @@
 
 /* Author: Ryan Luna */
 
+#include <algorithm>  // for std::min
+#include <boost/algorithm/string.hpp>
+
 #include "ompl/geometric/planners/AnytimePathShortening.h"
+#include "ompl/geometric/planners/fmt/BFMT.h"
+#include "ompl/geometric/planners/est/BiEST.h"
+#include "ompl/geometric/planners/rrt/BiTRRT.h"
+#include "ompl/geometric/planners/informedtrees/BITstar.h"
+#include "ompl/geometric/planners/kpiece/BKPIECE1.h"
+#include "ompl/geometric/planners/est/EST.h"
+#include "ompl/geometric/planners/fmt/FMT.h"
+#include "ompl/geometric/planners/kpiece/KPIECE1.h"
+#include "ompl/geometric/planners/rrt/LazyLBTRRT.h"
+#include "ompl/geometric/planners/prm/LazyPRM.h"
+#include "ompl/geometric/planners/prm/LazyPRMstar.h"
+#include "ompl/geometric/planners/rrt/LazyRRT.h"
+#include "ompl/geometric/planners/kpiece/LBKPIECE1.h"
+#include "ompl/geometric/planners/rrt/LBTRRT.h"
+#include "ompl/geometric/planners/pdst/PDST.h"
+#include "ompl/geometric/planners/prm/PRM.h"
+#include "ompl/geometric/planners/prm/PRMstar.h"
+#include "ompl/geometric/planners/est/ProjEST.h"
+#include "ompl/geometric/planners/rrt/RRT.h"
+#include "ompl/geometric/planners/rrt/RRTConnect.h"
+#include "ompl/geometric/planners/rrt/RRTstar.h"
+#include "ompl/geometric/planners/rrt/RRTXstatic.h"
+#include "ompl/geometric/planners/sbl/SBL.h"
+#include "ompl/geometric/planners/prm/SPARS.h"
+#include "ompl/geometric/planners/prm/SPARStwo.h"
+#include "ompl/geometric/planners/sst/SST.h"
+#include "ompl/geometric/planners/stride/STRIDE.h"
+#include "ompl/geometric/planners/rrt/TRRT.h"
 #include "ompl/geometric/PathHybridization.h"
 #include "ompl/geometric/PathSimplifier.h"
 #include "ompl/tools/config/SelfConfig.h"
 #include "ompl/base/objectives/PathLengthOptimizationObjective.h"
 #include "ompl/util/String.h"
 
-#include <thread>
-
 ompl::geometric::AnytimePathShortening::AnytimePathShortening(const ompl::base::SpaceInformationPtr &si)
-  : ompl::base::Planner(si, "APS")
-  , defaultNumPlanners_(std::max(1u, std::thread::hardware_concurrency()))
+  : ompl::base::Planner(si, "APS"), defaultNumPlanners_(std::max(1u, std::thread::hardware_concurrency()))
 {
     specs_.approximateSolutions = true;
     specs_.multithreaded = true;
@@ -59,11 +87,10 @@ ompl::geometric::AnytimePathShortening::AnytimePathShortening(const ompl::base::
                                         &AnytimePathShortening::maxHybridizationPaths, "0:1:50");
     Planner::declareParam<unsigned int>("num_planners", this, &AnytimePathShortening::setDefaultNumPlanners,
                                         &AnytimePathShortening::getDefaultNumPlanners, "0:64");
+    Planner::declareParam<std::string>("planners", this, &AnytimePathShortening::setPlanners,
+                                       &AnytimePathShortening::getPlanners);
 
-    addPlannerProgressProperty("best cost REAL", [this]
-                               {
-                                   return getBestCost();
-                               });
+    addPlannerProgressProperty("best cost REAL", [this] { return getBestCost(); });
 }
 
 ompl::geometric::AnytimePathShortening::~AnytimePathShortening() = default;
@@ -89,20 +116,25 @@ void ompl::geometric::AnytimePathShortening::addPlanner(base::PlannerPtr &planne
     planners_.push_back(planner);
 }
 
-void ompl::geometric::AnytimePathShortening::setProblemDefinition(const ompl::base::ProblemDefinitionPtr &pdef)
+void ompl::geometric::AnytimePathShortening::addPath(const geometric::PathGeometricPtr &path, base::Planner *planner)
 {
-    ompl::base::Planner::setProblemDefinition(pdef);
-    for (auto &planner : planners_)
-        planner->setProblemDefinition(pdef);
+    const base::OptimizationObjectivePtr &opt(pdef_->getOptimizationObjective());
+    base::Cost pathCost = path->cost(opt);
+    std::lock_guard<std::mutex> _(lock_);
+    if (opt->isCostBetterThan(pathCost, bestCost_))
+    {
+        bestCost_ = pathCost;
+        pdef_->addSolutionPath(path, false, 0.0, planner->getName());
+    }
+    else if (planner != this)
+        pdef_->addSolutionPath(path, false, 0.0, planner->getName());
 }
 
 ompl::base::PlannerStatus
 ompl::geometric::AnytimePathShortening::solve(const ompl::base::PlannerTerminationCondition &ptc)
 {
-    base::Goal *goal = pdef_->getGoal().get();
-    std::vector<std::thread *> threads(planners_.size());
+    std::vector<std::thread> threads;
     geometric::PathHybridization phybrid(si_);
-    base::Path *bestSln = nullptr;
 
     base::OptimizationObjectivePtr opt = pdef_->getOptimizationObjective();
     if (!opt)
@@ -113,90 +145,95 @@ ompl::geometric::AnytimePathShortening::solve(const ompl::base::PlannerTerminati
         opt = std::make_shared<base::PathLengthOptimizationObjective>(si_);
         pdef_->setOptimizationObjective(opt);
     }
-    else
-    {
-        if (dynamic_cast<base::PathLengthOptimizationObjective *>(opt.get()) == nullptr)
-            OMPL_WARN("The optimization objective is not set for path length.  The specified optimization criteria may "
-                      "not be optimized over.");
-    }
 
     // Disable output from the motion planners, except for errors
     msg::LogLevel currentLogLevel = msg::getLogLevel();
     msg::setLogLevel(std::max(msg::LOG_ERROR, currentLogLevel));
-    while (!ptc())
+
+    // Clear any previous planning data for the set of planners
+    clear();
+    // Spawn a thread for each planner.  This will shortcut the best path after solving.
+    for (auto &planner : planners_)
+        threads.emplace_back([this, planner, &ptc] { return threadSolve(planner.get(), ptc); });
+
+    geometric::PathSimplifier ps(si_);
+    geometric::PathGeometric *sln = nullptr, *prevLastPath = nullptr;
+    bestCost_ = opt->infiniteCost();
+    std::size_t prevSolCount = 0;
+    while (!ptc)
     {
         // We have found a solution that is good enough
-        if ((bestSln != nullptr) && opt->isSatisfied(base::Cost(bestSln->length())))
-            break;
-
-        // Clear any previous planning data for the set of planners
-        clear();
-
-        // Spawn a thread for each planner.  This will shortcut the best path after solving.
-        for (size_t i = 0; i < threads.size(); ++i)
-            threads[i] = new std::thread([this, i, &ptc]
-                                         {
-                                             return threadSolve(planners_[i].get(), ptc);
-                                         });
-
-        // Join each thread, and then delete it
-        for (auto &thread : threads)
+        if (opt->isSatisfied(bestCost_))
         {
-            thread->join();
-            delete thread;
+            ptc.terminate();
+            break;
         }
 
-        // Hybridize the set of paths computed.  Add the new hybrid path to the mix.
-        if (hybridize_ && !ptc())
+        // Hybridize the set of paths computed. Add the new hybrid path to the mix.
+        unsigned int solCount = pdef_->getSolutionCount();
+        if (hybridize_ && !ptc && solCount > 1)
         {
             const std::vector<base::PlannerSolution> &paths = pdef_->getSolutions();
-            for (size_t j = 0; j < paths.size() && j < maxHybridPaths_ && !ptc(); ++j)
-                phybrid.recordPath(paths[j].path_, false);
-
-            phybrid.computeHybridPath();
-            const base::PathPtr &hsol = phybrid.getHybridPath();
-            if (hsol)
+            std::size_t numPaths = std::min(solCount, maxHybridPaths_);
+            geometric::PathGeometric *lastPath = static_cast<PathGeometric *>(paths[numPaths - 1].path_.get());
+            // check if new solution paths have been added to top numPaths paths
+            if (lastPath != prevLastPath || (prevSolCount < solCount && solCount <= maxHybridPaths_))
             {
-                auto *pg = static_cast<geometric::PathGeometric *>(hsol.get());
-                double difference = 0.0;
-                bool approximate = !goal->isSatisfied(pg->getStates().back(), &difference);
-                pdef_->addSolutionPath(hsol, approximate, difference);
+                for (size_t j = 0; j < numPaths && !ptc; ++j)
+                    phybrid.recordPath(std::static_pointer_cast<PathGeometric>(paths[j].path_), false);
+
+                phybrid.computeHybridPath();
+                sln = phybrid.getHybridPath().get();
+                prevLastPath = lastPath;
             }
+            else
+                sln = static_cast<PathGeometric *>(pdef_->getSolutionPath().get());
+            prevSolCount = solCount;
         }
+        else if (solCount > 0)
+            sln = static_cast<PathGeometric *>(pdef_->getSolutionPath().get());
 
-        // keep track of the best solution found so far
-        if (pdef_->getSolutionCount() > 0)
-            bestSln = pdef_->getSolutionPath().get();
+        if (sln)
+        {
+            auto pathCopy(std::make_shared<geometric::PathGeometric>(*sln));
+            if (shortcut_)  // Shortcut the path
+                if (!ps.simplify(*pathCopy, ptc, true))
+                    // revert if shortcutting failed
+                    pathCopy = std::make_shared<geometric::PathGeometric>(*sln);
+            addPath(pathCopy, this);
+        }
+        if (hybridize_ && phybrid.pathCount() >= maxHybridPaths_)
+            phybrid.clear();
     }
+
+    for (auto &thread : threads)
+        thread.join();
+
     msg::setLogLevel(currentLogLevel);
-
-    if (bestSln != nullptr)
-    {
-        if (goal->isSatisfied(static_cast<geometric::PathGeometric *>(bestSln)->getStates().back()))
-            return base::PlannerStatus::EXACT_SOLUTION;
-        return base::PlannerStatus::APPROXIMATE_SOLUTION;
-    }
-    return base::PlannerStatus::UNKNOWN;
+    return pdef_->getSolutionCount() > 0 ? base::PlannerStatus::EXACT_SOLUTION : base::PlannerStatus::UNKNOWN;
 }
 
 void ompl::geometric::AnytimePathShortening::threadSolve(base::Planner *planner,
                                                          const base::PlannerTerminationCondition &ptc)
 {
-    // compute a motion plan
-    base::PlannerStatus status = planner->solve(ptc);
+    // create a local clone of the problem definition where we keep at most one solution
+    auto pdef = pdef_->clone();
+    geometric::PathSimplifier ps(si_);
 
-    // Shortcut the best solution found so far
-    if (shortcut_ && status == base::PlannerStatus::EXACT_SOLUTION)
+    planner->setProblemDefinition(pdef);
+    while (!ptc)
     {
-        geometric::PathGeometric *sln = static_cast<geometric::PathGeometric *>(pdef_->getSolutionPath().get());
-        auto pathCopy(std::make_shared<geometric::PathGeometric>(*sln));
-        geometric::PathSimplifier ps(pdef_->getSpaceInformation());
-        if (ps.shortcutPath(*pathCopy))
+        if (planner->solve(ptc) == base::PlannerStatus::EXACT_SOLUTION)
         {
-            double difference = 0.0;
-            bool approximate = !pdef_->getGoal()->isSatisfied(pathCopy->getStates().back(), &difference);
-            pdef_->addSolutionPath(pathCopy, approximate, difference);
+            geometric::PathGeometric *sln = static_cast<geometric::PathGeometric *>(pdef->getSolutionPath().get());
+            auto pathCopy(std::make_shared<geometric::PathGeometric>(*sln));
+            if (shortcut_)  // Shortcut the path
+                ps.shortcutPath(*pathCopy);
+            addPath(pathCopy, planner);
         }
+
+        planner->clear();
+        pdef->clearSolutionPaths();
     }
 }
 
@@ -205,6 +242,7 @@ void ompl::geometric::AnytimePathShortening::clear()
     Planner::clear();
     for (auto &planner : planners_)
         planner->clear();
+    bestCost_ = base::Cost(std::numeric_limits<double>::quiet_NaN());
 }
 
 void ompl::geometric::AnytimePathShortening::getPlannerData(ompl::base::PlannerData &data) const
@@ -302,8 +340,124 @@ unsigned int ompl::geometric::AnytimePathShortening::getDefaultNumPlanners() con
 
 std::string ompl::geometric::AnytimePathShortening::getBestCost() const
 {
-    base::Cost bestCost(std::numeric_limits<double>::quiet_NaN());
-    if (pdef_ && pdef_->getSolutionCount() > 0)
-        bestCost = base::Cost(pdef_->getSolutionPath()->length());
-    return ompl::toString(bestCost.value());
+    return ompl::toString(bestCost_.value());
+}
+
+void ompl::geometric::AnytimePathShortening::setPlanners(const std::string &plannerList)
+{
+    std::vector<std::string> plannerStrings;
+
+    boost::split(plannerStrings, plannerList, boost::is_any_of(","));
+
+    planners_.clear();
+    for (const auto &plannerString : plannerStrings)
+    {
+        std::vector<std::string> plannerAndParams;
+        boost::split(plannerAndParams, plannerString, boost::is_any_of("[ ]"));
+        const std::string &plannerName = plannerAndParams[0];
+
+        if (plannerName == "BFMT")
+            planners_.push_back(std::make_shared<geometric::BFMT>(si_));
+        else if (plannerName == "BiEST")
+            planners_.push_back(std::make_shared<geometric::BiEST>(si_));
+        else if (plannerName == "BiTRRT")
+            planners_.push_back(std::make_shared<geometric::BiTRRT>(si_));
+        else if (plannerName == "BITstar")
+            planners_.push_back(std::make_shared<geometric::BITstar>(si_));
+        else if (plannerName == "BKPIECE")
+            planners_.push_back(std::make_shared<geometric::BKPIECE1>(si_));
+        else if (plannerName == "EST")
+            planners_.push_back(std::make_shared<geometric::EST>(si_));
+        else if (plannerName == "FMT")
+            planners_.push_back(std::make_shared<geometric::FMT>(si_));
+        else if (plannerName == "KPIECE")
+            planners_.push_back(std::make_shared<geometric::KPIECE1>(si_));
+        else if (plannerName == "LazyLBTRRT")
+            planners_.push_back(std::make_shared<geometric::LazyLBTRRT>(si_));
+        else if (plannerName == "LazyPRM")
+            planners_.push_back(std::make_shared<geometric::LazyPRM>(si_));
+        else if (plannerName == "LazyPRMstar")
+            planners_.push_back(std::make_shared<geometric::LazyPRMstar>(si_));
+        else if (plannerName == "LazyRRT")
+            planners_.push_back(std::make_shared<geometric::LazyRRT>(si_));
+        else if (plannerName == "LBKPIECE")
+            planners_.push_back(std::make_shared<geometric::LBKPIECE1>(si_));
+        else if (plannerName == "LBTRRT")
+            planners_.push_back(std::make_shared<geometric::LBTRRT>(si_));
+        else if (plannerName == "PDST")
+            planners_.push_back(std::make_shared<geometric::PDST>(si_));
+        else if (plannerName == "PRM")
+            planners_.push_back(std::make_shared<geometric::PRM>(si_));
+        else if (plannerName == "PRMstar")
+            planners_.push_back(std::make_shared<geometric::PRMstar>(si_));
+        else if (plannerName == "ProjEST")
+            planners_.push_back(std::make_shared<geometric::ProjEST>(si_));
+        else if (plannerName == "RRT")
+            planners_.push_back(std::make_shared<geometric::RRT>(si_));
+        else if (plannerName == "RRTConnect")
+            planners_.push_back(std::make_shared<geometric::RRTConnect>(si_));
+        else if (plannerName == "RRTstar")
+            planners_.push_back(std::make_shared<geometric::RRTstar>(si_));
+        else if (plannerName == "RRTXstatic")
+            planners_.push_back(std::make_shared<geometric::RRTXstatic>(si_));
+        else if (plannerName == "SBL")
+            planners_.push_back(std::make_shared<geometric::SBL>(si_));
+        else if (plannerName == "SPARS")
+            planners_.push_back(std::make_shared<geometric::SPARS>(si_));
+        else if (plannerName == "SPARStwo")
+            planners_.push_back(std::make_shared<geometric::SPARStwo>(si_));
+        else if (plannerName == "SST")
+            planners_.push_back(std::make_shared<geometric::SST>(si_));
+        else if (plannerName == "STRIDE")
+            planners_.push_back(std::make_shared<geometric::STRIDE>(si_));
+        else if (plannerName == "TRRT")
+            planners_.push_back(std::make_shared<geometric::TRRT>(si_));
+        else
+            OMPL_ERROR("Unknown planner name: %s", plannerName.c_str());
+
+        std::vector<std::string> paramValue;
+        for (auto it = plannerAndParams.begin() + 1; it != plannerAndParams.end(); ++it)
+            if (!it->empty())
+            {
+                boost::split(paramValue, *it, boost::is_any_of("="));
+                planners_.back()->params().setParam(paramValue[0], paramValue[1]);
+            }
+    }
+}
+
+std::string ompl::geometric::AnytimePathShortening::getPlanners() const
+{
+    std::stringstream ss;
+    for (unsigned int i = 0; i < planners_.size(); ++i)
+    {
+        if (i > 0)
+            ss << ',';
+        ss << planners_[i]->getName();
+
+        std::map<std::string, std::string> params;
+        planners_[i]->params().getParams(params);
+        if (params.size() > 0)
+        {
+            ss << '[';
+            for (auto it = params.begin(); it != params.end(); ++it)
+            {
+                if (it != params.begin())
+                    ss << ' ';
+                ss << it->first << '=' << it->second;
+            }
+            ss << ']';
+        }
+    }
+    return ss.str();
+}
+
+void ompl::geometric::AnytimePathShortening::printSettings(std::ostream &out) const
+{
+    Planner::printSettings(out);
+    out << "Settings for planner instances in AnytimePathShortening instance:\n";
+    for (const auto &planner : planners_)
+    {
+        out << "* ";
+        planner->printSettings(out);
+    }
 }

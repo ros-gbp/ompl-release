@@ -64,7 +64,6 @@ namespace og = ompl::geometric;
 
 static const double SOLUTION_TIME = 5.0;
 static const bool VERBOSE = true;
-static const unsigned int TRIALS = 10;
 
 class Sphere : public ob::Constraint
 {
@@ -419,7 +418,7 @@ BOOST_FIXTURE_TEST_SUITE(MyPlanTestFixture, PlanTest)
     {                                                                                                                  \
         if (VERBOSE)                                                                                                   \
             printf("\n\n\n*****************************\nTesting %s %s ...\n", #Type, #Name);                          \
-        runAllTests<Name##Test, Type>(MinSuccess, MaxAvgTime * MACHINE_SPEED_FACTOR);                                  \
+        runAllTests<Name##Test, Type>(MinSuccess, (MaxAvgTime) * MACHINE_SPEED_FACTOR);                                  \
         if (VERBOSE)                                                                                                   \
             printf("Done with %s.\n", #Name);                                                                          \
     }

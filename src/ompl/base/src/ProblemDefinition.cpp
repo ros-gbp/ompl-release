@@ -165,6 +165,19 @@ ompl::base::ProblemDefinition::ProblemDefinition(SpaceInformationPtr si)
 {
 }
 
+ompl::base::ProblemDefinitionPtr ompl::base::ProblemDefinition::clone() const
+{
+    auto result = std::make_shared<ProblemDefinition>(si_);
+    result->startStates_.reserve(startStates_.size());
+    for (const auto &state : startStates_)
+        result->addStartState(state);
+    result->setGoal(goal_);
+    result->setOptimizationObjective(optimizationObjective_);
+    result->setSolutionNonExistenceProof(nonExistenceProof_);
+
+    return result;
+}
+
 void ompl::base::ProblemDefinition::setStartAndGoalStates(const State *start, const State *goal, const double threshold)
 {
     clearStartStates();
@@ -345,19 +358,11 @@ ompl::base::PathPtr ompl::base::ProblemDefinition::isStraightLinePathValid() con
         }
         else
         {
-            for (unsigned int i = 0; i < startStates_.size() && !path; ++i)
-            {
-                const State *start = startStates_[i];
+            for (const auto start : startStates_)
                 if (start && si_->isValid(start) && si_->satisfiesBounds(start))
-                {
-                    for (unsigned int j = 0; j < states.size() && !path; ++j)
-                        if (si_->checkMotion(start, states[j]))
-                        {
-                            path = std::make_shared<geometric::PathGeometric>(si_, start, states[j]);
-                            break;
-                        }
-                }
-            }
+                    for (const auto state : states)
+                        if (si_->checkMotion(start, state))
+                            return std::make_shared<geometric::PathGeometric>(si_, start, state);
         }
     }
 

@@ -46,7 +46,6 @@
 #include "ompl/base/spaces/constraint/ConstrainedStateSpace.h"
 
 #include <boost/math/constants/constants.hpp>
-#include <Eigen/Core>
 
 namespace ompl
 {
@@ -128,7 +127,7 @@ namespace ompl
         class AtlasStateSpace : public ConstrainedStateSpace
         {
         public:
-            typedef std::function<double(AtlasChart *)> AtlasChartBiasFunction;
+            using AtlasChartBiasFunction = std::function<double(AtlasChart *)>;
             using NNElement = std::pair<const StateType *, std::size_t>;
 
             /** \brief A state in an atlas represented as a real vector in

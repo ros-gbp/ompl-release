@@ -59,7 +59,7 @@
 #include <ompl/geometric/planners/est/EST.h>
 #include <ompl/geometric/planners/est/BiEST.h>
 #include <ompl/geometric/planners/est/ProjEST.h>
-#include <ompl/geometric/planners/bitstar/BITstar.h>
+#include <ompl/geometric/planners/informedtrees/BITstar.h>
 #include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/planners/prm/SPARS.h>
 #include <ompl/geometric/planners/prm/SPARStwo.h>
@@ -374,7 +374,7 @@ public:
     }
 
     template <typename _T>
-    std::shared_ptr<_T> createPlannerRange(bool intermediate)
+    std::shared_ptr<_T> createPlannerRange(bool /*intermediate*/)
     {
         auto &&planner = createPlannerIntermediate<_T>();
 
@@ -523,7 +523,7 @@ public:
         bench->addExperimentParameter("n - k", "INTEGER", std::to_string(constraint->getCoDimension()));
         bench->addExperimentParameter("space", "INTEGER", std::to_string(type));
 
-        request = ot::Benchmark::Request(c_opt.time, 2048, 100, 0.1, true, false, true, true);
+        request = ot::Benchmark::Request(c_opt.time, 2048, 100, 0.1, true, false, true);
 
         for (auto planner : planners)
             bench->addPlanner(getPlanner(planner, problem));

@@ -164,7 +164,7 @@ ompl::base::PlannerStatus ompl::geometric::PDST::solve(const base::PlannerTermin
 
     OMPL_INFORM("%s: Created %u states and %u cells", getName().c_str(), priorityQueue_.size(), bsp_->size());
 
-    return base::PlannerStatus(hasSolution, isApproximate);
+    return {hasSolution, isApproximate};
 }
 
 ompl::geometric::PDST::Motion *ompl::geometric::PDST::propagateFrom(Motion *motion, base::State *start,
@@ -241,7 +241,8 @@ void ompl::geometric::PDST::clear()
     iteration_ = 1;
     lastGoalMotion_ = nullptr;
     freeMemory();
-    bsp_ = new Cell(1., projectionEvaluator_->getBounds(), 0);
+    if (projectionEvaluator_ && projectionEvaluator_->hasBounds())
+        bsp_ = new Cell(1., projectionEvaluator_->getBounds(), 0);
 }
 
 void ompl::geometric::PDST::freeMemory()

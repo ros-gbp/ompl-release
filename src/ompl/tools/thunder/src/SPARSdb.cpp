@@ -35,15 +35,16 @@
 
 /* Author: Andrew Dobson, Dave Coleman */
 
-#include <ompl/tools/thunder/SPARSdb.h>
-#include <ompl/geometric/planners/prm/ConnectionStrategy.h>
 #include <ompl/base/goals/GoalSampleableRegion.h>
+#include <ompl/geometric/planners/prm/ConnectionStrategy.h>
 #include <ompl/tools/config/SelfConfig.h>
+#include <ompl/tools/thunder/SPARSdb.h>
 #include <ompl/util/Console.h>
+#include <boost/foreach.hpp>
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/incremental_components.hpp>
 #include <boost/property_map/vector_property_map.hpp>
-#include <boost/foreach.hpp>
+#include <random>
 
 // Allow hooks for visualizing planner
 //#define OMPL_THUNDER_DEBUG
@@ -190,7 +191,7 @@ void ompl::geometric::SPARSdb::freeMemory()
         nn_->clear();
 }
 
-bool ompl::geometric::SPARSdb::getSimilarPaths(int nearestK, const base::State *start, const base::State *goal,
+bool ompl::geometric::SPARSdb::getSimilarPaths(int /*nearestK*/, const base::State *start, const base::State *goal,
                                                CandidateSolution &candidateSolution,
                                                const base::PlannerTerminationCondition &ptc)
 {
@@ -815,7 +816,7 @@ bool ompl::geometric::SPARSdb::addPathToRoadmap(const base::PlannerTerminationCo
         shuffledIDs.push_back(i);  // 1 2 3...
     }
 
-    std::random_shuffle(shuffledIDs.begin(), shuffledIDs.end());  // using built-in random generator:
+    std::shuffle(shuffledIDs.begin(), shuffledIDs.end(), std::mt19937(std::random_device()()));
 
     // Add each state randomly
     for (unsigned long shuffledID : shuffledIDs)
@@ -1055,7 +1056,7 @@ void ompl::geometric::SPARSdb::checkQueryStateInitialization()
     }
 }
 
-ompl::base::PlannerStatus ompl::geometric::SPARSdb::solve(const base::PlannerTerminationCondition &ptc)
+ompl::base::PlannerStatus ompl::geometric::SPARSdb::solve(const base::PlannerTerminationCondition &)
 {
     // Disabled
     return base::PlannerStatus::TIMEOUT;

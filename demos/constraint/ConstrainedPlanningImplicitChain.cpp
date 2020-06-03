@@ -55,9 +55,7 @@ private:
          * the wall. */
         bool within(double x) const
         {
-            if (x < (offset_ - thickness_) || x > (offset_ + thickness_))
-                return false;
-            return true;
+            return !(x < (offset_ - thickness_) || x > (offset_ + thickness_));
         }
 
         bool checkJoint(const Eigen::Ref<const Eigen::VectorXd> &v) const
@@ -302,24 +300,24 @@ public:
         class ChainProjection : public ob::ProjectionEvaluator
         {
         public:
-            ChainProjection(ob::StateSpacePtr space, unsigned int links, double radius)
+            ChainProjection(const ob::StateSpacePtr &space, unsigned int links, double radius)
               : ob::ProjectionEvaluator(space), links_(links), radius_(radius)
             {
             }
 
-            unsigned int getDimension(void) const
+            unsigned int getDimension() const override
             {
                 return 2;
             }
 
-            void defaultCellSizes(void)
+            void defaultCellSizes() override
             {
                 cellSizes_.resize(2);
                 cellSizes_[0] = 0.1;
                 cellSizes_[1] = 0.1;
             }
 
-            void project(const ob::State *state, Eigen::Ref<Eigen::VectorXd> projection) const
+            void project(const ob::State *state, Eigen::Ref<Eigen::VectorXd> projection) const override
             {
                 auto &&x = *state->as<ob::ConstrainedStateSpace::StateType>();
                 const unsigned int s = 3 * (links_ - 1);
@@ -395,7 +393,7 @@ bool chainPlanningBench(ConstrainedProblem &cp, std::vector<enum PLANNER_TYPE> &
 
     cp.runBenchmark();
 
-    return 0;
+    return false;
 }
 
 bool chainPlanning(bool output, enum SPACE_TYPE space, std::vector<enum PLANNER_TYPE> &planners, unsigned int links,
@@ -465,7 +463,7 @@ int main(int argc, char **argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("help"))
+    if (vm.count("help") != 0u)
     {
         std::cout << desc << std::endl;
         return 1;

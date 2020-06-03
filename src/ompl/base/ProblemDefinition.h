@@ -141,8 +141,8 @@ namespace ompl
         /** \brief When a planner has an intermediate solution (e.g., optimizing planners), a function with this
            signature can be called
             to report the states of that solution. */
-        typedef std::function<void(const Planner *, const std::vector<const base::State *> &, const Cost)>
-            ReportIntermediateSolutionFn;
+        using ReportIntermediateSolutionFn =
+            std::function<void(const Planner *, const std::vector<const base::State *> &, const Cost)>;
 
         OMPL_CLASS_FORWARD(OptimizationObjective);
 
@@ -158,6 +158,14 @@ namespace ompl
 
             /** \brief Create a problem definition given the SpaceInformation it is part of */
             ProblemDefinition(SpaceInformationPtr si);
+
+            /** \brief Return a copy of the problem definition
+             *
+             * A deep copy is made of the start and goal states. A shallow copy is made
+             * of shared ptrs. The set of solutions paths and the intermediate solution
+             * callback function are not copied.
+             */
+            ProblemDefinitionPtr clone() const;
 
             virtual ~ProblemDefinition()
             {

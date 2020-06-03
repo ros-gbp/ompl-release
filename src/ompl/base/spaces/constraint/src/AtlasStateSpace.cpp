@@ -200,7 +200,7 @@ void ompl::base::AtlasStateSampler::sampleGaussian(State *state, const State *me
 ompl::base::AtlasStateSpace::AtlasStateSpace(const StateSpacePtr &ambientSpace, const ConstraintPtr &constraint,
                                              bool separate)
   : ConstrainedStateSpace(ambientSpace, constraint)
-  , biasFunction_([](AtlasChart *c) -> double { return 1; })
+  , biasFunction_([](AtlasChart *) -> double { return 1; })
   , separate_(separate)
 {
     setRho(delta_ * ompl::magic::ATLAS_STATE_SPACE_RHO_MULTIPLIER);
@@ -346,10 +346,10 @@ ompl::base::AtlasChart *ompl::base::AtlasStateSpace::owningChart(const StateType
 
     double best = epsilon_;
     AtlasChart *chart = nullptr;
-    for (auto near = nearby.begin(); near != nearby.end(); ++near)
+    for (auto & near : nearby)
     {
         // The point must lie in the chart's validity region and polytope
-        auto owner = charts_[near->second];
+        auto owner = charts_[near.second];
         owner->psiInverse(*state, u_t);
         owner->phi(u_t, *temp);
 

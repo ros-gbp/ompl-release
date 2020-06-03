@@ -182,7 +182,7 @@ bool torusPlanningBench(ConstrainedProblem &cp, std::vector<enum PLANNER_TYPE> &
 {
     cp.setupBenchmark(planners, "torus");
     cp.runBenchmark();
-    return 0;
+    return false;
 }
 
 bool torusPlanning(bool output, enum SPACE_TYPE space, std::vector<enum PLANNER_TYPE> &planners,
@@ -267,5 +267,5 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    return torusPlanning(output, space, planners, c_opt, a_opt, bench, outer, inner, maze);
+    return static_cast<int>(torusPlanning(output, space, planners, c_opt, a_opt, bench, outer, inner, maze));
 }

@@ -101,7 +101,7 @@ bool ompl::base::ConstrainedMotionValidator::checkMotion(const State *s1, const 
 
 ompl::base::ConstrainedStateSpace::ConstrainedStateSpace(const StateSpacePtr &space, const ConstraintPtr &constraint)
   : WrapperStateSpace(space)
-  , constraint_(std::move(constraint))
+  , constraint_(constraint)
   , n_(space->getDimension())
   , k_(constraint_->getManifoldDimension())
 {
@@ -110,7 +110,7 @@ ompl::base::ConstrainedStateSpace::ConstrainedStateSpace(const StateSpacePtr &sp
 
 void ompl::base::ConstrainedStateSpace::constrainedSanityChecks(unsigned int flags) const
 {
-    StateType *s1 = allocState()->as<StateType>();
+    auto *s1 = allocState()->as<StateType>();
     State *s2 = allocState();
     StateSamplerPtr ss = allocStateSampler();
 
@@ -288,7 +288,7 @@ ompl::base::State *ompl::base::ConstrainedStateSpace::geodesicInterpolate(const 
                                                                           const double t) const
 {
     unsigned int n = geodesic.size();
-    double *d = new double[n];
+    auto *d = new double[n];
 
     // Compute partial sums of distances between intermediate states.
     d[0] = 0.;
@@ -312,6 +312,7 @@ ompl::base::State *ompl::base::ConstrainedStateSpace::geodesicInterpolate(const 
         const double t2 = (i <= n - 2) ? d[i + 1] / last - t : 1;
 
         delete[] d;
-        return (t1 < t2) ? geodesic[i] : geodesic[i + 1];
+        assert((t1 < t2 || std::abs(t1 - t2) < std::numeric_limits<double>::epsilon())  ? (i < geodesic.size()) : (i + 1 < geodesic.size()));
+        return (t1 < t2 || std::abs(t1 - t2) < std::numeric_limits<double>::epsilon()) ? geodesic[i] : geodesic[i + 1];
     }
 }

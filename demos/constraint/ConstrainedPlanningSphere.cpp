@@ -134,7 +134,7 @@ bool spherePlanningBench(ConstrainedProblem &cp, std::vector<enum PLANNER_TYPE> 
 {
     cp.setupBenchmark(planners, "sphere");
     cp.runBenchmark();
-    return 0;
+    return false;
 }
 
 bool spherePlanning(bool output, enum SPACE_TYPE space, std::vector<enum PLANNER_TYPE> &planners,
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("help"))
+    if (vm.count("help") != 0u)
     {
         std::cout << desc << std::endl;
         return 1;

@@ -40,7 +40,8 @@
 #include "ompl/datastructures/NearestNeighborsLinear.h"
 #include "ompl/geometric/planners/prm/ConnectionStrategy.h"
 #include "ompl/geometric/planners/prm/PRM.h"
-#include "ompl/geometric/planners/bitstar/BITstar.h"
+#include "ompl/geometric/planners/quotientspace/QRRT.h"
+#include "ompl/geometric/planners/informedtrees/BITstar.h"
 #include <deque>
 #include <map>
 #include <boost/graph/adjacency_list.hpp>
@@ -63,7 +64,12 @@ namespace ompl
             return sizeof(std::deque<ompl::base::State*>) +
                 sizeof(std::map<boost::adjacency_list<>::vertex_descriptor, ompl::base::State*>) +
                 sizeof(std::vector<const ompl::base::State*>) +
-                sizeof(std::vector< std::shared_ptr<ompl::geometric::BITstar::Vertex> >);
+                sizeof(std::vector< std::shared_ptr<ompl::geometric::BITstar::Vertex> >) +
+                sizeof(std::vector< std::shared_ptr<ompl::base::SpaceInformation> >);
+        }
+        inline int dummyQRRTsize()
+        {
+            return sizeof(QRRT);
         }
     }
 }

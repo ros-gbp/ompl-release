@@ -103,8 +103,7 @@ namespace ompl
 
         ~NearestNeighborsGNATNoThreadSafety() override
         {
-            if (tree_)
-                delete tree_;
+            delete tree_;
         }
         /// \brief Set the distance function to use
         void setDistanceFunction(const typename NearestNeighbors<_T>::DistanceFunction &distFun) override
@@ -366,9 +365,8 @@ namespace ompl
         /// to the vector that NearestNeighbor API requires.
         void postprocessNearest(std::vector<_T> &nbh) const
         {
-            typename std::vector<_T>::reverse_iterator it;
             nbh.resize(nearQueue_.size());
-            for (it = nbh.rbegin(); it != nbh.rend(); it++, nearQueue_.pop())
+            for (auto it = nbh.rbegin(); it != nbh.rend(); it++, nearQueue_.pop())
                 *it = *nearQueue_.top().second;
         }
 
@@ -533,13 +531,13 @@ namespace ompl
             {
                 if (nbh.size() < k)
                 {
-                    nbh.push(std::make_pair(dist, &data));
+                    nbh.emplace(dist, &data);
                     return true;
                 }
                 if (dist < nbh.top().first || (dist < std::numeric_limits<double>::epsilon() && data == key))
                 {
                     nbh.pop();
-                    nbh.push(std::make_pair(dist, &data));
+                    nbh.emplace(dist, &data);
                     return true;
                 }
                 return false;
@@ -598,7 +596,7 @@ namespace ompl
             void insertNeighborR(NearQueue &nbh, double r, const _T &data, double dist) const
             {
                 if (dist <= r)
-                    nbh.push(std::make_pair(dist, &data));
+                    nbh.emplace(dist, &data);
             }
             /// \brief Return all elements that are within distance r in nbh.
             void nearestR(const GNAT &gnat, const _T &data, double r) const
@@ -799,7 +797,7 @@ namespace ompl
         mutable std::vector<unsigned int> pivots_;
         /// \brief Matrix of distances to pivots
         mutable typename GreedyKCenters<_T>::Matrix distances_;
-/// \}
+        /// \}
 
 #ifdef GNAT_SAMPLER
         /// \brief Estimated dimension of the local free space.

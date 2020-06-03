@@ -301,7 +301,7 @@ ompl::base::PlannerStatus ompl::geometric::LBTRRT::solve(const base::PlannerTerm
 
     OMPL_INFORM("%s: Created %u states", getName().c_str(), statesGenerated);
 
-    return base::PlannerStatus(solved, approximate);
+    return {solved, approximate};
 }
 
 void ompl::geometric::LBTRRT::considerEdge(Motion *parent, Motion *child, double c)
@@ -324,7 +324,7 @@ void ompl::geometric::LBTRRT::considerEdge(Motion *parent, Motion *child, double
     // insert them into a priority queue ordered according to the lb cost
     std::list<std::size_t>::iterator iter;
     IsLessThanLB isLessThanLB(this);
-    Lb_queue queue(isLessThanLB);
+    std::set<Motion *, IsLessThanLB> queue(isLessThanLB);
 
     for (iter = affected.begin(); iter != affected.end(); ++iter)
     {

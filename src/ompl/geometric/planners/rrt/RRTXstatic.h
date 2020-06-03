@@ -93,7 +93,7 @@ namespace ompl
            Volume 107 of the series Springer Tracts in Advanced Robotics pp 461-478
            -# O. Arslan, P. Tsiotras - The role of vertex consistency in sampling-based algorithms for optimal motion
            planning,
-           http://arxiv.org/pdf/1204.6453
+           https://arxiv.org/pdf/1204.6453
            -# O. Arslan, P. Tsiotras - Dynamic programming guided exploration for sampling-based motion planning
            algorithms,
            2015 IEEE International Conference on Robotics and Automation (ICRA), pp 4819-4826
@@ -105,15 +105,15 @@ namespace ompl
         public:
             RRTXstatic(const base::SpaceInformationPtr &si);
 
-            virtual ~RRTXstatic();
+            ~RRTXstatic() override;
 
-            virtual void getPlannerData(base::PlannerData &data) const;
+            void getPlannerData(base::PlannerData &data) const override;
 
-            virtual base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc);
+            base::PlannerStatus solve(const base::PlannerTerminationCondition &ptc) override;
 
-            virtual void clear();
+            void clear() override;
 
-            virtual void setup();
+            void setup() override;
 
             /** \brief Set the goal bias
 

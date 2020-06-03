@@ -40,6 +40,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 namespace ompl
@@ -48,10 +49,10 @@ namespace ompl
     namespace time
     {
         /** \brief Representation of a point in time */
-        typedef std::chrono::system_clock::time_point point;
+        using point = std::chrono::system_clock::time_point;
 
         /** \brief Representation of a time duration */
-        typedef std::chrono::system_clock::duration duration;
+        using duration = std::chrono::system_clock::duration;
 
         /** \brief Get the current time point */
         inline point now()
@@ -81,6 +82,22 @@ namespace ompl
             ss << std::put_time(std::localtime(&pt), "%F %T");
             return ss.str();
         }
+
+        // Adapted from the deprecated boost/progress.hpp header file
+        class ProgressDisplay
+        {
+        public:
+            explicit ProgressDisplay(std::ostream &os = std::cout);
+            unsigned int operator++();
+            unsigned int count() const
+            {
+                return count_;
+            }
+
+        private:
+            std::ostream& out_;
+            unsigned int count_{0u};
+        };
     }
 }
 

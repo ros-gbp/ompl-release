@@ -93,11 +93,11 @@ namespace ompl
                 Additional edge cost factors can be added
                 with the addEdgeCostFactor() function, and Syclop's list of edge cost factors can be cleared using
                clearEdgeCostFactors() . */
-            typedef std::function<double(int, int)> EdgeCostFactorFn;
+            using EdgeCostFactorFn = std::function<double(int, int)>;
 
             /** \brief Leads should consist of a path of adjacent regions in the decomposition that start with the start
              * region and end at the end region.  Default is \f$A^\ast\f$ search. */
-            typedef std::function<void(int, int, std::vector<int> &)> LeadComputeFn;
+            using LeadComputeFn = std::function<void(int, int, std::vector<int> &)>;
 
             /** \brief Constructor. Requires a Decomposition, which Syclop uses to create high-level leads. */
             Syclop(const SpaceInformationPtr &si, DecompositionPtr d, const std::string &plannerName)
@@ -249,9 +249,8 @@ namespace ompl
             };
 
         protected:
-#pragma pack(push, 4)  // push default byte alignment to stack and align the following structure to 4 byte boundary
                        /** \brief Representation of a motion
-           
+
                            A motion contains pointers to its state, its parent motion, and the control
                            that was applied to get from its parent to its state. */
             class Motion
@@ -274,9 +273,7 @@ namespace ompl
                 /** \brief The number of steps for which the control is applied */
                 unsigned int steps{0};
             };
-#pragma pack(pop)  // Restoring default byte alignment
 
-#pragma pack(push, 4)  // push default byte alignment to stack and align the following structure to 4 byte boundary
             /** \brief Representation of a region in the Decomposition assigned to Syclop. */
             class Region
             {
@@ -284,12 +281,10 @@ namespace ompl
                 Region() = default;
                 virtual ~Region() = default;
 
-#if __cplusplus >= 201103L
                 Region(const Region &) = default;
                 Region &operator=(const Region &) = default;
                 Region(Region &&) = default;
                 Region &operator=(Region &&) = default;
-#endif
 
                 /** \brief Clears motions and coverage information from this region. */
                 void clear()
@@ -320,11 +315,9 @@ namespace ompl
                 /** \brief The Element corresponding to this region in the PDF of available regions. */
                 PDF<int>::Element *pdfElem;
             };
-#pragma pack(pop)  // Restoring default byte alignment
 
-#pragma pack(push, 4)  // push default byte alignment to stack and align the following structure to 4 byte boundary
-                       /** \brief Representation of an adjacency (a directed edge) between two regions
-                           in the Decomposition assigned to Syclop. */
+            /** \brief Representation of an adjacency (a directed edge) between two regions
+                in the Decomposition assigned to Syclop. */
             class Adjacency
             {
             public:
@@ -353,7 +346,6 @@ namespace ompl
                  * zero tree motions. */
                 bool empty;
             };
-#pragma pack(pop)  // Restoring default byte alignment
 
             /** \brief Add State s as a new root in the low-level tree, and return the Motion corresponding to s. */
             virtual Motion *addRoot(const base::State *s) = 0;
@@ -440,11 +432,11 @@ namespace ompl
                 const DecompositionPtr &decomp;
             };
 
-            typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Region, Adjacency> RegionGraph;
-            typedef boost::graph_traits<RegionGraph>::vertex_descriptor Vertex;
-            typedef boost::graph_traits<RegionGraph>::vertex_iterator VertexIter;
-            typedef boost::property_map<RegionGraph, boost::vertex_index_t>::type VertexIndexMap;
-            typedef boost::graph_traits<RegionGraph>::edge_iterator EdgeIter;
+            using RegionGraph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Region, Adjacency>;
+            using Vertex = boost::graph_traits<RegionGraph>::vertex_descriptor;
+            using VertexIter = boost::graph_traits<RegionGraph>::vertex_iterator;
+            using VertexIndexMap = boost::property_map<RegionGraph, boost::vertex_index_t>::type;
+            using EdgeIter = boost::graph_traits<RegionGraph>::edge_iterator;
 
             /// @cond IGNORE
             friend class DecompositionHeuristic;

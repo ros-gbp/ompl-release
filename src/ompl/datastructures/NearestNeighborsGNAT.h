@@ -42,12 +42,13 @@
 #ifdef GNAT_SAMPLER
 #include "ompl/datastructures/PDF.h"
 #endif
-#include "ompl/util/Exception.h"
-#include <unordered_set>
-#include <queue>
 #include <algorithm>
-#include <utility>
 #include <iostream>
+#include <queue>
+#include <random>
+#include <unordered_set>
+#include <utility>
+#include "ompl/util/Exception.h"
 
 namespace ompl
 {
@@ -114,8 +115,7 @@ namespace ompl
 
         ~NearestNeighborsGNAT() override
         {
-            if (tree_)
-                delete tree_;
+            delete tree_;
         }
         /// \brief Set the distance function to use
         void setDistanceFunction(const typename NearestNeighbors<_T>::DistanceFunction &distFun) override
@@ -378,9 +378,8 @@ namespace ompl
         /// to the vector that NearestNeighbor API requires.
         void postprocessNearest(NearQueue &nbhQueue, std::vector<_T> &nbh) const
         {
-            typename std::vector<_T>::reverse_iterator it;
             nbh.resize(nbhQueue.size());
-            for (it = nbh.rbegin(); it != nbh.rend(); it++, nbhQueue.pop())
+            for (auto it = nbh.rbegin(); it != nbh.rend(); it++, nbhQueue.pop())
                 *it = *nbhQueue.top().second;
         }
 
@@ -546,13 +545,13 @@ namespace ompl
             {
                 if (nbh.size() < k)
                 {
-                    nbh.push(std::make_pair(dist, &data));
+                    nbh.emplace(dist, &data);
                     return true;
                 }
                 if (dist < nbh.top().first || (dist < std::numeric_limits<double>::epsilon() && data == key))
                 {
                     nbh.pop();
-                    nbh.push(std::make_pair(dist, &data));
+                    nbh.emplace(dist, &data);
                     return true;
                 }
                 return false;
@@ -576,14 +575,13 @@ namespace ompl
                 {
                     double dist;
                     Node *child;
-                    std::vector<double> distToPivot(children_.size());
-                    std::vector<int> permutation(children_.size());
-                    for (unsigned int i = 0; i < permutation.size(); ++i)
-                        permutation[i] = i;
-                    // for one-time use this is faster than using ompl::Permutation
-                    std::random_shuffle(permutation.begin(), permutation.end());
+                    std::size_t sz = children_.size(), offset = gnat.offset_++;
+                    std::vector<double> distToPivot(sz);
+                    std::vector<int> permutation(sz);
+                    for (unsigned int i = 0; i < sz; ++i)
+                        permutation[i] = (i + offset) % sz;
 
-                    for (unsigned int i = 0; i < children_.size(); ++i)
+                    for (unsigned int i = 0; i < sz; ++i)
                         if (permutation[i] >= 0)
                         {
                             child = children_[permutation[i]];
@@ -593,7 +591,7 @@ namespace ompl
                             if (nbh.size() == k)
                             {
                                 dist = nbh.top().first;  // note difference with nearestR
-                                for (unsigned int j = 0; j < children_.size(); ++j)
+                                for (unsigned int j = 0; j < sz; ++j)
                                     if (permutation[j] >= 0 && i != j &&
                                         (distToPivot[permutation[i]] - dist > child->maxRange_[permutation[j]] ||
                                          distToPivot[permutation[i]] + dist < child->minRange_[permutation[j]]))
@@ -608,7 +606,7 @@ namespace ompl
                             child = children_[p];
                             if (nbh.size() < k || (distToPivot[p] - dist <= child->maxRadius_ &&
                                                    distToPivot[p] + dist >= child->minRadius_))
-                                nodeQueue.push(std::make_pair(child, distToPivot[p]));
+                                nodeQueue.emplace(child, distToPivot[p]);
                         }
                 }
             }
@@ -616,7 +614,7 @@ namespace ompl
             void insertNeighborR(NearQueue &nbh, double r, const _T &data, double dist) const
             {
                 if (dist <= r)
-                    nbh.push(std::make_pair(dist, &data));
+                    nbh.emplace(dist, &data);
             }
             /// \brief Return all elements that are within distance r in nbh.
             /// The nodeQueue, which contains other Nodes that need to
@@ -631,33 +629,34 @@ namespace ompl
                 if (!children_.empty())
                 {
                     Node *child;
-                    std::vector<double> distToPivot(children_.size());
-                    std::vector<int> permutation(children_.size());
-                    for (unsigned int i = 0; i < permutation.size(); ++i)
-                        permutation[i] = i;
-                    // for one-time use this is faster than using ompl::Permutation
-                    std::random_shuffle(permutation.begin(), permutation.end());
+                    std::size_t sz = children_.size(), offset = gnat.offset_++;
+                    std::vector<double> distToPivot(sz);
+                    std::vector<int> permutation(sz);
+                    // Not a random permutation, but processing the children in slightly different order is
+                    // "good enough" to get a performance boost. A call to std::shuffle takes too long.
+                    for (unsigned int i = 0; i < sz; ++i)
+                        permutation[i] = (i + offset) % sz;
 
-                    for (unsigned int i = 0; i < children_.size(); ++i)
+                    for (unsigned int i = 0; i < sz; ++i)
                         if (permutation[i] >= 0)
                         {
                             child = children_[permutation[i]];
-                            distToPivot[i] = gnat.distFun_(data, child->pivot_);
-                            insertNeighborR(nbh, r, child->pivot_, distToPivot[i]);
-                            for (unsigned int j = 0; j < children_.size(); ++j)
+                            distToPivot[permutation[i]] = gnat.distFun_(data, child->pivot_);
+                            insertNeighborR(nbh, r, child->pivot_, distToPivot[permutation[i]]);
+                            for (unsigned int j = 0; j < sz; ++j)
                                 if (permutation[j] >= 0 && i != j &&
-                                    (distToPivot[i] - dist > child->maxRange_[permutation[j]] ||
-                                     distToPivot[i] + dist < child->minRange_[permutation[j]]))
+                                    (distToPivot[permutation[i]] - dist > child->maxRange_[permutation[j]] ||
+                                     distToPivot[permutation[i]] + dist < child->minRange_[permutation[j]]))
                                     permutation[j] = -1;
                         }
 
-                    for (unsigned int i = 0; i < children_.size(); ++i)
-                        if (permutation[i] >= 0)
+                    for (auto p : permutation)
+                        if (p >= 0)
                         {
-                            child = children_[permutation[i]];
-                            if (distToPivot[i] - dist <= child->maxRadius_ &&
-                                distToPivot[i] + dist >= child->minRadius_)
-                                nodeQueue.push(std::make_pair(child, distToPivot[i]));
+                            child = children_[p];
+                            if (distToPivot[p] - dist <= child->maxRadius_ &&
+                                distToPivot[p] + dist >= child->minRadius_)
+                                nodeQueue.emplace(child, distToPivot[p]);
                         }
                 }
             }
@@ -796,6 +795,11 @@ namespace ompl
         /// \brief Estimated dimension of the local free space.
         double estimatedDimension_;
 #endif
+
+        /// \cond IGNORE
+        // used to cycle through children of a node in different orders
+        mutable std::size_t offset_{0};
+        /// \endcond
     };
 }
 
