@@ -1,0 +1,12 @@
+Source: ros-noetic-ompl
+Section: misc
+Priority: optional
+Maintainer: Mark Moll <mmoll@rice.edu>
+Build-Depends: debhelper (>= 9.0.0), cmake, libboost-all-dev, libeigen3-dev, pkg-config
+Homepage: https://ompl.kavrakilab.org
+Standards-Version: 3.9.2
+
+Package: ros-noetic-ompl
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libboost-all-dev, libeigen3-dev, libflann-dev, libode-dev
+Description: OMPL is a free sampling-based motion planning library.
