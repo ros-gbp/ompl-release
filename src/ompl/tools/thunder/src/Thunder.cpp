@@ -70,31 +70,15 @@ void ompl::tools::Thunder::initialize()
 
 void ompl::tools::Thunder::setup()
 {
+    if (filePath_ == "unloaded" || filePath_.empty())
+    {
+        OMPL_WARN("Database filepath has not been set. Unable to setup!");
+        return;
+    }
+
     if (!configured_ || !si_->isSetup() || !planner_->isSetup() || !rrPlanner_->isSetup())
     {
-        // Setup Space Information if we haven't already done so
-        if (!si_->isSetup())
-            si_->setup();
-
-        // Setup planning from scratch planner
-        if (!planner_)
-        {
-            if (pa_)
-                planner_ = pa_(si_);
-            if (!planner_)
-            {
-                OMPL_INFORM("Getting default planner: ");
-                planner_ = std::make_shared<ompl::geometric::RRTConnect>(si_);
-                // This was disabled because i like to use Thunder / SPARSdb without setting a goal definition
-                // planner_ = ompl::geometric::getDefaultPlanner(pdef_->getGoal()); // we could use the
-                // repairProblemDef_ here but that isn't setup yet
-
-                OMPL_INFORM("No planner specified. Using default: %s", planner_->getName().c_str());
-            }
-        }
-        planner_->setProblemDefinition(pdef_);
-        if (!planner_->isSetup())
-            planner_->setup();
+        SimpleSetup::setup();
 
         // Decide if we should setup the second planning from scratch planner for benchmarking w/o recall
         if (dualThreadScratchEnabled_ && !recallEnabled_)
@@ -153,17 +137,14 @@ void ompl::tools::Thunder::setup()
             experienceDB_->getSPARSdb()->setup();
 
             experienceDB_->getSPARSdb()->setStretchFactor(1.2);
-            experienceDB_->getSPARSdb()->setSparseDeltaFraction(
-                0.05);  // vertex visibility range  = maximum_extent * this_fraction
+            experienceDB_->getSPARSdb()->setSparseDeltaFraction(0.05);  // vertex visibility range  = maximum_extent *
+                                                                        // this_fraction
             // experienceDB_->getSPARSdb()->setDenseDeltaFraction(0.001);
 
             experienceDB_->getSPARSdb()->printDebug();
 
             experienceDB_->load(filePath_);  // load from file
         }
-
-        // Set the configured flag
-        configured_ = true;
     }
 }
 
@@ -491,7 +472,7 @@ void ompl::tools::Thunder::getAllPlannerDatas(std::vector<ob::PlannerDataPtr> &p
 
 void ompl::tools::Thunder::convertPlannerData(const ob::PlannerDataPtr &plannerData, og::PathGeometric &path)
 {
-    // Convert the planner data verticies into a vector of states
+    // Convert the planner data vertices into a vector of states
     for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
         path.append(plannerData->getVertex(i).getState());
 }

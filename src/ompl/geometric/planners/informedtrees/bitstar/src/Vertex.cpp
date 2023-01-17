@@ -386,7 +386,6 @@ namespace ompl
             {
                 throw ompl::Exception("Attempted to remove a child vertex from the wrong parent.");
             }
-#endif  // BITSTAR_DEBUG
 
             // Variables
             // Whether the child has been found (and then deleted);
@@ -394,7 +393,8 @@ namespace ompl
 
             // Iterate over the vector of children pointers until the child is found. Iterators make erase easier
             foundChild = false;
-            for (auto it = children_.begin(); it != children_.end() && !foundChild; ++it)
+#endif  // BITSTAR_DEBUG
+            for (auto it = children_.begin(); it != children_.end(); ++it)
             {
 #ifdef BITSTAR_DEBUG
                 // Check that the weak pointer hasn't expired
@@ -408,14 +408,17 @@ namespace ompl
                 // Check if this is the child we're looking for
                 if (it->lock()->getId() == child->getId())
                 {
+#ifdef BITSTAR_DEBUG
                     // It is, mark as found
                     foundChild = true;
+#endif  // BITSTAR_DEBUG
 
                     // First, clear the entry in the vector
                     it->reset();
 
                     // Then remove that entry from the vector efficiently
                     swapPopBack(it, &children_);
+                    break;
                 }
                 // No else.
             }
@@ -579,14 +582,14 @@ namespace ompl
             {
                 throw ompl::Exception("Attempted to remove an incoming queue edge added under a different expansion id.");
             }
-#endif  // BITSTAR_DEBUG
 
             // Variable
             // Element found
             bool found = false;
+#endif  // BITSTAR_DEBUG
 
             // Iterate through the list and find the address of the element to delete
-            for (auto it = edgeQueueInLookup_.begin(); it != edgeQueueInLookup_.end() && !found; ++it)
+            for (auto it = edgeQueueInLookup_.begin(); it != edgeQueueInLookup_.end(); ++it)
             {
                 // Is it the element we're looking for? Source id
                 if ((*it)->data.second.first->getId() == element->data.second.first->getId())
@@ -594,8 +597,11 @@ namespace ompl
                     // Remove by iterator
                     this->removeFromEdgeQueueInLookup(it);
 
+#ifdef BITSTAR_DEBUG
                     // Mark as found
                     found = true;
+#endif  // BITSTAR_DEBUG
+                    break;
                 }
                 // No else, try the next
             }
@@ -706,14 +712,14 @@ namespace ompl
             {
                 throw ompl::Exception("Attempted to remove an incoming queue edge added under a different expansion id.");
             }
-#endif  // BITSTAR_DEBUG
 
             // Variable
             // Element found
             bool found = false;
+#endif  // BITSTAR_DEBUG
 
             // Iterate through the list and find the address of the element to delete
-            for (auto it = edgeQueueOutLookup_.begin(); it != edgeQueueOutLookup_.end() && !found; ++it)
+            for (auto it = edgeQueueOutLookup_.begin(); it != edgeQueueOutLookup_.end(); ++it)
             {
                 // Is it the element we're looking for? Source id
                 if ((*it)->data.second.second->getId() == element->data.second.second->getId())
@@ -721,8 +727,11 @@ namespace ompl
                     // Remove by iterator
                     this->removeFromEdgeQueueOutLookup(it);
 
+#ifdef BITSTAR_DEBUG
                     // Mark as found
                     found = true;
+#endif  // BITSTAR_DEBUG
+                    break;
                 }
                 // No else, try the next
             }

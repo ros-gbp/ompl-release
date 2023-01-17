@@ -69,37 +69,7 @@ void ompl::tools::Lightning::setup()
 {
     if (!configured_ || !si_->isSetup() || !planner_->isSetup() || !rrPlanner_->isSetup())
     {
-        OMPL_INFORM("Setting up the Lightning Framework");
-
-        if (!configured_)
-            OMPL_INFORM("  Setting up because not configured");
-        else if (!si_->isSetup())
-            OMPL_INFORM("  Setting up because not si->isSetup");
-        else if (!planner_->isSetup())
-            OMPL_INFORM("  Setting up because not planner->isSetup");
-        else if (!rrPlanner_->isSetup())
-            OMPL_INFORM("  Setting up because not rrPlanner->isSetup");
-
-        // Setup Space Information if we haven't already done so
-        if (!si_->isSetup())
-            si_->setup();
-
-        // Setup planning from scratch planner
-        if (!planner_)
-        {
-            if (pa_)
-                planner_ = pa_(si_);
-            if (!planner_)
-            {
-                planner_ = tools::SelfConfig::getDefaultPlanner(
-                    pdef_->getGoal());  // we could use the repairProblemDef_ here but that isn't setup yet
-
-                OMPL_INFORM("No planner specified. Using default: %s", planner_->getName().c_str());
-            }
-        }
-        planner_->setProblemDefinition(pdef_);
-        if (!planner_->isSetup())
-            planner_->setup();
+        SimpleSetup::setup();
 
         // Setup planning from experience planner
         rrPlanner_->setProblemDefinition(pdef_);
@@ -124,6 +94,7 @@ void ompl::tools::Lightning::setup()
             if (filePath_.empty())
             {
                 OMPL_ERROR("No file path has been specified, unable to load experience DB");
+                return; 
             }
             else
             {
@@ -132,9 +103,6 @@ void ompl::tools::Lightning::setup()
         }
         else
             OMPL_ERROR("Attempting to load experience database when it is not empty");
-
-        // Set the configured flag
-        configured_ = true;
     }
 }
 
@@ -435,7 +403,7 @@ void ompl::tools::Lightning::getAllPlannerDatas(std::vector<ob::PlannerDataPtr> 
 
 void ompl::tools::Lightning::convertPlannerData(const ob::PlannerDataPtr &plannerData, og::PathGeometric &path)
 {
-    // Convert the planner data verticies into a vector of states
+    // Convert the planner data vertices into a vector of states
     for (std::size_t i = 0; i < plannerData->numVertices(); ++i)
         path.append(plannerData->getVertex(i).getState());
 }
