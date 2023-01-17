@@ -116,7 +116,7 @@ function(find_python_module module)
         # it's a .so file.
         if (_minversion STREQUAL "")
             execute_process(COMMAND "${PYTHON_EXEC}" "-c"
-                "import re, inspect, ${module}; print(re.compile('/__init__.py.*').sub('',inspect.getfile(${module})))"
+                "from importlib.util import find_spec; print(find_spec('${module}').submodule_search_locations[0])"
                 RESULT_VARIABLE _status OUTPUT_VARIABLE _location
                 ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
             if(NOT _status)
@@ -125,7 +125,7 @@ function(find_python_module module)
             endif(NOT _status)
         else (_minversion STREQUAL "")
             execute_process(COMMAND "${PYTHON_EXEC}" "-c"
-                "import re, inspect, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__version__+';'+inspect.getfile(${module})))"
+                "from importlib.metadata import version; from importlib.util import find_spec; print(version('${module}') + ';' + find_spec('${module}').submodule_search_locations[0])"
                 RESULT_VARIABLE _status
                 OUTPUT_VARIABLE _verloc
                 ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -189,7 +189,7 @@ macro(find_boost_numpy)
             "numpy${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}"
             "numpy${PYTHON_VERSION_MAJOR}" "numpy")
             string(TOUPPER ${_bn_libname} _bn_upper)
-            set(_Boost_${_bn_upper}_HEADERS "boost/numpy.hpp")
+            set(_Boost_${_bn_upper}_HEADERS "boost/python/numpy.hpp")
             find_package(Boost COMPONENTS ${_bn_libname} QUIET)
             set(_bnlib "${Boost_${_bn_upper}_LIBRARY}")
             if (_bnlib)

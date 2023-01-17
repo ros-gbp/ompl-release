@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
-project(ompl VERSION 1.5.2 LANGUAGES CXX)
-set(OMPL_ABI_VERSION 16)
+project(ompl VERSION 1.6.0 LANGUAGES CXX)
+set(OMPL_ABI_VERSION 17)
 
 # set the default build type
 if (NOT CMAKE_BUILD_TYPE)
@@ -41,7 +41,7 @@ if(MSVC)
 endif(MSVC)
 # Ensure dynamic linking with boost unit_test_framework
 add_definitions(-DBOOST_TEST_DYN_LINK)
-# Avoid valgrind error due to overflow error, cf. https://bitbucket.org/ompl/ompl/issues/543
+# Avoid valgrind error due to overflow error, cf. https://github.com/ompl/ompl/issues/664
 add_definitions(-DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
 
 set_package_properties(Boost PROPERTIES
@@ -199,6 +199,7 @@ if(NOT MSVC)
         COMPONENT ompl)
 endif()
 
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 include(CMakePackageConfigHelpers)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR})
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
