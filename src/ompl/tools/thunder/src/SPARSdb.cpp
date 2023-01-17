@@ -460,7 +460,7 @@ bool ompl::geometric::SPARSdb::constructSolution(const Vertex start, const Verte
             // previous one
             vertexPath.clear();  // remove any old solutions
 
-            // Trace back the shortest path in reverse and only save the states
+            // Trace back a shortest path in reverse and only save the states
             Vertex v;
             for (v = goal; v != vertexPredecessors[v]; v = vertexPredecessors[v])
             {
@@ -846,7 +846,7 @@ bool ompl::geometric::SPARSdb::checkStartGoalConnection(ompl::geometric::PathGeo
     // Make sure path has states
     if (solutionPath.getStateCount() < 2)
     {
-        OMPL_ERROR("Not enought states (< 2) in the solutionPath");
+        OMPL_ERROR("Not enough states (< 2) in the solutionPath");
         return false;
     }
 

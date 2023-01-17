@@ -97,7 +97,11 @@ void ompl::geometric::SST::setup()
             pdef_->setOptimizationObjective(opt_);
         }
     }
-
+    else
+    {
+        OMPL_WARN("%s: No optimization object set. Using path length", getName().c_str());
+        opt_ = std::make_shared<base::PathLengthOptimizationObjective>(si_);
+    }
     prevSolutionCost_ = opt_->infiniteCost();
 }
 
@@ -241,6 +245,8 @@ ompl::base::PlannerStatus ompl::geometric::SST::solve(const base::PlannerTermina
     if (!sampler_)
         sampler_ = si_->allocStateSampler();
 
+    const base::ReportIntermediateSolutionFn intermediateSolutionCallback = pdef_->getIntermediateSolutionCallback();
+
     OMPL_INFORM("%s: Starting planning with %u states already in datastructure", getName().c_str(), nn_->size());
 
     Motion *solution = nullptr;
@@ -325,6 +331,12 @@ ompl::base::PlannerStatus ompl::geometric::SST::solve(const base::PlannerTermina
                     prevSolutionCost_ = solution->accCost_;
 
                     OMPL_INFORM("Found solution with cost %.2f", solution->accCost_.value());
+                    if (intermediateSolutionCallback)
+                    {
+                        // the callback requires a vector with const elements -> create a copy
+                        std::vector<const base::State *> prevSolutionConst(prevSolution_.begin(), prevSolution_.end());
+                        intermediateSolutionCallback(this, prevSolutionConst, prevSolutionCost_);
+                    }
                     sufficientlyShort = opt_->isSatisfied(solution->accCost_);
                     if (sufficientlyShort)
                     {
