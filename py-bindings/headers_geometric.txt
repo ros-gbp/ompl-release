@@ -1,3 +1,4 @@
+py-bindings/stdsize.h
 src/ompl/geometric/PathGeometric.h
 src/ompl/geometric/PathSimplifier.h
 src/ompl/geometric/PathHybridization.h
@@ -15,8 +16,6 @@ src/ompl/geometric/planners/kpiece/KPIECE1.h
 src/ompl/geometric/planners/kpiece/BKPIECE1.h
 src/ompl/geometric/planners/kpiece/LBKPIECE1.h
 src/ompl/geometric/planners/pdst/PDST.h
-src/ompl/geometric/planners/quotientspace/algorithms/MultiQuotient.h
-src/ompl/geometric/planners/quotientspace/QRRT.h
 src/ompl/geometric/planners/rrt/RRT.h
 src/ompl/geometric/planners/rrt/RRTConnect.h
 src/ompl/geometric/planners/rrt/LazyRRT.h
