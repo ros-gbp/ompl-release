@@ -1,3 +1,26 @@
+## ompl (noetic) - 1.6.0-1
+
+The packages in the `ompl` repository were released into the `noetic` distro by running `/usr/bin/bloom-release ompl -r noetic -t noetic` on `Tue, 17 Jan 2023 00:45:03 -0000`
+
+The `ompl` package was released.
+
+Version of package(s) in repository `ompl`:
+
+- upstream repository: https://github.com/ompl/ompl.git
+- release repository: https://github.com/ros-gbp/ompl-release.git
+- rosdistro version: `1.5.2-1`
+- old version: `1.5.2-1`
+- new version: `1.6.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.1`
+- catkin_pkg version: `0.5.2`
+- rosdep version: `0.22.1`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## ompl (rolling) - 1.5.2-1
 
 The packages in the `ompl` repository were released into the `rolling` distro by running `/usr/bin/bloom-release ompl -r rolling -t rolling` on `Fri, 30 Apr 2021 04:54:35 -0000`
